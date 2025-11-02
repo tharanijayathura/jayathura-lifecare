@@ -1,62 +1,167 @@
+// client/src/components/auth/Login.jsx
 import React, { useState } from 'react';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Alert,
+  Paper,
+  Container
+} from '@mui/material';
+import { LocalPharmacy } from '@mui/icons-material';
 import { useAuth } from '../../contexts/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError('');
+
     try {
-      await login(email, password);
-      // Optionally redirect after login
-    } catch {
-      setError('Login failed. Please check your credentials.');
+      await login(formData.email, formData.password);
+      navigate('/patient');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
     }
     setLoading(false);
   };
 
   return (
-    <Box maxWidth={400} mx="auto" mt={8} p={3} boxShadow={3} borderRadius={2} bgcolor="background.paper">
-      <Typography variant="h4" align="center" gutterBottom>Login</Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <form onSubmit={handleSubmit}>
-        <TextField
-          label="Email"
-          type="email"
-          fullWidth
-          margin="normal"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-        <TextField
-          label="Password"
-          type="password"
-          fullWidth
-          margin="normal"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          disabled={loading}
-          sx={{ mt: 2 }}
+    <Container component="main" maxWidth="sm">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            padding: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            backgroundColor: '#FFFFFF',
+            borderRadius: 3,
+            border: '1px solid #ECF4E8',
+            width: '100%',
+          }}
         >
-          {loading ? 'Logging in...' : 'Login'}
-        </Button>
-      </form>
-    </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
+            <Typography variant="h4" sx={{ color: '#2C3E50', fontWeight: 700 }}>
+              Login
+            </Typography>
+          </Box>
+          
+          <Typography variant="body1" sx={{ color: '#546E7A', mb: 3 }}>
+            Welcome back to Jayathura LifeCare
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={formData.email}
+              onChange={handleChange}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={formData.password}
+              onChange={handleChange}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={loading}
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+                backgroundColor: '#ABE7B2',
+                color: '#2C3E50',
+                '&:hover': {
+                  backgroundColor: '#CBF3BB',
+                },
+                '&:disabled': {
+                  backgroundColor: '#ECF4E8',
+                  color: '#93BFC7',
+                },
+              }}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/register')}
+              sx={{
+                color: '#93BFC7',
+                '&:hover': {
+                  backgroundColor: '#ECF4E8',
+                },
+              }}
+            >
+              Don't have an account? Sign Up
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 

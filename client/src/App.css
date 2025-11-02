@@ -2,6 +2,7 @@
 .App {
   text-align: center;
   width: 100%;
+  background-color: #ECF4E8;
 }
 
 /* Loading animation */
@@ -9,9 +10,9 @@
   display: inline-block;
   width: 50px;
   height: 50px;
-  border: 3px solid #f3f3f3;
+  border: 3px solid #ECF4E8;
   border-radius: 50%;
-  border-top: 3px solid #2E7D32;
+  border-top: 3px solid #ABE7B2;
   animation: spin 1s linear infinite;
 }
 
@@ -27,7 +28,7 @@
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(171, 231, 178, 0.2);
 }
 
 /* Button animations */
@@ -50,12 +51,28 @@
 
 /* Utility classes */
 .text-gradient {
-  background: linear-gradient(135deg, #2E7D32, #0288D1);
+  background: linear-gradient(135deg, #ABE7B2, #93BFC7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .shadow-custom {
-  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.1);
-} 
+  box-shadow: 0 2px 8px rgba(171, 231, 178, 0.15);
+}
+
+.bg-primary-light {
+  background-color: #ECF4E8;
+}
+
+.bg-primary-main {
+  background-color: #ABE7B2;
+}
+
+.bg-primary-dark {
+  background-color: #CBF3BB;
+}
+
+.bg-secondary {
+  background-color: #93BFC7;
+}

@@ -1,72 +1,195 @@
+// client/src/components/auth/Register.jsx
 import React, { useState } from 'react';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Alert,
+  Paper,
+  Container,
+  MenuItem
+} from '@mui/material';
+import { LocalPharmacy } from '@mui/icons-material';
 import { useAuth } from '../../contexts/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const { register } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'patient',
+    phone: ''
+  });
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError('');
+
     try {
-      await register({ name, email, password });
-      // Optionally redirect after registration
-    } catch {
-      setError('Registration failed. Please try again.');
+      await register(formData);
+      const redirectPath = formData.role === 'patient' ? '/patient' : 
+                          formData.role === 'pharmacist' ? '/pharmacist' : '/';
+      navigate(redirectPath);
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
     }
     setLoading(false);
   };
 
   return (
-    <Box maxWidth={400} mx="auto" mt={8} p={3} boxShadow={3} borderRadius={2} bgcolor="background.paper">
-      <Typography variant="h4" align="center" gutterBottom>Register</Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <form onSubmit={handleSubmit}>
-        <TextField
-          label="Name"
-          type="text"
-          fullWidth
-          margin="normal"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-        />
-        <TextField
-          label="Email"
-          type="email"
-          fullWidth
-          margin="normal"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-        <TextField
-          label="Password"
-          type="password"
-          fullWidth
-          margin="normal"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          disabled={loading}
-          sx={{ mt: 2 }}
+    <Container component="main" maxWidth="sm">
+      <Box
+        sx={{
+          marginTop: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            padding: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            backgroundColor: '#FFFFFF',
+            borderRadius: 3,
+            border: '1px solid #ECF4E8',
+            width: '100%',
+          }}
         >
-          {loading ? 'Registering...' : 'Register'}
-        </Button>
-      </form>
-    </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
+            <Typography variant="h4" sx={{ color: '#2C3E50', fontWeight: 700 }}>
+              Register
+            </Typography>
+          </Box>
+          
+          <Typography variant="body1" sx={{ color: '#546E7A', mb: 3 }}>
+            Join Jayathura LifeCare today
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="name"
+              label="Full Name"
+              name="name"
+              autoComplete="name"
+              autoFocus
+              value={formData.name}
+              onChange={handleChange}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="phone"
+              label="Phone Number"
+              type="tel"
+              id="phone"
+              autoComplete="tel"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              select
+              name="role"
+              label="Role"
+              value={formData.role}
+              onChange={handleChange}
+            >
+              <MenuItem value="patient">Patient</MenuItem>
+              <MenuItem value="pharmacist">Pharmacist</MenuItem>
+            </TextField>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={loading}
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+                backgroundColor: '#ABE7B2',
+                color: '#2C3E50',
+                '&:hover': {
+                  backgroundColor: '#CBF3BB',
+                },
+                '&:disabled': {
+                  backgroundColor: '#ECF4E8',
+                  color: '#93BFC7',
+                },
+              }}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/login')}
+              sx={{
+                color: '#93BFC7',
+                '&:hover': {
+                  backgroundColor: '#ECF4E8',
+                },
+              }}
+            >
+              Already have an account? Sign In
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
   );
 };
 

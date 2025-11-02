@@ -4,41 +4,45 @@ import { createTheme } from '@mui/material/styles';
 export const lifecareTheme = createTheme({
   palette: {
     primary: {
-      main: '#2E7D32',
-      light: '#E8F5E9',
-      dark: '#1B5E20',
+      main: '#ABE7B2',
+      light: '#ECF4E8',
+      dark: '#CBF3BB',
     },
     secondary: {
-      main: '#0288D1',
-      light: '#E3F2FD',
-      dark: '#01579B',
+      main: '#93BFC7',
+      light: '#ECF4E8',
+      dark: '#93BFC7',
     },
     background: {
-      default: '#FFFFFF',
-      paper: '#F8F9FA',
+      default: '#ECF4E8',
+      paper: '#FFFFFF',
     },
     text: {
       primary: '#2C3E50',
       secondary: '#546E7A',
     },
     success: {
-      main: '#4CAF50',
-      light: '#E8F5E9',
+      main: '#ABE7B2',
+      light: '#ECF4E8',
+    },
+    info: {
+      main: '#93BFC7',
+      light: '#ECF4E8',
     },
     warning: {
-      main: '#FF9800',
-      light: '#FFF3E0',
+      main: '#CBF3BB',
+      light: '#ECF4E8',
     },
     error: {
-      main: '#f44336',
-      light: '#FFEBEE',
+      main: '#ABE7B2',
+      light: '#ECF4E8',
     },
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h4: {
       fontWeight: 700,
-      color: '#2E7D32',
+      color: '#2C3E50',
       fontSize: '2rem',
     },
     h5: {
@@ -47,10 +51,15 @@ export const lifecareTheme = createTheme({
     },
     h6: {
       fontWeight: 500,
+      color: '#2C3E50',
     },
     body1: {
       fontSize: '1rem',
       lineHeight: 1.6,
+      color: '#2C3E50',
+    },
+    body2: {
+      color: '#546E7A',
     },
     button: {
       textTransform: 'none',
@@ -68,9 +77,25 @@ export const lifecareTheme = createTheme({
           fontSize: '0.9rem',
         },
         contained: {
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          backgroundColor: '#ABE7B2',
+          color: '#2C3E50',
           '&:hover': {
-            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+            backgroundColor: '#CBF3BB',
+            boxShadow: '0 4px 8px rgba(171, 231, 178, 0.3)',
+          },
+        },
+        outlined: {
+          borderColor: '#93BFC7',
+          color: '#93BFC7',
+          '&:hover': {
+            backgroundColor: '#ECF4E8',
+            borderColor: '#93BFC7',
+          },
+        },
+        text: {
+          color: '#93BFC7',
+          '&:hover': {
+            backgroundColor: '#ECF4E8',
           },
         },
       },
@@ -79,8 +104,9 @@ export const lifecareTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-          border: '1px solid #E0E0E0',
+          boxShadow: '0 2px 12px rgba(171, 231, 178, 0.1)',
+          border: '1px solid #ECF4E8',
+          backgroundColor: '#FFFFFF',
         },
       },
     },
@@ -89,7 +115,8 @@ export const lifecareTheme = createTheme({
         root: {
           backgroundColor: '#FFFFFF',
           color: '#2C3E50',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          boxShadow: '0 1px 3px rgba(171, 231, 178, 0.2)',
+          borderBottom: '1px solid #ECF4E8',
         },
       },
     },
@@ -98,6 +125,12 @@ export const lifecareTheme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
+            '&:hover fieldset': {
+              borderColor: '#ABE7B2',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#93BFC7',
+            },
           },
         },
       },
@@ -106,6 +139,21 @@ export const lifecareTheme = createTheme({
       styleOverrides: {
         rounded: {
           borderRadius: 12,
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+        standardSuccess: {
+          backgroundColor: '#ECF4E8',
+          color: '#2C3E50',
+        },
+        standardError: {
+          backgroundColor: '#ECF4E8',
+          color: '#2C3E50',
         },
       },
     },
