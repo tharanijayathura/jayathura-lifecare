@@ -3,6 +3,7 @@
   text-align: center;
   width: 100%;
   background-color: #ECF4E8;
+  min-height: 100vh;
 }
 
 /* Loading animation */
@@ -75,4 +76,166 @@
 
 .bg-secondary {
   background-color: #93BFC7;
+}
+
+/* ===== DELIVERY PERSON ANIMATIONS ===== */
+
+/* Slide in from right and move downwards - MOVED MORE LEFT */
+@keyframes floatIn {
+  0% {
+    transform: translateX(150px) translateY(0px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-100px) translateY(80px); /* More left and down */
+    opacity: 1;
+  }
+}
+
+/* Continuous floating animation - MOVED MORE LEFT */
+@keyframes float {
+  0%, 100% {
+    transform: translateX(-100px) translateY(80px); /* More left and down */
+  }
+  50% {
+    transform: translateX(-100px) translateY(70px); /* More left and down */
+  }
+}
+
+/* Floating package animation */
+@keyframes floatPackage {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-15px) translateX(5px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(10px);
+  }
+  75% {
+    transform: translateY(-5px) translateX(5px);
+  }
+}
+
+/* Ensure smooth image rendering */
+.delivery-person {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Performance optimizations for animations */
+* {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Form styles */
+.form-container {
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #ECF4E8;
+  padding: 2rem;
+}
+
+/* Error message styles */
+.error-message {
+  background-color: #ECF4E8;
+  color: #2C3E50;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 1rem;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ECF4E8;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBF3BB;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ABE7B2;
+}
+
+/* Additional utility classes for positioning */
+.position-relative {
+  position: relative;
+}
+
+.position-absolute {
+  position: absolute;
+}
+
+.z-index-1 {
+  z-index: 1;
+}
+
+.z-index-2 {
+  z-index: 2;
+}
+
+.z-index-3 {
+  z-index: 3;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Text colors for consistency */
+.text-primary {
+  color: #2C3E50;
+}
+
+.text-secondary {
+  color: #546E7A;
+}
+
+.text-accent {
+  color: #93BFC7;
+}
+
+.text-success {
+  color: #ABE7B2;
+}
+
+/* Background colors */
+.bg-white {
+  background-color: #FFFFFF;
+}
+
+.bg-light {
+  background-color: #ECF4E8;
+}
+
+/* Border colors */
+.border-light {
+  border-color: #ECF4E8;
+}
+
+.border-accent {
+  border-color: #93BFC7;
+}
+
+/* Shadow effects */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(171, 231, 178, 0.1);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 12px rgba(171, 231, 178, 0.2);
+}
+
+.shadow-strong {
+  box-shadow: 0 8px 24px rgba(171, 231, 178, 0.3);
 }
