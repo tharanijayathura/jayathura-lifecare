@@ -431,10 +431,10 @@ const Home = () => {
                 24/7 Customer Support
               </Typography>
               <Typography variant="body2" sx={{ color: '#546E7A' }}>
-                Email: support@jayathuralifecare.lk
+                Email: jayathuralifecare@gmail.com
               </Typography>
               <Typography variant="body2" sx={{ color: '#546E7A' }}>
-                Phone: +94 11 234 5678
+                Phone: +94 71 234 5678
               </Typography>
             </Grid>
           </Grid>
