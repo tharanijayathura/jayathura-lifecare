@@ -1,7 +1,8 @@
 // client/src/contexts/AuthContext.jsx
-import React, { useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
-import { AuthContext } from './AuthContextInstance';
+
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -18,19 +19,29 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await authAPI.login(email, password);
-    setUser(response.data);
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data));
-    return response.data;
+    try {
+      const response = await authAPI.login(email, password);
+      const userData = response.data;
+      setUser(userData);
+      localStorage.setItem('token', userData.token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      return userData;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Login failed');
+    }
   };
 
   const register = async (userData) => {
-    const response = await authAPI.register(userData);
-    setUser(response.data);
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data));
-    return response.data;
+    try {
+      const response = await authAPI.register(userData);
+      const newUser = response.data;
+      setUser(newUser);
+      localStorage.setItem('token', newUser.token);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      return newUser;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
   };
 
   const logout = () => {

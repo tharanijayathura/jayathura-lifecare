@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { lifecareTheme } from './themes';
+import { lifecareTheme } from './themes/index';
 import Home from './pages/Home';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -25,10 +25,10 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/patient/*" element={<PatientPortal />} />
-              <Route path="/pharmacist/*" element={<PharmacistPortal />} />
-              <Route path="/admin/*" element={<AdminPortal />} />
-              <Route path="/delivery/*" element={<DeliveryPortal />} />
+              <Route path="/patient" element={<PatientPortal />} />
+              <Route path="/pharmacist" element={<PharmacistPortal />} />
+              <Route path="/admin" element={<AdminPortal />} />
+              <Route path="/delivery" element={<DeliveryPortal />} />
             </Routes>
           </div>
         </Router>
