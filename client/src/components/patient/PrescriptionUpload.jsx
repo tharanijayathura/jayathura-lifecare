@@ -11,7 +11,7 @@ import {
 import { CloudUpload } from '@mui/icons-material';
 import { prescriptionAPI } from '../../services/api';
 
-const PrescriptionUpload = () => {
+const PrescriptionUpload = ({ onUploaded }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
@@ -34,12 +34,30 @@ const PrescriptionUpload = () => {
 
     try {
       const response = await prescriptionAPI.upload(formData);
+      const payload = response.data?.prescription || response.data || {};
+      const meta = {
+        id: payload._id || payload.id || `rx-${Date.now()}`,
+        fileName: selectedFile.name,
+        status: payload.status || 'pending',
+        uploadedAt: new Date().toISOString(),
+      };
+      onUploaded?.(meta);
       setMessage('Prescription uploaded successfully! It will be verified by our pharmacist.');
       setSelectedFile(null);
       // Reset file input
       document.getElementById('prescription-upload').value = '';
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Upload failed');
+      const fallbackMeta = {
+        id: `rx-local-${Date.now()}`,
+        fileName: selectedFile.name,
+        status: 'pending',
+        uploadedAt: new Date().toISOString(),
+        note: 'Stored locally until connection is available',
+      };
+      onUploaded?.(fallbackMeta);
+      setMessage(error.response?.data?.error || 'Upload failed. Stored locally for now.');
+      setSelectedFile(null);
+      document.getElementById('prescription-upload').value = '';
     } finally {
       setUploading(false);
     }

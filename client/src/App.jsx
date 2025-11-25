@@ -5,6 +5,7 @@ import { CssBaseline } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { lifecareTheme } from './themes/index';
+import { CatalogProvider } from './contexts/CatalogContext';
 import Home from './pages/Home';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -19,19 +20,21 @@ function App() {
     <ThemeProvider theme={lifecareTheme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <div className="App">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/patient" element={<PatientPortal />} />
-              <Route path="/pharmacist" element={<PharmacistPortal />} />
-              <Route path="/admin" element={<AdminPortal />} />
-              <Route path="/delivery" element={<DeliveryPortal />} />
-            </Routes>
-          </div>
-        </Router>
+        <CatalogProvider>
+          <Router>
+            <div className="App">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/patient" element={<PatientPortal />} />
+                <Route path="/pharmacist" element={<PharmacistPortal />} />
+                <Route path="/admin" element={<AdminPortal />} />
+                <Route path="/delivery" element={<DeliveryPortal />} />
+              </Routes>
+            </div>
+          </Router>
+        </CatalogProvider>
       </AuthProvider>
     </ThemeProvider>
   );
