@@ -51,4 +51,11 @@ export const prescriptionAPI = {
   verify: (id, status) => API.put(`/prescriptions/${id}/verify`, { status }),
 };
 
+export const adminAPI = {
+  getPendingUsers: () => API.get('/admin/pending-users'),
+  approveUser: (userId) => API.post(`/admin/approve/${userId}`),
+  rejectUser: (userId) => API.post(`/admin/reject/${userId}`),
+  getAllUsers: () => API.get('/admin/users'),
+};
+
 export default API;

@@ -42,14 +42,21 @@ const Register = () => {
     setSuccess('');
 
     try {
-      await register(formData);
-      setSuccess('Registration successful. Please sign in using your credentials.');
-      // redirect to login page
-      navigate('/login');
+      const result = await register(formData);
+      // Show appropriate message based on role
+      if (result.isApproved) {
+        setSuccess('Registration successful! You can now sign in.');
+      } else {
+        setSuccess('Registration successful! Your account is pending approval. You will be notified once approved by the administrator.');
+      }
+      // Wait a moment to show the message, then redirect to login
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

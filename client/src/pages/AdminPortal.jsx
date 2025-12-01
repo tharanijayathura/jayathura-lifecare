@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -19,6 +19,7 @@ import {
   FormControlLabel,
   Switch,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   AddCircle,
@@ -28,8 +29,13 @@ import {
   AddPhotoAlternate,
   Delete,
   Info,
+  CheckCircle,
+  Cancel,
+  Refresh,
+  Person,
 } from '@mui/icons-material';
 import { useCatalog } from '../contexts/CatalogContext';
+import { adminAPI } from '../services/api';
 
 const MEDICINE_CATEGORIES = ['prescription', 'otc', 'herbal', 'vitamins', 'non-medical'];
 
@@ -70,6 +76,8 @@ const AdminPortal = () => {
   const [groceryForm, setGroceryForm] = useState(initialGroceryForm);
   const [editingMedicineId, setEditingMedicineId] = useState(null);
   const [editingGroceryId, setEditingGroceryId] = useState(null);
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const handleFormChange = (setter) => (event) => {
     const { name, value } = event.target;
@@ -136,6 +144,51 @@ const AdminPortal = () => {
     };
     reader.readAsDataURL(file);
   };
+
+  // Fetch pending users
+  const fetchPendingUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const response = await adminAPI.getPendingUsers();
+      setPendingUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching pending users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Approve user
+  const handleApproveUser = async (userId) => {
+    try {
+      await adminAPI.approveUser(userId);
+      await fetchPendingUsers(); // Refresh list
+    } catch (error) {
+      console.error('Error approving user:', error);
+      alert('Failed to approve user. Please try again.');
+    }
+  };
+
+  // Reject user
+  const handleRejectUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      await adminAPI.rejectUser(userId);
+      await fetchPendingUsers(); // Refresh list
+    } catch (error) {
+      console.error('Error rejecting user:', error);
+      alert('Failed to reject user. Please try again.');
+    }
+  };
+
+  // Fetch pending users when User Approvals tab is selected
+  useEffect(() => {
+    if (tabIndex === 2) {
+      fetchPendingUsers();
+    }
+  }, [tabIndex]);
 
   const renderMedicineTab = () => (
     <Grid container spacing={3}>
@@ -490,6 +543,87 @@ const AdminPortal = () => {
     </Grid>
   );
 
+  const renderUserApprovalsTab = () => (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6">Pending User Approvals</Typography>
+        <Button
+          variant="outlined"
+          startIcon={<Refresh />}
+          onClick={fetchPendingUsers}
+          disabled={loadingUsers}
+        >
+          Refresh
+        </Button>
+      </Box>
+      {loadingUsers ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : pendingUsers.length === 0 ? (
+        <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
+          <CheckCircle color="success" sx={{ fontSize: 48 }} />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            No pending user approvals. All users are approved.
+          </Typography>
+        </Paper>
+      ) : (
+        <Grid container spacing={2}>
+          {pendingUsers.map((user) => (
+            <Grid item xs={12} md={6} key={user._id || user.id}>
+              <Card>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Person sx={{ mr: 1, color: 'primary.main' }} />
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="h6">{user.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {user.email}
+                      </Typography>
+                      {user.phone && (
+                        <Typography variant="body2" color="text.secondary">
+                          {user.phone}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Chip
+                      label={user.role}
+                      color={user.role === 'admin' ? 'error' : user.role === 'pharmacist' ? 'warning' : 'info'}
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                    Registered: {new Date(user.createdAt).toLocaleDateString()}
+                  </Typography>
+                  <Stack direction="row" spacing={2}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<CheckCircle />}
+                      onClick={() => handleApproveUser(user._id || user.id)}
+                      fullWidth
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      startIcon={<Cancel />}
+                      onClick={() => handleRejectUser(user._id || user.id)}
+                      fullWidth
+                    >
+                      Reject
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
+  );
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
@@ -514,9 +648,12 @@ const AdminPortal = () => {
         <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)}>
           <Tab label="Medicine Catalogue" />
           <Tab label="Grocery Catalogue" />
+          <Tab label="User Approvals" />
         </Tabs>
         <Box sx={{ mt: 3 }}>
-          {tabIndex === 0 ? renderMedicineTab() : renderGroceryTab()}
+          {tabIndex === 0 && renderMedicineTab()}
+          {tabIndex === 1 && renderGroceryTab()}
+          {tabIndex === 2 && renderUserApprovalsTab()}
         </Box>
       </Paper>
     </Container>

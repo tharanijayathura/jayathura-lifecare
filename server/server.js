@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Mock data routes for testing
 app.get('/api/medicines', (req, res) => {

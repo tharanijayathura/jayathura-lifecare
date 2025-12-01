@@ -36,12 +36,22 @@ const Login = () => {
     setError('');
 
     try {
-      await login(formData.email, formData.password);
-      navigate('/patient');
+      const userData = await login(formData.email, formData.password);
+      
+      // Redirect based on role
+      const redirectPaths = {
+        patient: '/patient',
+        pharmacist: '/pharmacist',
+        admin: '/admin',
+        delivery: '/delivery'
+      };
+      
+      const redirectPath = redirectPaths[userData.role] || '/patient';
+      navigate(redirectPath);
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
