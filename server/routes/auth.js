@@ -5,104 +5,77 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const router = express.Router();
 
-// Mock data for testing (remove when database is connected)
-const mockUsers = [
-  {
-    id: 1,
-    name: 'John Patient',
-    email: 'patient@test.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'patient',
-    phone: '0712345678'
-  },
-  {
-    id: 2,
-    name: 'Dr. Pharmacist',
-    email: 'pharmacist@test.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'pharmacist',
-    phone: '0712345679'
-  }
-];
+const ALLOWED_ROLES = ['patient', 'pharmacist', 'delivery', 'admin'];
 
-// Login route
-router.post('/login', async (req, res) => {
+// POST /api/auth/register
+router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { name, email, password, role = 'patient', phone } = req.body;
 
-    // Mock authentication (replace with database query)
-    const user = mockUsers.find(u => u.email === email);
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email and password are required' });
     }
 
-    // Mock password check (in real app, use bcrypt.compare)
-    const isValidPassword = password === 'password';
-    
-    if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    if (!ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
     }
 
-    // Create token
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '24h' }
-    );
+    // Check existing user
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: 'User already exists' });
 
-    res.json({
+    const hashed = await bcrypt.hash(password, 10);
+    // Patients are auto-approved by default in the model; others will be created not approved
+    const user = new User({ name, email, password: hashed, role, phone });
+    await user.save();
+
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
+
+    // Optional server log for visibility
+    console.log('New user registered:', { id: user._id.toString(), email: user.email, role: user.role });
+
+    res.status(201).json({
       token,
-      id: user.id,
+      id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      isApproved: user.isApproved,
+      isVerified: user.isVerified,
       phone: user.phone
     });
   } catch (error) {
+    console.error('Register error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Register route
-router.post('/register', async (req, res) => {
+// POST /api/auth/login
+router.post('/login', async (req, res) => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
 
-    // Check if user exists (mock)
-    const existingUser = mockUsers.find(u => u.email === email);
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
-    // Create new user (mock)
-    const newUser = {
-      id: mockUsers.length + 1,
-      name,
-      email,
-      password: await bcrypt.hash(password, 10),
-      role,
-      phone
-    };
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
-    mockUsers.push(newUser);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
 
-    // Create token
-    const token = jwt.sign(
-      { id: newUser.id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '24h' }
-    );
-
-    res.status(201).json({
+    res.json({
       token,
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      phone: newUser.phone
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isApproved: user.isApproved,
+      isVerified: user.isVerified,
+      phone: user.phone
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

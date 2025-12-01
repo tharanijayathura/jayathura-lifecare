@@ -35,9 +35,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData);
       const newUser = response.data;
-      setUser(newUser);
-      localStorage.setItem('token', newUser.token);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      // Do not auto-login after register. Redirect user to login page instead.
+      // Return the created user so the caller can display a message.
       return newUser;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Registration failed');

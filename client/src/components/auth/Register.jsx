@@ -25,6 +25,7 @@ const Register = () => {
     phone: ''
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -38,12 +39,13 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       await register(formData);
-      const redirectPath = formData.role === 'patient' ? '/patient' : 
-                          formData.role === 'pharmacist' ? '/pharmacist' : '/';
-      navigate(redirectPath);
+      setSuccess('Registration successful. Please sign in using your credentials.');
+      // redirect to login page
+      navigate('/login');
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     }
@@ -87,6 +89,11 @@ const Register = () => {
           {error && (
             <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
               {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+              {success}
             </Alert>
           )}
 
@@ -150,6 +157,8 @@ const Register = () => {
             >
               <MenuItem value="patient">Patient</MenuItem>
               <MenuItem value="pharmacist">Pharmacist</MenuItem>
+              <MenuItem value="delivery">Delivery Person</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
             </TextField>
             <Button
               type="submit"

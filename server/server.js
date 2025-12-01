@@ -66,10 +66,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Database connection (optional for now)
-const MONGODB_URI = process.env.MONGODB_URI;
-if (MONGODB_URI) {
-  mongoose.connect(MONGODB_URI)
+// Database connection
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (MONGO_URI) {
+  mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 10000 })
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.log('❌ MongoDB connection error:', err));
 } else {
