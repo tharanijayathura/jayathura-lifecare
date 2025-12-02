@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/chat', require('./routes/chat'));
 
 // Mock data routes for testing
 app.get('/api/medicines', (req, res) => {
@@ -70,9 +71,24 @@ app.get('/api/health', (req, res) => {
 // Database connection
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 10000 })
-    .then(() => console.log('✅ MongoDB connected successfully'))
-    .catch(err => console.log('❌ MongoDB connection error:', err));
+  mongoose.connect(MONGO_URI, { 
+    serverSelectionTimeoutMS: 15000,
+    socketTimeoutMS: 45000,
+  })
+    .then(() => {
+      console.log('✅ MongoDB connected successfully');
+      console.log('📊 Database:', mongoose.connection.db.databaseName);
+    })
+    .catch(err => {
+      console.log('❌ MongoDB connection error:', err.message);
+      console.log('💡 Error code:', err.code);
+      if (err.code === 'ENOTFOUND') {
+        console.log('⚠️  DNS resolution failed. Check:');
+        console.log('   1. Cluster URL is correct in MongoDB Atlas');
+        console.log('   2. Network Access IP is whitelisted');
+        console.log('   3. Connection string has no spaces/line breaks');
+      }
+    });
 } else {
   console.log('⚠️  MongoDB URI not set, using mock data');
 }

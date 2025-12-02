@@ -58,4 +58,12 @@ export const adminAPI = {
   getAllUsers: () => API.get('/admin/users'),
 };
 
+export const chatAPI = {
+  getConversation: (patientId) => API.get(`/chat/conversation${patientId ? `?patientId=${patientId}` : ''}`),
+  getConversations: () => API.get('/chat/conversations'),
+  sendMessage: (data) => API.post('/chat/message', data),
+  markAsRead: (chatId) => API.put(`/chat/read/${chatId}`),
+  closeChat: (chatId) => API.put(`/chat/close/${chatId}`),
+};
+
 export default API;

@@ -6,6 +6,8 @@ import MedicineCatalog from '../components/patient/MedicineCatalog';
 import ShoppingCart from '../components/patient/ShoppingCart';
 import OrderHistory from '../components/patient/OrderHistory';
 import GroceryCatalog from '../components/patient/GroceryCatalog';
+import ChatWidget from '../components/chat/ChatWidget';
+import { useNavigate } from 'react-router-dom';
 
 const PatientPortal = () => {
   const { user } = useAuth();
@@ -148,6 +150,7 @@ const PatientPortal = () => {
           {tabs[activeTab].component}
         </Box>
       </Paper>
+      <ChatWidget onOpenFullScreen={() => window.location.href = '/chat'} />
     </Container>
   );
 };

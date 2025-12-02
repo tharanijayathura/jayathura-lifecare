@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seedUsers.js",
     "check-admin": "node scripts/checkSuperAdmin.js",
+    "check-login": "node scripts/checkLogin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

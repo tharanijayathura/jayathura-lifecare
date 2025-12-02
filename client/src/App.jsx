@@ -13,6 +13,9 @@ import PatientPortal from './pages/PatientPortal';
 import PharmacistPortal from './pages/PharmacistPortal';
 import AdminPortal from './pages/AdminPortal';
 import DeliveryPortal from './pages/DeliveryPortal';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Chat from './pages/Chat';
 import './App.css';
 
 function App() {
@@ -31,6 +34,9 @@ function App() {
                 <Route path="/pharmacist" element={<PharmacistPortal />} />
                 <Route path="/admin" element={<AdminPortal />} />
                 <Route path="/delivery" element={<DeliveryPortal />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/chat" element={<Chat />} />
               </Routes>
             </div>
           </Router>

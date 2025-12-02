@@ -490,6 +490,7 @@ const Home = () => {
               <Button
                 variant="contained"
                 fullWidth
+                onClick={() => navigate('/chat')}
                 sx={{
                   backgroundColor: '#2C3E50',
                   color: '#FFFFFF',

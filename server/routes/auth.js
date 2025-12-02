@@ -75,30 +75,51 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' });
+    }
 
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Find user
     const user = await User.findOne({ email: normalizedEmail });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) {
+      console.log(`Login attempt failed: User not found - ${normalizedEmail}`);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
 
+    // Check password
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!ok) {
+      console.log(`Login attempt failed: Wrong password - ${normalizedEmail}`);
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
 
     // Check if account is active
     if (!user.isActive) {
-      return res.status(403).json({ message: 'Account is deactivated. Please contact administrator.' });
+      console.log(`Login attempt failed: Account deactivated - ${normalizedEmail}`);
+      return res.status(403).json({ 
+        message: 'Account is deactivated. Please contact administrator.' 
+      });
     }
 
     // Check if non-patient user is approved
     if (user.role !== 'patient' && !user.isApproved) {
+      console.log(`Login attempt failed: Account not approved - ${normalizedEmail} (${user.role})`);
       return res.status(403).json({
         message: 'Your account is pending approval. Please wait for administrator approval.'
       });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '24h' });
+    // Generate token
+    const token = jwt.sign(
+      { id: user._id, role: user.role }, 
+      process.env.JWT_SECRET || 'fallback_secret', 
+      { expiresIn: '24h' }
+    );
+
+    console.log(`✅ Login successful: ${user.email} (${user.role})`);
 
     res.json({
       token,
@@ -112,7 +133,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 });
 
