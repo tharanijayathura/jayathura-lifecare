@@ -56,37 +56,44 @@ const Login = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <PageHeader title="Login" subtitle="Welcome back to Jayathura LifeCare" showBack={true} backPath="/" />
-      <Box
-        sx={{
-          marginTop: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={0}
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+      <Container component="main" maxWidth="sm">
+        <PageHeader title="Login" subtitle="Welcome back to Jayathura LifeCare" showBack={true} backPath="/" />
+        <Box
           sx={{
-            padding: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: '#FFFFFF',
-            borderRadius: 3,
-            border: '1px solid #ECF4E8',
-            width: '100%',
           }}
         >
+          <Paper
+            elevation={0}
+            sx={{
+              padding: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 3,
+              border: '1px solid #ECF4E8',
+              width: '100%',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
+              <Typography variant="h5" sx={{ color: '#2C3E50', fontWeight: 700 }}>
+                Sign In
+              </Typography>
+            </Box>
 
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
-              {error}
-            </Alert>
-          )}
+            {error && (
+              <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+                {error}
+              </Alert>
+            )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
             <TextField
               margin="normal"
               required
@@ -99,8 +106,12 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               sx={{
+                mb: 2,
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
                     borderColor: '#ABE7B2',
                   },
                 },
@@ -118,8 +129,12 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
               sx={{
+                mb: 2,
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
                     borderColor: '#ABE7B2',
                   },
                 },
@@ -147,23 +162,40 @@ const Login = () => {
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </Button>
-            <Button
-              fullWidth
-              variant="text"
-              onClick={() => navigate('/register')}
-              sx={{
-                color: '#93BFC7',
-                '&:hover': {
-                  backgroundColor: '#ECF4E8',
-                },
-              }}
-            >
-              Don't have an account? Sign Up
-            </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+              <Button
+                fullWidth
+                variant="text"
+                onClick={() => navigate('/forgot-password')}
+                sx={{
+                  color: '#93BFC7',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    backgroundColor: '#ECF4E8',
+                  },
+                }}
+              >
+                Forgot Password?
+              </Button>
+              <Button
+                fullWidth
+                variant="text"
+                onClick={() => navigate('/register')}
+                sx={{
+                  color: '#93BFC7',
+                  '&:hover': {
+                    backgroundColor: '#ECF4E8',
+                  },
+                }}
+              >
+                Don't have an account? Sign Up
+              </Button>
+            </Box>
+            </Box>
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

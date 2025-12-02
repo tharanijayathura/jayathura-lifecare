@@ -71,24 +71,188 @@ app.get('/api/health', (req, res) => {
 // Database connection
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI, { 
-    serverSelectionTimeoutMS: 15000,
-    socketTimeoutMS: 45000,
-  })
-    .then(() => {
+  // Clean the URI - remove port number if it's a mongodb+srv URI
+  let cleanedUri = MONGO_URI.trim();
+  const originalUri = cleanedUri;
+  
+  // Check for placeholder
+  if (cleanedUri.includes('<CLUSTER-URL>')) {
+    console.log('❌ ERROR: MONGO_URI contains <CLUSTER-URL> placeholder!');
+    console.log('   Please replace <CLUSTER-URL> with: cluster0.odyxp5v.mongodb.net');
+    console.log('   And add @ symbol after password');
+    console.log('   Correct format: mongodb+srv://user:pass@cluster0.odyxp5v.mongodb.net/database');
+    console.log('   Your current URI:', cleanedUri.substring(0, 100) + '...');
+  }
+  
+  // Replace placeholder if it exists
+  if (cleanedUri.includes('<CLUSTER-URL>')) {
+    console.log('🔧 Auto-fixing <CLUSTER-URL> placeholder...');
+    // Replace placeholder and add @ if missing
+    if (cleanedUri.includes('mongodb+srv://')) {
+      // Pattern: mongodb+srv://user:pass<CLUSTER-URL>/db
+      // Need to add @ before cluster URL
+      cleanedUri = cleanedUri.replace('mongodb+srv://', 'mongodb+srv://');
+      cleanedUri = cleanedUri.replace('<CLUSTER-URL>', '@cluster0.odyxp5v.mongodb.net');
+      // If @ is already there, fix it
+      cleanedUri = cleanedUri.replace('@@', '@');
+      console.log('✅ Auto-fixed placeholder');
+      console.log('⚠️  Please update your .env file manually for permanent fix');
+    }
+  }
+  
+  // Debug: Show the URI (masked for security)
+  const maskedUri = cleanedUri.replace(/:([^:@]+)@/, ':***@');
+  console.log('🔍 Checking MongoDB URI:', maskedUri.substring(0, 80) + '...');
+  
+  // If it's a mongodb+srv URI, remove any port numbers
+  if (cleanedUri.startsWith('mongodb+srv://')) {
+    // Use a more comprehensive approach to remove port numbers
+    // Pattern: mongodb+srv://[user:pass@]host[:port]/database[?options]
+    
+    try {
+      // Parse the URI manually to handle all cases
+      const protocol = 'mongodb+srv://';
+      const afterProtocol = cleanedUri.substring(protocol.length);
+      
+      // Find @ to separate credentials from host
+      const atIndex = afterProtocol.indexOf('@');
+      let credentials = '';
+      let hostAndPath = afterProtocol;
+      
+      if (atIndex > 0) {
+        credentials = afterProtocol.substring(0, atIndex + 1); // Include @
+        hostAndPath = afterProtocol.substring(atIndex + 1);
+      }
+      
+      // Find where host ends (/, ?, or end of string)
+      let hostEndIndex = hostAndPath.length;
+      const slashIndex = hostAndPath.indexOf('/');
+      const queryIndex = hostAndPath.indexOf('?');
+      
+      if (slashIndex >= 0) hostEndIndex = Math.min(hostEndIndex, slashIndex);
+      if (queryIndex >= 0) hostEndIndex = Math.min(hostEndIndex, queryIndex);
+      
+      const hostPart = hostAndPath.substring(0, hostEndIndex);
+      const pathPart = hostAndPath.substring(hostEndIndex);
+      
+      // Remove port from host (check if last segment after : is a number)
+      let cleanHost = hostPart;
+      const lastColonIndex = hostPart.lastIndexOf(':');
+      if (lastColonIndex > 0) {
+        const afterColon = hostPart.substring(lastColonIndex + 1);
+        // If what comes after the last colon is all digits, it's a port
+        if (/^\d+$/.test(afterColon)) {
+          cleanHost = hostPart.substring(0, lastColonIndex);
+        }
+      }
+      
+      // Reconstruct the URI
+      cleanedUri = protocol + credentials + cleanHost + pathPart;
+      
+      // Remove any port-related query parameters
+      cleanedUri = cleanedUri.replace(/[?&]port=\d+/gi, '');
+      cleanedUri = cleanedUri.replace(/\?&/, '?');
+      cleanedUri = cleanedUri.replace(/\?\?/, '?');
+      cleanedUri = cleanedUri.replace(/\?$/, ''); // Remove trailing ?
+      
+    } catch (parseError) {
+      console.log('⚠️  Error parsing URI, using regex fallback');
+      // Fallback: simple regex replacement
+      cleanedUri = cleanedUri.replace(/:\d+(\/|\?|$)/g, '$1');
+    }
+    
+    if (originalUri !== cleanedUri) {
+      console.log('🔧 Cleaned MongoDB URI (removed port number)');
+      console.log('   Original (first 70):', originalUri.substring(0, 70) + '...');
+      console.log('   Cleaned (first 70): ', cleanedUri.substring(0, 70) + '...');
+    } else {
+      console.log('✅ MongoDB URI appears clean (no port number detected)');
+    }
+    
+    // Final check: verify no port numbers remain
+    const portPattern = /:\d+(\/|\?|$)/;
+    if (portPattern.test(cleanedUri)) {
+      console.log('⚠️  WARNING: Port number still detected in cleaned URI!');
+      console.log('   Attempting additional cleanup...');
+      cleanedUri = cleanedUri.replace(/:\d+(\/|\?|$)/g, '$1');
+      console.log('   Final cleaned URI (first 70):', cleanedUri.substring(0, 70) + '...');
+    }
+  }
+  
+  // Final validation and aggressive cleaning before connecting
+  if (cleanedUri.startsWith('mongodb+srv://')) {
+    // One more aggressive pass - remove ANY :number pattern in the host part
+    const parts = cleanedUri.split('@');
+    if (parts.length === 2) {
+      const [credentials, hostAndPath] = parts;
+      const hostPart = hostAndPath.split('/')[0].split('?')[0];
+      const pathPart = hostAndPath.substring(hostPart.length);
+      
+      // Remove any :number from the end of host
+      const cleanHost = hostPart.replace(/:\d+$/, '');
+      
+      if (hostPart !== cleanHost) {
+        console.log('🔧 Additional cleanup: Removed port from host');
+        cleanedUri = credentials + '@' + cleanHost + pathPart;
+      }
+    }
+    
+    // Final check - if still has port, use regex as last resort
+    if (/:\d+(\/|\?|$)/.test(cleanedUri)) {
+      console.log('⚠️  Final cleanup pass using regex');
+      cleanedUri = cleanedUri.replace(/:\d+(\/|\?|$)/g, '$1');
+    }
+    
+    // Verify the cleaned URI one more time
+    const hostAfterAt = cleanedUri.split('@')[1];
+    if (hostAfterAt) {
+      const hostOnly = hostAfterAt.split('/')[0].split('?')[0];
+      if (/:\d+$/.test(hostOnly)) {
+        console.log('⚠️  Still detecting port in host, forcing removal...');
+        const cleanHostOnly = hostOnly.replace(/:\d+$/, '');
+        cleanedUri = cleanedUri.replace(hostOnly, cleanHostOnly);
+      }
+    }
+    
+    console.log('📋 Final URI to use (masked):', cleanedUri.replace(/:([^:@]+)@/, ':***@').substring(0, 80) + '...');
+  }
+  
+  // Connect with error handling
+  (async () => {
+    try {
+      await mongoose.connect(cleanedUri, {
+        serverSelectionTimeoutMS: 15000,
+        socketTimeoutMS: 45000,
+      });
       console.log('✅ MongoDB connected successfully');
-      console.log('📊 Database:', mongoose.connection.db.databaseName);
-    })
-    .catch(err => {
+      const dbName = mongoose.connection.db.databaseName;
+      console.log('📊 Database:', dbName);
+      
+      // Check if database name matches expected
+      if (dbName !== 'jayathurapharmacy-project') {
+        console.log('⚠️  WARNING: Connected to database "' + dbName + '"');
+        console.log('   Expected: "jayathurapharmacy-project"');
+        console.log('   Check your MONGO_URI in .env file');
+        console.log('   Current URI database:', cleanedUri.split('/').pop()?.split('?')[0] || 'unknown');
+      }
+    } catch (err) {
       console.log('❌ MongoDB connection error:', err.message);
       console.log('💡 Error code:', err.code);
-      if (err.code === 'ENOTFOUND') {
+      if (err.message.includes('port number')) {
+        console.log('⚠️  mongodb+srv URIs cannot have port numbers.');
+        console.log('   The URI cleaning may have failed.');
+        console.log('   Original URI (first 70):', originalUri.substring(0, 70) + '...');
+        console.log('   Cleaned URI (first 70):', cleanedUri.substring(0, 70) + '...');
+        console.log('   Please manually check your .env file and remove any :port');
+        console.log('   Correct format: mongodb+srv://user:pass@cluster.mongodb.net/database');
+      } else if (err.code === 'ENOTFOUND') {
         console.log('⚠️  DNS resolution failed. Check:');
         console.log('   1. Cluster URL is correct in MongoDB Atlas');
         console.log('   2. Network Access IP is whitelisted');
         console.log('   3. Connection string has no spaces/line breaks');
       }
-    });
+    }
+  })();
 } else {
   console.log('⚠️  MongoDB URI not set, using mock data');
 }

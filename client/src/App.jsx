@@ -9,6 +9,8 @@ import { CatalogProvider } from './contexts/CatalogContext';
 import Home from './pages/Home';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
 import PatientPortal from './pages/PatientPortal';
 import PharmacistPortal from './pages/PharmacistPortal';
 import AdminPortal from './pages/AdminPortal';
@@ -31,6 +33,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/patient" element={<PatientPortal />} />
                 <Route path="/pharmacist" element={<PharmacistPortal />} />
                 <Route path="/admin" element={<AdminPortal />} />

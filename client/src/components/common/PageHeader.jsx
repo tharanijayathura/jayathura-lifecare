@@ -23,10 +23,11 @@ const PageHeader = ({ title, subtitle, showBack = true, showHome = true, backPat
         gap: 2,
         mb: 3,
         flexWrap: 'wrap',
+        position: 'relative',
       }}
     >
       {(showBack || showHome) && (
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, position: 'absolute', left: 0 }}>
           {showBack && (
             <IconButton
               onClick={handleBack}
@@ -57,14 +58,21 @@ const PageHeader = ({ title, subtitle, showBack = true, showHome = true, backPat
           )}
         </Box>
       )}
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ 
+        flexGrow: 1, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center',
+        textAlign: 'center',
+        width: '100%',
+      }}>
         {title && (
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', width: '100%' }}>
             {title}
           </Typography>
         )}
         {subtitle && (
-          <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5 }}>
+          <Typography variant="body1" sx={{ color: 'text.secondary', mt: 0.5, width: '100%' }}>
             {subtitle}
           </Typography>
         )}

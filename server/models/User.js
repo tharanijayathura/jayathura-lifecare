@@ -27,7 +27,9 @@ const userSchema = new mongoose.Schema({
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt: Date,
   chronicConditions: [String],
-  flaggedAsChronic: { type: Boolean, default: false }
+  flaggedAsChronic: { type: Boolean, default: false },
+  passwordResetCode: String,
+  passwordResetExpires: Date
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

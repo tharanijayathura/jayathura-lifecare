@@ -61,46 +61,53 @@ const Register = () => {
   };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <PageHeader title="Register" subtitle="Create your account to get started" showBack={true} backPath="/" />
-      <Box
-        sx={{
-          marginTop: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={0}
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+      <Container component="main" maxWidth="sm">
+        <PageHeader title="Register" subtitle="Create your account to get started" showBack={true} backPath="/" />
+        <Box
           sx={{
-            padding: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            backgroundColor: '#FFFFFF',
-            borderRadius: 3,
-            border: '1px solid #ECF4E8',
-            width: '100%',
           }}
         >
-          
-          <Typography variant="body1" sx={{ color: '#546E7A', mb: 3 }}>
-            Join Jayathura LifeCare today
-          </Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              padding: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              backgroundColor: '#FFFFFF',
+              borderRadius: 3,
+              border: '1px solid #ECF4E8',
+              width: '100%',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
+              <Typography variant="h5" sx={{ color: '#2C3E50', fontWeight: 700 }}>
+                Create Account
+              </Typography>
+            </Box>
+            
+            <Typography variant="body2" sx={{ color: '#546E7A', mb: 3, textAlign: 'center' }}>
+              Join Jayathura LifeCare today and start your health journey
+            </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
-              {error}
-            </Alert>
-          )}
-          {success && (
-            <Alert severity="success" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
-              {success}
-            </Alert>
-          )}
+            {error && (
+              <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert severity="success" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+                {success}
+              </Alert>
+            )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
             <TextField
               margin="normal"
               required
@@ -112,6 +119,17 @@ const Register = () => {
               autoFocus
               value={formData.name}
               onChange={handleChange}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -123,6 +141,17 @@ const Register = () => {
               autoComplete="email"
               value={formData.email}
               onChange={handleChange}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -135,6 +164,17 @@ const Register = () => {
               autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -147,6 +187,17 @@ const Register = () => {
               autoComplete="tel"
               value={formData.phone}
               onChange={handleChange}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -157,6 +208,17 @@ const Register = () => {
               label="Role"
               value={formData.role}
               onChange={handleChange}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
             >
               <MenuItem value="patient">Patient</MenuItem>
               <MenuItem value="pharmacist">Pharmacist</MenuItem>
@@ -198,10 +260,11 @@ const Register = () => {
             >
               Already have an account? Sign In
             </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+            </Box>
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
