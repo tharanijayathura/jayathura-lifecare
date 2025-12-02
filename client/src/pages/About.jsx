@@ -33,6 +33,7 @@ import {
   Flag,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/common/PageHeader';
 
 const About = () => {
   const theme = useTheme();
@@ -83,20 +84,11 @@ const About = () => {
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: 4, pb: 8 }}>
       <Container maxWidth="lg">
+        <PageHeader title="About Jayathura LifeCare" showBack={false} />
+        
         {/* Hero Section */}
-        <Box sx={{ textAlign: 'center', mb: 6, mt: 4 }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
           <LocalPharmacy sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 700,
-              color: 'text.primary',
-              mb: 2,
-              fontSize: { xs: '2rem', md: '3rem' },
-            }}
-          >
-            About Jayathura LifeCare
-          </Typography>
           <Typography
             variant="h6"
             sx={{

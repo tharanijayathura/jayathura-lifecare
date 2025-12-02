@@ -12,6 +12,7 @@ import {
 import { LocalPharmacy } from '@mui/icons-material';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../common/PageHeader';
 
 const Login = () => {
   const { login } = useAuth();
@@ -56,9 +57,10 @@ const Login = () => {
 
   return (
     <Container component="main" maxWidth="sm">
+      <PageHeader title="Login" subtitle="Welcome back to Jayathura LifeCare" showBack={true} backPath="/" />
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: 2,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -77,16 +79,6 @@ const Login = () => {
             width: '100%',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
-            <Typography variant="h4" sx={{ color: '#2C3E50', fontWeight: 700 }}>
-              Login
-            </Typography>
-          </Box>
-          
-          <Typography variant="body1" sx={{ color: '#546E7A', mb: 3 }}>
-            Welcome back to Jayathura LifeCare
-          </Typography>
 
           {error && (
             <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>

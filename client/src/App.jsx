@@ -16,6 +16,7 @@ import DeliveryPortal from './pages/DeliveryPortal';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Chat from './pages/Chat';
+import Support from './pages/Support';
 import './App.css';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/delivery" element={<DeliveryPortal />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/support" element={<Support />} />
                 <Route path="/chat" element={<Chat />} />
               </Routes>
             </div>

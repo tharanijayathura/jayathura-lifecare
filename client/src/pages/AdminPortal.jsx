@@ -36,6 +36,7 @@ import {
 } from '@mui/icons-material';
 import { useCatalog } from '../contexts/CatalogContext';
 import { adminAPI } from '../services/api';
+import PageHeader from '../components/common/PageHeader';
 
 const MEDICINE_CATEGORIES = ['prescription', 'otc', 'herbal', 'vitamins', 'non-medical'];
 
@@ -626,23 +627,20 @@ const AdminPortal = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Admin Catalogue Manager
-        </Typography>
-        <Typography color="text.secondary">
-          Add or update OTC medicines and grocery items with dose-based pricing.
-        </Typography>
-        <Alert
-          severity="info"
-          icon={<Info fontSize="inherit" />}
-          sx={{ mt: 2, bgcolor: 'primary.50', color: 'primary.dark' }}
-        >
-          Add or update items in the pharmacy catalogue by selecting the correct category (Prescription, OTC, Herbal,
-          Vitamins, or Non-Medical). Enter the medicine name, brand, description, price, stock quantity, and whether it
-          requires a prescription. Upload an image and save the item to make it visible for patients.
-        </Alert>
-      </Box>
+      <PageHeader 
+        title="Admin Catalogue Manager"
+        subtitle="Add or update OTC medicines and grocery items with dose-based pricing"
+        showBack={false}
+      />
+      <Alert
+        severity="info"
+        icon={<Info fontSize="inherit" />}
+        sx={{ mt: 2, bgcolor: 'primary.50', color: 'primary.dark' }}
+      >
+        Add or update items in the pharmacy catalogue by selecting the correct category (Prescription, OTC, Herbal,
+        Vitamins, or Non-Medical). Enter the medicine name, brand, description, price, stock quantity, and whether it
+        requires a prescription. Upload an image and save the item to make it visible for patients.
+      </Alert>
 
       <Paper sx={{ p: 3 }}>
         <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)}>

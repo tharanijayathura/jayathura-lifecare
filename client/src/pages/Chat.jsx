@@ -22,11 +22,11 @@ import {
   Send,
   Chat as ChatIcon,
   SmartToy,
-  ArrowBack,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/useAuth';
 import { chatAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/common/PageHeader';
 
 const Chat = () => {
   const { user } = useAuth();
@@ -131,14 +131,7 @@ const Chat = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, mt: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-        <IconButton onClick={() => navigate(-1)}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
-          Chat Support
-        </Typography>
-      </Box>
+      <PageHeader title="Chat Support" subtitle={isPharmacist ? "Manage patient conversations" : "Get help from our pharmacists"} />
 
       <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)', minHeight: 600 }}>
         {/* Conversations List (Pharmacist only) */}

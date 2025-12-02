@@ -8,6 +8,7 @@ import OrderHistory from '../components/patient/OrderHistory';
 import GroceryCatalog from '../components/patient/GroceryCatalog';
 import ChatWidget from '../components/chat/ChatWidget';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../components/common/PageHeader';
 
 const PatientPortal = () => {
   const { user } = useAuth();
@@ -126,14 +127,11 @@ const PatientPortal = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome back, {user?.name}!
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage your prescriptions, orders, and health needs
-        </Typography>
-      </Box>
+      <PageHeader 
+        title={`Welcome back, ${user?.name || 'Patient'}!`}
+        subtitle="Manage your prescriptions, orders, and health needs"
+        showBack={false}
+      />
 
       <Paper sx={{ width: '100%' }}>
         <Tabs
