@@ -1,5 +1,4 @@
-// client/src/pages/Chat.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Container,
   Box,
@@ -17,6 +16,8 @@ import {
   ListItemAvatar,
   Badge,
   Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Send,
@@ -31,6 +32,8 @@ import PageHeader from '../components/common/PageHeader';
 const Chat = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -40,19 +43,27 @@ const Chat = () => {
   const pollIntervalRef = useRef(null);
 
   useEffect(() => {
-    if (user) {
-      loadData();
-      pollIntervalRef.current = setInterval(() => {
-        loadData();
-      }, 3000);
+    // Check if user is authenticated
+    if (!user) {
+      // Redirect to login immediately
+      navigate('/login', { replace: true });
+      return;
     }
+
+    // Load chat data
+    loadData();
+    
+    // Set up polling for new messages
+    pollIntervalRef.current = setInterval(() => {
+      loadData();
+    }, 3000);
 
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [user]);
+  }, [user, navigate, loadData]);
 
   useEffect(() => {
     scrollToBottom();
@@ -62,29 +73,37 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    
     try {
-      if (user?.role === 'patient') {
+      if (user.role === 'patient') {
         const response = await chatAPI.getConversation();
-        if (response.data) {
+        if (response?.data) {
           setSelectedChat(response.data);
           setMessages(response.data.messages || []);
         }
-      } else if (user?.role === 'pharmacist' || user?.role === 'admin') {
+      } else if (user.role === 'pharmacist' || user.role === 'admin') {
         const response = await chatAPI.getConversations();
-        setConversations(response.data || []);
-        if (selectedChat) {
-          const updated = response.data.find((c) => c._id === selectedChat._id);
-          if (updated) {
-            setSelectedChat(updated);
-            setMessages(updated.messages || []);
-          }
+        if (response?.data) {
+          setConversations(response.data || []);
+          setSelectedChat((prevSelected) => {
+            if (prevSelected) {
+              const updated = response.data.find((c) => c._id === prevSelected._id);
+              if (updated) {
+                setMessages(updated.messages || []);
+                return updated;
+              }
+            }
+            return prevSelected;
+          });
         }
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading chat data:', error);
+      // Don't throw error, just log it so the component can still render
     }
-  };
+  }, [user]);
 
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
@@ -122,24 +141,35 @@ const Chat = () => {
     }
   };
 
+  // Show loading state while checking authentication
   if (!user) {
-    navigate('/login');
-    return null;
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, mt: 4, textAlign: 'center' }}>
+        <CircularProgress sx={{ mb: 2 }} />
+        <Typography>Redirecting to login...</Typography>
+      </Container>
+    );
   }
 
-  const isPharmacist = user?.role === 'pharmacist' || user?.role === 'admin';
+  const isPharmacist = user.role === 'pharmacist' || user.role === 'admin';
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, mt: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, mt: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
       <PageHeader title="Chat Support" subtitle={isPharmacist ? "Manage patient conversations" : "Get help from our pharmacists"} />
 
-      <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)', minHeight: 600 }}>
+      <Grid container spacing={{ xs: 1, sm: 2, md: 3 }} sx={{ height: { xs: 'calc(100vh - 150px)', md: 'calc(100vh - 200px)' }, minHeight: { xs: 500, md: 600 } }}>
         {/* Conversations List (Pharmacist only) */}
         {isPharmacist && (
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={4} sx={{ display: { xs: selectedChat ? 'none' : 'block', md: 'block' } }}>
             <Paper sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              <Box sx={{ p: { xs: 1.5, md: 2 }, borderBottom: 1, borderColor: 'divider' }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', md: '1.25rem' },
+                  }}
+                >
                   Conversations
                 </Typography>
               </Box>
@@ -177,8 +207,9 @@ const Chat = () => {
                       <ListItemText
                         primary={chat.patientId?.name || 'Patient'}
                         secondary={
-                          chat.messages?.[chat.messages.length - 1]?.message?.substring(0, 30) + '...' ||
-                          'No messages'
+                          chat.messages && chat.messages.length > 0
+                            ? (chat.messages[chat.messages.length - 1]?.message?.substring(0, 30) || '') + '...'
+                            : 'No messages'
                         }
                       />
                     </ListItem>
@@ -195,27 +226,45 @@ const Chat = () => {
             {/* Header */}
             <Box
               sx={{
-                p: 2,
+                p: { xs: 1.5, md: 2 },
                 borderBottom: 1,
                 borderColor: 'divider',
                 bgcolor: 'primary.light',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 2,
+                gap: { xs: 1.5, md: 2 },
               }}
             >
-              <Avatar sx={{ bgcolor: 'primary.main' }}>
+              {isPharmacist && (
+                <IconButton
+                  sx={{ display: { xs: 'block', md: 'none' }, mr: 1 }}
+                  onClick={() => setSelectedChat(null)}
+                >
+                  ←
+                </IconButton>
+              )}
+              <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 36, md: 40 }, height: { xs: 36, md: 40 } }}>
                 {isPharmacist
                   ? selectedChat?.patientId?.name?.charAt(0)?.toUpperCase() || 'P'
                   : user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.95rem', md: '1.25rem' },
+                  }}
+                >
                   {isPharmacist
                     ? selectedChat?.patientId?.name || 'Select a conversation'
                     : 'Chat Support'}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', md: '0.75rem' } }}
+                >
                   {isPharmacist
                     ? selectedChat?.patientId?.email || ''
                     : 'Our team is here to help you'}
@@ -228,7 +277,7 @@ const Chat = () => {
               sx={{
                 flexGrow: 1,
                 overflowY: 'auto',
-                p: 2,
+                p: { xs: 1, sm: 1.5, md: 2 },
                 bgcolor: 'background.default',
               }}
             >
@@ -258,10 +307,10 @@ const Chat = () => {
                   >
                     <Box
                       sx={{
-                        maxWidth: '70%',
+                        maxWidth: { xs: '85%', sm: '75%', md: '70%' },
                         display: 'flex',
                         flexDirection: msg.senderRole === 'patient' ? 'row-reverse' : 'row',
-                        gap: 1,
+                        gap: { xs: 0.75, md: 1 },
                         alignItems: 'flex-start',
                       }}
                     >
@@ -272,20 +321,24 @@ const Chat = () => {
                             : msg.senderRole === 'patient'
                             ? 'primary.main'
                             : 'secondary.main',
+                          width: { xs: 32, md: 40 },
+                          height: { xs: 32, md: 40 },
                         }}
                       >
                         {msg.isBot ? (
-                          <SmartToy />
+                          <SmartToy sx={{ fontSize: { xs: 18, md: 24 } }} />
                         ) : (
-                          msg.senderName.charAt(0).toUpperCase()
+                          (msg.senderName || 'U').charAt(0).toUpperCase()
                         )}
                       </Avatar>
-                      <Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Chip
-                          label={msg.isBot ? 'Jayathura Bot' : msg.senderName}
+                          label={msg.isBot ? 'Jayathura Bot' : (msg.senderName || 'User')}
                           size="small"
                           sx={{
                             mb: 0.5,
+                            fontSize: { xs: '0.7rem', md: '0.75rem' },
+                            height: { xs: 20, md: 24 },
                             bgcolor: msg.isBot
                               ? 'info.light'
                               : msg.senderRole === 'patient'
@@ -296,7 +349,7 @@ const Chat = () => {
                         <Paper
                           elevation={2}
                           sx={{
-                            p: 2,
+                            p: { xs: 1.5, md: 2 },
                             bgcolor:
                               msg.senderRole === 'patient'
                                 ? 'primary.light'
@@ -306,14 +359,25 @@ const Chat = () => {
                             borderRadius: 2,
                           }}
                         >
-                          <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              wordBreak: 'break-word',
+                              fontSize: { xs: '0.85rem', md: '1rem' },
+                            }}
+                          >
                             {msg.message}
                           </Typography>
                           <Typography
                             variant="caption"
-                            sx={{ display: 'block', mt: 1, color: 'text.secondary' }}
+                            sx={{ 
+                              display: 'block', 
+                              mt: 1, 
+                              color: 'text.secondary',
+                              fontSize: { xs: '0.65rem', md: '0.75rem' },
+                            }}
                           >
-                            {new Date(msg.timestamp).toLocaleString()}
+                            {msg.timestamp ? new Date(msg.timestamp).toLocaleString() : 'Just now'}
                           </Typography>
                         </Paper>
                       </Box>
@@ -327,12 +391,12 @@ const Chat = () => {
             {/* Input */}
             <Box
               sx={{
-                p: 2,
+                p: { xs: 1.5, md: 2 },
                 borderTop: 1,
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
                 display: 'flex',
-                gap: 1,
+                gap: { xs: 0.75, md: 1 },
               }}
             >
               <TextField
@@ -343,15 +407,22 @@ const Chat = () => {
                 onKeyPress={handleKeyPress}
                 disabled={loading || (!selectedChat && isPharmacist)}
                 multiline
-                maxRows={4}
+                maxRows={isMobile ? 3 : 4}
+                size={isMobile ? 'small' : 'medium'}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                  },
+                }}
               />
               <IconButton
                 color="primary"
                 onClick={handleSendMessage}
                 disabled={loading || !inputMessage.trim() || (!selectedChat && isPharmacist)}
                 sx={{ alignSelf: 'flex-end' }}
+                size={isMobile ? 'small' : 'medium'}
               >
-                {loading ? <CircularProgress size={24} /> : <Send />}
+                {loading ? <CircularProgress size={isMobile ? 20 : 24} /> : <Send sx={{ fontSize: { xs: 20, md: 24 } }} />}
               </IconButton>
             </Box>
           </Paper>

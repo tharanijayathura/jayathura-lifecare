@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Grid, Tabs, Tab, Paper, Alert } from '@mui/material';
+import { Container, Typography, Box, Grid, Tabs, Tab, Paper, Alert, useTheme, useMediaQuery } from '@mui/material';
 import { useAuth } from '../contexts/useAuth';
 import PrescriptionUpload from '../components/patient/PrescriptionUpload';
 import MedicineCatalog from '../components/patient/MedicineCatalog';
@@ -12,6 +12,8 @@ import PageHeader from '../components/common/PageHeader';
 
 const PatientPortal = () => {
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [activeTab, setActiveTab] = useState(0);
   const [cartItems, setCartItems] = useState([]);
   const [shopTab, setShopTab] = useState(0);
@@ -80,10 +82,10 @@ const PatientPortal = () => {
     {
       label: 'Shop Pharmacy',
       component: (
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
           <Grid item xs={12} md={8}>
-            <Paper variant="outlined" sx={{ p: 2 }}>
-              <Alert severity="info" sx={{ mb: 2 }}>
+            <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Alert severity="info" sx={{ mb: 2, fontSize: { xs: '0.85rem', md: '0.875rem' } }}>
                 Browse all non-prescription items such as Panadol, Siddhalepa, ENO, Vicks, vitamins, baby products,
                 medical supplies like cotton wool, masks, and bandages. Use filters to sort by category, price, or brand,
                 and add items directly to your cart without a prescription.
@@ -91,7 +93,16 @@ const PatientPortal = () => {
               <Tabs
                 value={shopTab}
                 onChange={(e, newValue) => setShopTab(newValue)}
-                sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+                sx={{ 
+                  borderBottom: 1, 
+                  borderColor: 'divider', 
+                  mb: 2,
+                  '& .MuiTab-root': {
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    minWidth: { xs: 80, sm: 120 },
+                  },
+                }}
+                variant={isMobile ? 'fullWidth' : 'standard'}
               >
                 <Tab label="OTC Medicines" />
                 <Tab label="Groceries & Wellness" />
@@ -113,7 +124,7 @@ const PatientPortal = () => {
               latestPrescription={latestPrescription}
             />
             {orderStatus && (
-              <Alert severity="success" sx={{ mt: 2 }}>
+              <Alert severity="success" sx={{ mt: 2, fontSize: { xs: '0.85rem', md: '0.875rem' } }}>
                 {orderStatus}
               </Alert>
             )}
@@ -126,7 +137,7 @@ const PatientPortal = () => {
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
       <PageHeader 
         title={`Welcome back, ${user?.name || 'Patient'}!`}
         subtitle="Manage your prescriptions, orders, and health needs"
@@ -137,14 +148,24 @@ const PatientPortal = () => {
         <Tabs
           value={activeTab}
           onChange={(e, newValue) => setActiveTab(newValue)}
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
+          sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            '& .MuiTab-root': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+              minWidth: { xs: 60, sm: 80, md: 120 },
+              px: { xs: 1, sm: 2, md: 3 },
+            },
+          }}
+          variant={isMobile ? 'scrollable' : 'standard'}
+          scrollButtons={isMobile ? 'auto' : false}
         >
           {tabs.map((tab, index) => (
             <Tab key={index} label={tab.label} />
           ))}
         </Tabs>
 
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
           {tabs[activeTab].component}
         </Box>
       </Paper>

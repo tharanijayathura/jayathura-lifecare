@@ -1,4 +1,3 @@
-// client/src/pages/About.jsx
 import React from 'react';
 import {
   Container,
@@ -82,13 +81,13 @@ const About = () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: 4, pb: 8 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <PageHeader title="About Jayathura LifeCare" showBack={false} />
         
         {/* Hero Section */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <LocalPharmacy sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+        <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
+          <LocalPharmacy sx={{ fontSize: { xs: 48, sm: 56, md: 64 }, color: 'primary.main', mb: 2 }} />
           <Typography
             variant="h6"
             sx={{
@@ -96,6 +95,8 @@ const About = () => {
               maxWidth: '800px',
               mx: 'auto',
               lineHeight: 1.8,
+              fontSize: { xs: '0.95rem', sm: '1rem', md: '1.25rem' },
+              px: { xs: 2, sm: 0 },
             }}
           >
             A modern digital healthcare platform revolutionizing pharmaceutical services in Sri Lanka
@@ -103,12 +104,28 @@ const About = () => {
         </Box>
 
         {/* Company Overview */}
-        <Card sx={{ mb: 4, borderRadius: 3 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
+        <Card sx={{ mb: { xs: 3, md: 4 }, borderRadius: 3 }}>
+          <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: { xs: 2, md: 3 }, 
+                color: 'text.primary',
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              }}
+            >
               Company Overview
             </Typography>
-            <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8, color: 'text.primary' }}>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                mb: { xs: 2, md: 3 }, 
+                lineHeight: 1.8, 
+                color: 'text.primary',
+                fontSize: { xs: '0.9rem', md: '1rem' },
+              }}
+            >
               <strong>Jayathura LifeCare</strong> is a comprehensive digital healthcare platform designed to transform
               how Sri Lankans access pharmaceutical services. Founded by <strong>Tharani Jayathura</strong>, our platform
               combines cutting-edge technology with compassionate healthcare to deliver exceptional service to patients
@@ -117,7 +134,7 @@ const About = () => {
             <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.8, color: 'text.primary' }}>
               We offer a complete suite of healthcare services including:
             </Typography>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mt: 1 }}>
               {[
                 'Online pharmacy services',
                 'Prescription upload & verification',
@@ -128,8 +145,14 @@ const About = () => {
               ].map((service, index) => (
                 <Grid item xs={12} sm={6} key={index}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircle sx={{ color: 'primary.main', fontSize: 20 }} />
-                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                    <CheckCircle sx={{ color: 'primary.main', fontSize: { xs: 18, md: 20 } }} />
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: 'text.primary',
+                        fontSize: { xs: '0.85rem', md: '0.875rem' },
+                      }}
+                    >
                       {service}
                     </Typography>
                   </Box>
@@ -144,17 +167,31 @@ const About = () => {
         </Card>
 
         {/* Mission & Vision */}
-        <Grid container spacing={4} sx={{ mb: 4 }}>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: { xs: 3, md: 4 } }}>
           <Grid item xs={12} md={6}>
             <Card sx={{ height: '100%', borderRadius: 3, bgcolor: 'primary.light' }}>
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Flag sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1.5, md: 2 }, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
+                  <Flag sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main', mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }} />
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      color: 'text.primary',
+                      fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    }}
+                  >
                     Our Mission
                   </Typography>
                 </Box>
-                <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary' }}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    lineHeight: 1.8, 
+                    color: 'text.primary',
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                  }}
+                >
                   To provide accessible, reliable, and fast pharmaceutical services that improve patient convenience
                   and safety through innovative technology. We strive to bridge the gap between traditional pharmacy
                   services and modern digital healthcare solutions.
@@ -164,14 +201,28 @@ const About = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <Card sx={{ height: '100%', borderRadius: 3, bgcolor: 'info.light' }}>
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Visibility sx={{ fontSize: 32, color: 'info.main', mr: 2 }} />
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1.5, md: 2 }, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
+                  <Visibility sx={{ fontSize: { xs: 28, md: 32 }, color: 'info.main', mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }} />
+                  <Typography 
+                    variant="h5" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      color: 'text.primary',
+                      fontSize: { xs: '1.25rem', md: '1.5rem' },
+                    }}
+                  >
                     Our Vision
                   </Typography>
                 </Box>
-                <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary' }}>
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    lineHeight: 1.8, 
+                    color: 'text.primary',
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                  }}
+                >
                   To become Sri Lanka's leading digital healthcare and pharmacy service provider, recognized for
                   excellence in patient care, technological innovation, and commitment to improving healthcare
                   accessibility across the nation.
@@ -182,17 +233,26 @@ const About = () => {
         </Grid>
 
         {/* Our Values */}
-        <Card sx={{ mb: 4, borderRadius: 3 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, textAlign: 'center', color: 'text.primary' }}>
+        <Card sx={{ mb: { xs: 3, md: 4 }, borderRadius: 3 }}>
+          <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: { xs: 3, md: 4 }, 
+                textAlign: 'center', 
+                color: 'text.primary',
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              }}
+            >
               Our Values
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {values.map((value, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Paper
                     sx={{
-                      p: 3,
+                      p: { xs: 2, sm: 2.5, md: 3 },
                       textAlign: 'center',
                       borderRadius: 2,
                       bgcolor: 'background.paper',
@@ -201,18 +261,32 @@ const About = () => {
                       height: '100%',
                       transition: 'transform 0.2s, box-shadow 0.2s',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 4,
+                        transform: { xs: 'none', sm: 'translateY(-4px)' },
+                        boxShadow: { xs: 1, sm: 4 },
                       },
                     }}
                   >
-                    <Box sx={{ color: 'primary.main', mb: 2, display: 'flex', justifyContent: 'center' }}>
-                      {React.cloneElement(value.icon, { sx: { fontSize: 40 } })}
+                    <Box sx={{ color: 'primary.main', mb: { xs: 1.5, md: 2 }, display: 'flex', justifyContent: 'center' }}>
+                      {React.cloneElement(value.icon, { sx: { fontSize: { xs: 32, md: 40 } } })}
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 600, 
+                        mb: 1, 
+                        color: 'text.primary',
+                        fontSize: { xs: '1rem', md: '1.25rem' },
+                      }}
+                    >
                       {value.title}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: 'text.secondary',
+                        fontSize: { xs: '0.85rem', md: '0.875rem' },
+                      }}
+                    >
                       {value.description}
                     </Typography>
                   </Paper>
@@ -223,17 +297,26 @@ const About = () => {
         </Card>
 
         {/* Why Choose Us */}
-        <Card sx={{ mb: 4, borderRadius: 3 }}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, textAlign: 'center', color: 'text.primary' }}>
+        <Card sx={{ mb: { xs: 3, md: 4 }, borderRadius: 3 }}>
+          <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: { xs: 3, md: 4 }, 
+                textAlign: 'center', 
+                color: 'text.primary',
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              }}
+            >
               Why Choose Us
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {features.map((feature, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Box
                     sx={{
-                      p: 3,
+                      p: { xs: 2, sm: 2.5, md: 3 },
                       borderRadius: 2,
                       bgcolor: 'background.paper',
                       border: '1px solid',
@@ -243,19 +326,34 @@ const About = () => {
                       flexDirection: 'column',
                       transition: 'transform 0.2s, box-shadow 0.2s',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 4,
+                        transform: { xs: 'none', sm: 'translateY(-4px)' },
+                        boxShadow: { xs: 1, sm: 4 },
                         borderColor: 'primary.main',
                       },
                     }}
                   >
-                    <Box sx={{ color: 'primary.main', mb: 2 }}>
-                      {React.cloneElement(feature.icon, { sx: { fontSize: 36 } })}
+                    <Box sx={{ color: 'primary.main', mb: { xs: 1.5, md: 2 } }}>
+                      {React.cloneElement(feature.icon, { sx: { fontSize: { xs: 28, md: 36 } } })}
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 600, 
+                        mb: 1, 
+                        color: 'text.primary',
+                        fontSize: { xs: '1rem', md: '1.25rem' },
+                      }}
+                    >
                       {feature.title}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', flexGrow: 1 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: 'text.secondary', 
+                        flexGrow: 1,
+                        fontSize: { xs: '0.85rem', md: '0.875rem' },
+                      }}
+                    >
                       {feature.description}
                     </Typography>
                   </Box>
@@ -266,16 +364,30 @@ const About = () => {
         </Card>
 
         {/* Location Section */}
-        <Card sx={{ mb: 4, borderRadius: 3, overflow: 'hidden' }}>
+        <Card sx={{ mb: { xs: 3, md: 4 }, borderRadius: 3, overflow: 'hidden' }}>
           <CardContent sx={{ p: 0 }}>
-            <Box sx={{ p: 4, bgcolor: 'primary.light' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <LocationOn sx={{ fontSize: 32, color: 'primary.main', mr: 2 }} />
-                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            <Box sx={{ p: { xs: 2.5, sm: 3, md: 4 }, bgcolor: 'primary.light' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1.5, md: 2 }, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
+                <LocationOn sx={{ fontSize: { xs: 28, md: 32 }, color: 'primary.main', mr: { xs: 0, sm: 2 }, mb: { xs: 1, sm: 0 } }} />
+                <Typography 
+                  variant="h4" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: 'text.primary',
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+                  }}
+                >
                   Our Location
                 </Typography>
               </Box>
-              <Typography variant="body1" sx={{ color: 'text.primary', mb: 3 }}>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: 'text.primary', 
+                  mb: { xs: 2, md: 3 },
+                  fontSize: { xs: '0.9rem', md: '1rem' },
+                }}
+              >
                 Visit us at our headquarters in Kamburupitiya, Matara, Sri Lanka
               </Typography>
             </Box>

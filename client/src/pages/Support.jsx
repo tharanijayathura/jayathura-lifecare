@@ -13,6 +13,8 @@ import {
   Button,
   Chip,
   Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   LocalPharmacy,
@@ -35,6 +37,8 @@ import PageHeader from '../components/common/PageHeader';
 const Support = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const faqCategories = [
     {
@@ -179,13 +183,13 @@ const Support = () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: 4, pb: 8 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <PageHeader title="Support Center" showBack={false} />
         
         {/* Hero Section */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Help sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+        <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
+          <Help sx={{ fontSize: { xs: 48, sm: 56, md: 64 }, color: 'primary.main', mb: 2 }} />
           <Typography
             variant="h6"
             sx={{
@@ -193,6 +197,8 @@ const Support = () => {
               maxWidth: '800px',
               mx: 'auto',
               lineHeight: 1.8,
+              fontSize: { xs: '0.95rem', sm: '1rem', md: '1.25rem' },
+              px: { xs: 2, sm: 0 },
             }}
           >
             Find answers to common questions, get help, and learn how to use Jayathura LifeCare
@@ -200,7 +206,7 @@ const Support = () => {
         </Box>
 
         {/* Quick Links */}
-        <Grid container spacing={3} sx={{ mb: 6 }}>
+        <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} sx={{ mb: { xs: 4, md: 6 } }}>
           {quickLinks.map((link, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Card
@@ -209,20 +215,34 @@ const Support = () => {
                   cursor: 'pointer',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                   '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 4,
+                    transform: { xs: 'none', sm: 'translateY(-4px)' },
+                    boxShadow: { xs: 2, sm: 4 },
                   },
                 }}
                 onClick={link.action}
               >
-                <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                  <Box sx={{ color: `${link.color}.main`, mb: 2, display: 'flex', justifyContent: 'center' }}>
-                    {React.cloneElement(link.icon, { sx: { fontSize: 40 } })}
+                <CardContent sx={{ textAlign: 'center', p: { xs: 2, sm: 2.5, md: 3 } }}>
+                  <Box sx={{ color: `${link.color}.main`, mb: { xs: 1.5, md: 2 }, display: 'flex', justifyContent: 'center' }}>
+                    {React.cloneElement(link.icon, { sx: { fontSize: { xs: 32, md: 40 } } })}
                   </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      mb: 1, 
+                      color: 'text.primary',
+                      fontSize: { xs: '1rem', md: '1.25rem' },
+                    }}
+                  >
                     {link.title}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: 'text.secondary',
+                      fontSize: { xs: '0.85rem', md: '0.875rem' },
+                    }}
+                  >
                     {link.description}
                   </Typography>
                 </CardContent>
@@ -232,20 +252,36 @@ const Support = () => {
         </Grid>
 
         {/* FAQs */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 4, textAlign: 'center', color: 'text.primary' }}>
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 700, 
+              mb: { xs: 3, md: 4 }, 
+              textAlign: 'center', 
+              color: 'text.primary',
+              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+            }}
+          >
             Frequently Asked Questions
           </Typography>
 
           {faqCategories.map((category, categoryIndex) => (
-            <Box key={categoryIndex} sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Box sx={{ color: 'primary.main' }}>{category.icon}</Box>
-                <Typography variant="h5" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            <Box key={categoryIndex} sx={{ mb: { xs: 3, md: 4 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, mb: { xs: 1.5, md: 2 }, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
+                <Box sx={{ color: 'primary.main' }}>{React.cloneElement(category.icon, { sx: { fontSize: { xs: 24, md: 28 } } })}</Box>
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    color: 'text.primary',
+                    fontSize: { xs: '1.25rem', md: '1.5rem' },
+                  }}
+                >
                   {category.title}
                 </Typography>
               </Box>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
               {category.questions.map((faq, faqIndex) => (
                 <Accordion
                   key={faqIndex}
@@ -261,14 +297,29 @@ const Support = () => {
                     sx={{
                       bgcolor: 'background.paper',
                       '&:hover': { bgcolor: 'primary.light' },
+                      px: { xs: 1.5, md: 2 },
                     }}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 500, color: 'text.primary' }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: 'text.primary',
+                        fontSize: { xs: '0.95rem', md: '1.25rem' },
+                      }}
+                    >
                       {faq.q}
                     </Typography>
                   </AccordionSummary>
-                  <AccordionDetails sx={{ bgcolor: 'background.default' }}>
-                    <Typography variant="body1" sx={{ color: 'text.primary', lineHeight: 1.8 }}>
+                  <AccordionDetails sx={{ bgcolor: 'background.default', px: { xs: 1.5, md: 2 } }}>
+                    <Typography 
+                      variant="body1" 
+                      sx={{ 
+                        color: 'text.primary', 
+                        lineHeight: 1.8,
+                        fontSize: { xs: '0.9rem', md: '1rem' },
+                      }}
+                    >
                       {faq.a}
                     </Typography>
                   </AccordionDetails>
@@ -280,21 +331,39 @@ const Support = () => {
 
         {/* Contact Support */}
         <Card sx={{ borderRadius: 3, bgcolor: 'primary.light' }}>
-          <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+          <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 }, textAlign: 'center' }}>
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: { xs: 1.5, md: 2 }, 
+                color: 'text.primary',
+                fontSize: { xs: '1.25rem', md: '1.5rem' },
+              }}
+            >
               Still Need Help?
             </Typography>
-            <Typography variant="body1" sx={{ color: 'text.primary', mb: 3 }}>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: 'text.primary', 
+                mb: { xs: 2, md: 3 },
+                fontSize: { xs: '0.9rem', md: '1rem' },
+              }}
+            >
               Our support team is here to help you. Get in touch with us through any of these channels.
             </Typography>
-            <Grid container spacing={3} justifyContent="center">
+            <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} justifyContent="center">
               <Grid item xs={12} sm={4}>
                 <Button
                   variant="contained"
                   startIcon={<ChatIcon />}
                   onClick={() => navigate('/chat')}
                   fullWidth
-                  sx={{ py: 1.5 }}
+                  sx={{ 
+                    py: { xs: 1.25, md: 1.5 },
+                    fontSize: { xs: '0.85rem', md: '0.875rem' },
+                  }}
                 >
                   Start Chat
                 </Button>
@@ -305,7 +374,10 @@ const Support = () => {
                   startIcon={<Phone />}
                   onClick={() => navigate('/contact')}
                   fullWidth
-                  sx={{ py: 1.5 }}
+                  sx={{ 
+                    py: { xs: 1.25, md: 1.5 },
+                    fontSize: { xs: '0.85rem', md: '0.875rem' },
+                  }}
                 >
                   Contact Us
                 </Button>
@@ -316,17 +388,34 @@ const Support = () => {
                   startIcon={<Email />}
                   href="mailto:support@jayathuralifecare.com"
                   fullWidth
-                  sx={{ py: 1.5 }}
+                  sx={{ 
+                    py: { xs: 1.25, md: 1.5 },
+                    fontSize: { xs: '0.85rem', md: '0.875rem' },
+                  }}
                 >
                   Send Email
                 </Button>
               </Grid>
             </Grid>
-            <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+            <Box sx={{ mt: { xs: 3, md: 4 }, pt: { xs: 2, md: 3 }, borderTop: 1, borderColor: 'divider' }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'text.secondary', 
+                  mb: 1,
+                  fontSize: { xs: '0.8rem', md: '0.875rem' },
+                }}
+              >
                 Phone: <strong>+94 71 259 9785</strong>
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontSize: { xs: '0.8rem', md: '0.875rem' },
+                  wordBreak: 'break-word',
+                }}
+              >
                 Email: <strong>support@jayathuralifecare.com</strong>
               </Typography>
             </Box>

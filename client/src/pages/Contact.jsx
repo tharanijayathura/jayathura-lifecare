@@ -1,4 +1,3 @@
-// client/src/pages/Contact.jsx
 import React, { useState } from 'react';
 import {
   Container,
@@ -122,13 +121,13 @@ const Contact = () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: 4, pb: 8 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <PageHeader title="Contact Us" showBack={false} />
         
         {/* Hero Section */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <LocalPharmacy sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+        <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
+          <LocalPharmacy sx={{ fontSize: { xs: 48, sm: 56, md: 64 }, color: 'primary.main', mb: 2 }} />
           <Typography
             variant="h6"
             sx={{
@@ -136,26 +135,43 @@ const Contact = () => {
               maxWidth: '800px',
               mx: 'auto',
               lineHeight: 1.8,
+              fontSize: { xs: '0.95rem', sm: '1rem', md: '1.25rem' },
+              px: { xs: 2, sm: 0 },
             }}
           >
             We're here to help! Get in touch with our team for any questions, support, or inquiries.
           </Typography>
         </Box>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
           {/* Contact Form */}
           <Grid item xs={12} md={7}>
-            <Card sx={{ borderRadius: 3, mb: 4 }}>
-              <CardContent sx={{ p: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
+            <Card sx={{ borderRadius: 3, mb: { xs: 3, md: 4 } }}>
+              <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+                <Typography 
+                  variant="h4" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    mb: { xs: 2, md: 3 }, 
+                    color: 'text.primary',
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+                  }}
+                >
                   Send us a Message
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'text.secondary', 
+                    mb: { xs: 3, md: 4 },
+                    fontSize: { xs: '0.85rem', md: '0.875rem' },
+                  }}
+                >
                   Fill out the form below and we'll get back to you as soon as possible.
                 </Typography>
 
                 <Box component="form" onSubmit={handleSubmit}>
-                  <Grid container spacing={3}>
+                  <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
@@ -165,6 +181,7 @@ const Contact = () => {
                         value={formData.name}
                         onChange={handleChange}
                         variant="outlined"
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             '&:hover fieldset': {
@@ -184,6 +201,7 @@ const Contact = () => {
                         value={formData.email}
                         onChange={handleChange}
                         variant="outlined"
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             '&:hover fieldset': {
@@ -202,6 +220,7 @@ const Contact = () => {
                         onChange={handleChange}
                         variant="outlined"
                         placeholder="+94 XX XXX XXXX"
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             '&:hover fieldset': {
@@ -220,6 +239,7 @@ const Contact = () => {
                         onChange={handleChange}
                         variant="outlined"
                         placeholder="What is this regarding?"
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             '&:hover fieldset': {
@@ -239,8 +259,9 @@ const Contact = () => {
                         onChange={handleChange}
                         variant="outlined"
                         multiline
-                        rows={6}
+                        rows={isMobile ? 4 : 6}
                         placeholder="Tell us how we can help you..."
+                        size={isMobile ? 'small' : 'medium'}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             '&:hover fieldset': {
@@ -254,12 +275,13 @@ const Contact = () => {
                       <Button
                         type="submit"
                         variant="contained"
-                        size="large"
+                        size={isMobile ? 'medium' : 'large'}
                         startIcon={<Send />}
+                        fullWidth={isMobile}
                         sx={{
-                          py: 1.5,
-                          px: 4,
-                          fontSize: '1rem',
+                          py: { xs: 1.25, md: 1.5 },
+                          px: { xs: 3, md: 4 },
+                          fontSize: { xs: '0.9rem', md: '1rem' },
                           fontWeight: 600,
                         }}
                       >
@@ -274,50 +296,82 @@ const Contact = () => {
 
           {/* Contact Information */}
           <Grid item xs={12} md={5}>
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>
+            <Box sx={{ mb: { xs: 3, md: 4 } }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 700, 
+                  mb: { xs: 2, md: 3 }, 
+                  color: 'text.primary',
+                  fontSize: { xs: '1.25rem', md: '1.5rem' },
+                }}
+              >
                 Get in Touch
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                 {contactInfo.map((info, index) => (
                   <Grid item xs={12} key={index}>
                     <Paper
                       sx={{
-                        p: 3,
+                        p: { xs: 2, sm: 2.5, md: 3 },
                         borderRadius: 2,
                         bgcolor: `${info.color}.light`,
                         border: '1px solid',
                         borderColor: `${info.color}.main`,
                         transition: 'transform 0.2s, box-shadow 0.2s',
                         '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: 4,
+                          transform: { xs: 'none', sm: 'translateY(-4px)' },
+                          boxShadow: { xs: 1, sm: 4 },
                         },
                       }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1.5, sm: 2 }, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
                         <Box
                           sx={{
                             color: `${info.color}.main`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            minWidth: 48,
-                            height: 48,
+                            minWidth: { xs: 40, md: 48 },
+                            height: { xs: 40, md: 48 },
                             borderRadius: 2,
                             bgcolor: 'background.paper',
+                            mx: { xs: 'auto', sm: 0 },
                           }}
                         >
-                          {React.cloneElement(info.icon, { sx: { fontSize: 24 } })}
+                          {React.cloneElement(info.icon, { sx: { fontSize: { xs: 20, md: 24 } } })}
                         </Box>
                         <Box sx={{ flexGrow: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, color: 'text.primary' }}>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              fontWeight: 600, 
+                              mb: 0.5, 
+                              color: 'text.primary',
+                              fontSize: { xs: '1rem', md: '1.25rem' },
+                            }}
+                          >
                             {info.title}
                           </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary', mb: 0.5 }}>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              fontWeight: 500, 
+                              color: 'text.primary', 
+                              mb: 0.5,
+                              fontSize: { xs: '0.9rem', md: '1rem' },
+                              wordBreak: 'break-word',
+                            }}
+                          >
                             {info.content}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: 'text.secondary',
+                              fontSize: { xs: '0.85rem', md: '0.875rem' },
+                            }}
+                          >
                             {info.subtitle}
                           </Typography>
                         </Box>

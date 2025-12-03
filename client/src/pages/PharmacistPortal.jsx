@@ -1,4 +1,3 @@
-// client/src/pages/PharmacistPortal.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Container,
@@ -21,6 +20,8 @@ import {
   Tabs,
   Tab,
   Badge,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Warning,
@@ -36,6 +37,8 @@ import { medicineAPI, groceryAPI } from '../services/api';
 const PharmacistPortal = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [tabIndex, setTabIndex] = useState(0);
   const [medicines, setMedicines] = useState([]);
   const [groceries, setGroceries] = useState([]);
@@ -120,7 +123,7 @@ const PharmacistPortal = () => {
             {lowStockItems.length} item(s) need attention (low or out of stock)
           </Alert>
         )}
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {items.map((item) => {
             const low = isLowStock(item);
             const out = isOutOfStock(item);
@@ -132,31 +135,58 @@ const PharmacistPortal = () => {
                     borderColor: out ? 'error.main' : low ? 'warning.main' : 'divider',
                   }}
                 >
-                  <CardContent>
-                    <Typography variant="h6">{item.name}</Typography>
+                  <CardContent sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+                    <Typography 
+                      variant="h6"
+                      sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+                    >
+                      {item.name}
+                    </Typography>
                     {item.brand && (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}
+                      >
                         Brand: {item.brand}
                       </Typography>
                     )}
                     {item.description && (
-                      <Typography variant="body2" sx={{ my: 1 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          my: 1,
+                          fontSize: { xs: '0.85rem', md: '0.875rem' },
+                        }}
+                      >
                         {item.description}
                       </Typography>
                     )}
-                    <Typography variant="subtitle1" color="primary">
+                    <Typography 
+                      variant="subtitle1" 
+                      color="primary"
+                      sx={{ fontSize: { xs: '0.9rem', md: '1rem' } }}
+                    >
                       Rs. {item.price} / {item.unit || 'unit'}
                     </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Stack 
+                      direction="row" 
+                      spacing={1} 
+                      sx={{ mt: 1 }}
+                      flexWrap="wrap"
+                      gap={0.5}
+                    >
                       <Chip
                         label={`Stock: ${item.stock}`}
                         size="small"
                         color={out ? 'error' : low ? 'warning' : 'default'}
+                        sx={{ fontSize: { xs: '0.7rem', md: '0.75rem' } }}
                       />
                       <Chip
                         label={`Min: ${item.minStock}`}
                         size="small"
                         variant="outlined"
+                        sx={{ fontSize: { xs: '0.7rem', md: '0.75rem' } }}
                       />
                     </Stack>
                     {(out || low) && (
@@ -166,7 +196,10 @@ const PharmacistPortal = () => {
                         color="error"
                         startIcon={<Warning />}
                         onClick={() => handleOpenAlert(item, type)}
-                        sx={{ mt: 2 }}
+                        sx={{ 
+                          mt: 2,
+                          fontSize: { xs: '0.8rem', md: '0.875rem' },
+                        }}
                       >
                         Alert Admin
                       </Button>
@@ -182,24 +215,29 @@ const PharmacistPortal = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
       <PageHeader
         title="Pharmacist Dashboard"
         subtitle={`Welcome, ${user?.name || 'Pharmacist'}`}
         showBack={false}
       />
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: { xs: 2, sm: 2.5, md: 3 }, mb: { xs: 2, md: 2 } }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+            >
               Quick Actions
             </Typography>
-            <Stack spacing={2}>
+            <Stack spacing={{ xs: 1.5, md: 2 }}>
               <Button
                 variant="contained"
                 startIcon={<Chat />}
                 onClick={() => navigate('/chat')}
                 fullWidth
+                sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}
               >
                 Open Chat with Patients
               </Button>
@@ -208,16 +246,24 @@ const PharmacistPortal = () => {
                 startIcon={<Inventory />}
                 onClick={() => setTabIndex(0)}
                 fullWidth
+                sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}
               >
                 View Medicines Inventory
               </Button>
             </Stack>
           </Paper>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+            >
               Features:
             </Typography>
-            <Typography variant="body2">
+            <Typography 
+              variant="body2"
+              sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}
+            >
               • Prescription Verification<br />
               • Medicine Catalog Management<br />
               • Order Processing<br />
@@ -227,8 +273,17 @@ const PharmacistPortal = () => {
           </Paper>
         </Grid>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)}>
+          <Paper sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+            <Tabs 
+              value={tabIndex} 
+              onChange={(e, newValue) => setTabIndex(newValue)}
+              variant={isMobile ? 'fullWidth' : 'standard'}
+              sx={{
+                '& .MuiTab-root': {
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                },
+              }}
+            >
               <Tab
                 label={
                   <Badge
@@ -250,7 +305,7 @@ const PharmacistPortal = () => {
                 }
               />
             </Tabs>
-            <Box sx={{ mt: 3 }}>
+            <Box sx={{ mt: { xs: 2, md: 3 } }}>
               {tabIndex === 0 && renderInventoryList(medicines, 'medicine')}
               {tabIndex === 1 && renderInventoryList(groceries, 'grocery')}
             </Box>

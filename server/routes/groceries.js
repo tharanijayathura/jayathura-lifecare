@@ -61,7 +61,18 @@ router.get('/', async (req, res) => {
 // GET /api/groceries/admin - Get all groceries for admin (with stock alerts)
 router.get('/admin', adminMiddleware, async (req, res) => {
   try {
-    const groceries = await Grocery.find()
+    const { includeInactive } = req.query;
+    const query = {};
+    
+    // Only show active groceries by default, unless includeInactive is true
+    if (includeInactive !== 'true') {
+      query.$or = [
+        { isActive: true },
+        { isActive: { $exists: false } } // For backward compatibility with old records
+      ];
+    }
+    
+    const groceries = await Grocery.find(query)
       .populate('stockAlert.alertedBy', 'name email')
       .sort({ createdAt: -1 });
     
@@ -168,14 +179,18 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Grocery not found' });
     }
     
-    // Soft delete
-    grocery.isActive = false;
-    await grocery.save();
+    // Soft delete using updateOne to avoid validation issues
+    // This bypasses validation which is safe since we're only updating isActive
+    await Grocery.updateOne(
+      { _id: req.params.id },
+      { $set: { isActive: false } },
+      { runValidators: false }
+    );
     
     res.json({ message: 'Grocery deleted successfully' });
   } catch (error) {
     console.error('Delete grocery error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

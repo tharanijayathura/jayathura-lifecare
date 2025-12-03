@@ -78,8 +78,16 @@ router.get('/', async (req, res) => {
 // GET /api/medicines/admin - Get all medicines for admin (with stock alerts)
 router.get('/admin', adminMiddleware, async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, includeInactive } = req.query;
     const query = {};
+    
+    // Only show active medicines by default, unless includeInactive is true
+    if (includeInactive !== 'true') {
+      query.$or = [
+        { isActive: true },
+        { isActive: { $exists: false } } // For backward compatibility with old records
+      ];
+    }
     
     if (category && category !== 'all') {
       query.category = category;
@@ -320,14 +328,18 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Medicine not found' });
     }
     
-    // Soft delete
-    medicine.isActive = false;
-    await medicine.save();
+    // Soft delete using updateOne to avoid validation issues
+    // This bypasses validation which is safe since we're only updating isActive
+    await Medicine.updateOne(
+      { _id: req.params.id },
+      { $set: { isActive: false } },
+      { runValidators: false }
+    );
     
     res.json({ message: 'Medicine deleted successfully' });
   } catch (error) {
     console.error('Delete medicine error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

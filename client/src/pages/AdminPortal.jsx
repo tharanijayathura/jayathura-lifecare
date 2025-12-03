@@ -26,6 +26,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   AddCircle,
@@ -111,6 +113,8 @@ const initialGroceryForm = {
 const AdminPortal = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // Check if user is admin
   useEffect(() => {
@@ -466,12 +470,16 @@ const AdminPortal = () => {
 
   // Render medicine form
   const renderMedicineForm = () => (
-    <Paper variant="outlined" sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+      <Typography 
+        variant="h6" 
+        gutterBottom
+        sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+      >
         {editingMedicineId ? 'Update Medicine' : 'Add New Medicine'}
       </Typography>
       <Box component="form" onSubmit={handleMedicineSubmit}>
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           <Grid item xs={12} md={6}>
             <TextField
               label="Medicine Name *"
@@ -726,7 +734,17 @@ const AdminPortal = () => {
         <Tabs
           value={medicineCategoryTab}
           onChange={(e, newValue) => setMedicineCategoryTab(newValue)}
-          sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+          variant={isMobile ? 'scrollable' : 'standard'}
+          scrollButtons={isMobile ? 'auto' : false}
+          sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider', 
+            mb: { xs: 2, md: 3 },
+            '& .MuiTab-root': {
+              fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.875rem' },
+              minWidth: { xs: 60, sm: 80 },
+            },
+          }}
         >
           {MEDICINE_CATEGORIES.map((cat, index) => {
             const categoryMedicines = medicines.filter((m) => m.category === cat.value);
@@ -744,7 +762,7 @@ const AdminPortal = () => {
           })}
         </Tabs>
 
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {filteredMedicines.length === 0 ? (
             <Grid item xs={12}>
               <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
@@ -905,12 +923,16 @@ const AdminPortal = () => {
 
   // Render grocery form
   const renderGroceryForm = () => (
-    <Paper variant="outlined" sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+      <Typography 
+        variant="h6" 
+        gutterBottom
+        sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+      >
         {editingGroceryId ? 'Update Grocery' : 'Add New Grocery'}
       </Typography>
       <Box component="form" onSubmit={handleGrocerySubmit}>
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           <Grid item xs={12} md={6}>
             <TextField
               label="Item Name *"
@@ -1042,7 +1064,7 @@ const AdminPortal = () => {
     }
 
     return (
-      <Grid container spacing={2}>
+      <Grid container spacing={{ xs: 1.5, sm: 2 }}>
         {groceries.length === 0 ? (
           <Grid item xs={12}>
             <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
@@ -1168,13 +1190,27 @@ const AdminPortal = () => {
   // Render user approvals tab
   const renderUserApprovals = () => (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">Pending User Approvals</Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: { xs: 2, md: 3 },
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 1.5, sm: 0 },
+      }}>
+        <Typography 
+          variant="h6"
+          sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+        >
+          Pending User Approvals
+        </Typography>
         <Button
           variant="outlined"
           startIcon={<Refresh />}
           onClick={fetchPendingUsers}
           disabled={loadingUsers}
+          fullWidth={isMobile}
+          sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}
         >
           Refresh
         </Button>
@@ -1191,7 +1227,7 @@ const AdminPortal = () => {
           </Typography>
         </Paper>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {pendingUsers.map((user) => (
             <Grid item xs={12} md={6} key={user._id || user.id}>
               <Card>
@@ -1269,28 +1305,46 @@ const AdminPortal = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
       <PageHeader
         title="Admin Catalogue Manager"
         subtitle="Manage medicines, groceries, and user approvals"
         showBack={false}
       />
-      <Alert severity="info" sx={{ mt: 2, mb: 3 }}>
-        <Typography variant="body2">
+      <Alert 
+        severity="info" 
+        sx={{ 
+          mt: { xs: 1, md: 2 }, 
+          mb: { xs: 2, md: 3 },
+          fontSize: { xs: '0.85rem', md: '0.875rem' },
+        }}
+      >
+        <Typography variant="body2" sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}>
           Add and manage medicines by category (Prescription, OTC, Herbal, Vitamins, Non-Medical). 
           Red indicators show items with stock alerts. Pharmacists can create alerts for low stock items.
         </Typography>
       </Alert>
 
-      <Paper sx={{ p: 3 }}>
-        <Tabs value={mainTabIndex} onChange={(e, newValue) => setMainTabIndex(newValue)}>
+      <Paper sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+        <Tabs 
+          value={mainTabIndex} 
+          onChange={(e, newValue) => setMainTabIndex(newValue)}
+          variant={isMobile ? 'scrollable' : 'standard'}
+          scrollButtons={isMobile ? 'auto' : false}
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+              minWidth: { xs: 80, sm: 120 },
+            },
+          }}
+        >
           <Tab label="Medicines" />
           <Tab label="Groceries" />
           <Tab label="User Approvals" />
         </Tabs>
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: { xs: 2, md: 3 } }}>
           {mainTabIndex === 0 && (
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               <Grid item xs={12} md={4}>
                 {renderMedicineForm()}
               </Grid>
@@ -1300,7 +1354,7 @@ const AdminPortal = () => {
             </Grid>
           )}
           {mainTabIndex === 1 && (
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               <Grid item xs={12} md={4}>
                 {renderGroceryForm()}
               </Grid>
