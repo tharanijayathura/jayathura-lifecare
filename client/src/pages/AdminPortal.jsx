@@ -111,13 +111,16 @@ const initialGroceryForm = {
 };
 
 const AdminPortal = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // Check if user is admin
   useEffect(() => {
+    // Wait for AuthContext to finish loading before checking
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/login');
       return;
@@ -127,7 +130,7 @@ const AdminPortal = () => {
       navigate('/');
       return;
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // State management
   const [mainTabIndex, setMainTabIndex] = useState(0); // Medicines, Groceries, Users
@@ -202,6 +205,9 @@ const AdminPortal = () => {
 
   // Load data on mount and tab change
   useEffect(() => {
+    // Wait for auth to finish loading before fetching data
+    if (authLoading) return;
+    
     // Only fetch if user is authenticated and is admin
     if (!user || (user.role !== 'admin' && !user.isSuperAdmin)) {
       return;
@@ -214,7 +220,7 @@ const AdminPortal = () => {
     } else if (mainTabIndex === 2) {
       fetchPendingUsers();
     }
-  }, [mainTabIndex, user]);
+  }, [mainTabIndex, user, authLoading]);
 
   // Filter medicines by category
   const filteredMedicines = medicines.filter((med) => {
@@ -1282,6 +1288,16 @@ const AdminPortal = () => {
       )}
     </Box>
   );
+
+  // Show loading while AuthContext is initializing
+  if (authLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>Loading...</Typography>
+      </Container>
+    );
+  }
 
   // Show loading or redirect if not authenticated
   if (!user) {
