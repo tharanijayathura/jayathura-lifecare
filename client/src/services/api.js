@@ -38,11 +38,18 @@ export const userAPI = {
 };
 
 export const medicineAPI = {
-  getAll: () => API.get('/medicines'),
+  getAll: (params) => API.get('/medicines', { params }),
   getById: (id) => API.get(`/medicines/${id}`),
-  create: (data) => API.post('/medicines', data),
-  update: (id, data) => API.put(`/medicines/${id}`, data),
+  getAllAdmin: (params) => API.get('/medicines/admin', { params }),
+  create: (formData) => API.post('/medicines', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  update: (id, formData) => API.put(`/medicines/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   delete: (id) => API.delete(`/medicines/${id}`),
+  createAlert: (id, reason) => API.post(`/medicines/${id}/alert`, { reason }),
+  clearAlert: (id) => API.post(`/medicines/${id}/clear-alert`),
 };
 
 export const prescriptionAPI = {
@@ -56,6 +63,21 @@ export const adminAPI = {
   approveUser: (userId) => API.post(`/admin/approve/${userId}`),
   rejectUser: (userId) => API.post(`/admin/reject/${userId}`),
   getAllUsers: () => API.get('/admin/users'),
+};
+
+export const groceryAPI = {
+  getAll: (params) => API.get('/groceries', { params }),
+  getById: (id) => API.get(`/groceries/${id}`),
+  getAllAdmin: () => API.get('/groceries/admin'),
+  create: (formData) => API.post('/groceries', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  update: (id, formData) => API.put(`/groceries/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  delete: (id) => API.delete(`/groceries/${id}`),
+  createAlert: (id, reason) => API.post(`/groceries/${id}/alert`, { reason }),
+  clearAlert: (id) => API.post(`/groceries/${id}/clear-alert`),
 };
 
 export const chatAPI = {

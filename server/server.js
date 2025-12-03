@@ -15,40 +15,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/chat', require('./routes/chat'));
+app.use('/api/medicines', require('./routes/medicines'));
+app.use('/api/groceries', require('./routes/groceries'));
 
-// Mock data routes for testing
-app.get('/api/medicines', (req, res) => {
-  const mockMedicines = [
-    {
-      id: 1,
-      name: 'Paracetamol',
-      brand: 'Panadol',
-      category: 'otc',
-      price: 25.00,
-      stock: 100,
-      description: 'Pain reliever and fever reducer'
-    },
-    {
-      id: 2,
-      name: 'Vitamin C',
-      brand: 'Cee',
-      category: 'otc',
-      price: 15.00,
-      stock: 50,
-      description: 'Immune system support'
-    },
-    {
-      id: 3,
-      name: 'Amoxicillin',
-      brand: 'Amoxil',
-      category: 'prescription',
-      price: 45.00,
-      stock: 30,
-      description: 'Antibiotic for bacterial infections'
-    }
-  ];
-  res.json(mockMedicines);
-});
+// Serve uploaded images
+app.use('/uploads', express.static('uploads'));
+
+// Note: Medicine routes are now handled by /api/medicines route
 
 // Basic route
 app.get('/', (req, res) => {
