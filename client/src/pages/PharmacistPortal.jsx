@@ -33,6 +33,7 @@ import { useAuth } from '../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import { medicineAPI, groceryAPI } from '../services/api';
+import PharmacistAnalytics from '../components/pharmacist/PharmacistAnalytics';
 
 const PharmacistPortal = () => {
   const { user } = useAuth();
@@ -277,13 +278,15 @@ const PharmacistPortal = () => {
             <Tabs 
               value={tabIndex} 
               onChange={(e, newValue) => setTabIndex(newValue)}
-              variant={isMobile ? 'fullWidth' : 'standard'}
+              variant={isMobile ? 'scrollable' : 'standard'}
+              scrollButtons={isMobile ? 'auto' : false}
               sx={{
                 '& .MuiTab-root': {
                   fontSize: { xs: '0.75rem', sm: '0.875rem' },
                 },
               }}
             >
+              <Tab label="Analytics" />
               <Tab
                 label={
                   <Badge
@@ -306,8 +309,9 @@ const PharmacistPortal = () => {
               />
             </Tabs>
             <Box sx={{ mt: { xs: 2, md: 3 } }}>
-              {tabIndex === 0 && renderInventoryList(medicines, 'medicine')}
-              {tabIndex === 1 && renderInventoryList(groceries, 'grocery')}
+              {tabIndex === 0 && <PharmacistAnalytics />}
+              {tabIndex === 1 && renderInventoryList(medicines, 'medicine')}
+              {tabIndex === 2 && renderInventoryList(groceries, 'grocery')}
             </Box>
           </Paper>
         </Grid>

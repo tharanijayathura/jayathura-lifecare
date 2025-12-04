@@ -160,7 +160,23 @@ router.put('/:id', adminMiddleware, upload.single('image'), async (req, res) => 
       }
       grocery.image = `/uploads/groceries/${req.file.filename}`;
     } else if (req.body.image !== undefined) {
-      grocery.image = req.body.image;
+      // If empty string is sent, remove the image
+      if (req.body.image === '' || req.body.image === null) {
+        // Delete old image file if exists
+        if (grocery.image && grocery.image.startsWith('/uploads/')) {
+          const oldPath = grocery.image.substring(1);
+          if (fs.existsSync(oldPath)) {
+            try {
+              fs.unlinkSync(oldPath);
+            } catch (err) {
+              console.error('Error deleting old image:', err);
+            }
+          }
+        }
+        grocery.image = '';
+      } else {
+        grocery.image = req.body.image;
+      }
     }
     
     await grocery.save();

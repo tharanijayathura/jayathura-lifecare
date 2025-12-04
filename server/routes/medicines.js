@@ -309,13 +309,43 @@ router.put('/:id', adminMiddleware, upload.single('image'), async (req, res) => 
       }
       medicine.image = `/uploads/medicines/${req.file.filename}`;
     } else if (req.body.image !== undefined) {
-      medicine.image = req.body.image;
+      // If empty string is sent, remove the image
+      if (req.body.image === '' || req.body.image === null) {
+        // Delete old image file if exists
+        if (medicine.image && medicine.image.startsWith('/uploads/')) {
+          const oldPath = medicine.image.substring(1);
+          if (fs.existsSync(oldPath)) {
+            try {
+              fs.unlinkSync(oldPath);
+            } catch (err) {
+              console.error('Error deleting old image:', err);
+            }
+          }
+        }
+        medicine.image = '';
+      } else {
+        medicine.image = req.body.image;
+      }
     }
     
     await medicine.save();
     res.json(medicine);
   } catch (error) {
     console.error('Update medicine error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// DELETE /api/medicines/all - Delete all medicines (admin only)
+router.delete('/all', adminMiddleware, async (req, res) => {
+  try {
+    const result = await Medicine.deleteMany({});
+    res.json({ 
+      message: `Successfully deleted ${result.deletedCount} medicines`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Delete all medicines error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

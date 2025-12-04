@@ -55,6 +55,7 @@ export const medicineAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   delete: (id) => API.delete(`/medicines/${id}`),
+  deleteAll: () => API.delete('/medicines/all'),
   createAlert: (id, reason) => API.post(`/medicines/${id}/alert`, { reason }),
   clearAlert: (id) => API.post(`/medicines/${id}/clear-alert`),
 };

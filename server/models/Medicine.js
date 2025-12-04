@@ -5,7 +5,27 @@ const medicineSchema = new mongoose.Schema({
   brand: String,
   category: { 
     type: String, 
-    enum: ['prescription', 'otc', 'herbal', 'vitamins', 'non-medical'], 
+    enum: [
+      'prescription',           // 1. Prescription Medicines (Rx)
+      'otc',                    // 2. Over-the-Counter (OTC) Medicines
+      'herbal',                 // 3. Herbal & Ayurvedic Products
+      'medical-devices',        // 4. Medical Devices & Equipment
+      'personal-care',          // 5. Personal Care & Hygiene
+      'groceries',              // 6. Groceries & Snacks
+      'baby-care',              // 7. Baby & Infant Care
+      'first-aid',              // 8. First Aid & Emergency
+      'vitamins',               // 9. Nutritional Supplements & Vitamins
+      'seasonal',               // 10. Seasonal & Special Sections
+      'dermatology',             // 11. Dermatology & Skin Care Medicines
+      'eye-ear-care',           // 12. Eye & Ear Care
+      'womens-health',          // 13. Women's Health
+      'mens-health',            // 14. Men's Health
+      'dental-care',            // 15. Dental Care
+      'home-healthcare',        // 16. Home Healthcare
+      'fitness-weight',         // 17. Fitness & Weight Management
+      'cold-chain',             // 18. Cold Chain / Temperature Sensitive
+      'pet-health'              // 19. Pet Health
+    ], 
     required: true 
   },
   description: String,

@@ -1,0 +1,101 @@
+Atorvastatin 20mg | Sunshine | prescription | tablet | blister | 10 | 250.00 | 50 | 100 | true | Cholesterol-lowering medication used to treat high cholesterol and prevent cardiovascular disease
+Metformin 500mg | State Pharma | prescription | tablet | blister | 10 | 180.00 | 60 | 100 | true | Antidiabetic medication used to treat type 2 diabetes by reducing glucose production in the liver
+Losartan 50mg | Remedia | prescription | tablet | blister | 10 | 260.00 | 55 | 100 | true | Angiotensin receptor blocker used to treat high blood pressure and protect kidneys in diabetic patients
+Amlodipine 5mg | CIC | prescription | tablet | blister | 10 | 150.00 | 70 | 100 | true | Calcium channel blocker used to treat high blood pressure and chest pain (angina)
+Glibenclamide 5mg | Astron | prescription | tablet | blister | 10 | 120.00 | 50 | 100 | true | Oral antidiabetic medication that stimulates insulin secretion from the pancreas
+Clopidogrel 75mg | Lankem | prescription | tablet | blister | 10 | 350.00 | 45 | 100 | true | Antiplatelet medication used to prevent blood clots in patients with heart disease or stroke
+Enalapril 5mg | State Pharma | prescription | tablet | blister | 10 | 140.00 | 60 | 100 | true | ACE inhibitor used to treat high blood pressure and heart failure
+Prednisolone 5mg | Astron | prescription | tablet | blister | 10 | 120.00 | 40 | 100 | true | Corticosteroid medication used to treat inflammation, allergic reactions, and autoimmune conditions
+Omeprazole 20mg | Glaxo | prescription | capsule | blister | 10 | 240.00 | 65 | 100 | true | Proton pump inhibitor used to treat acid reflux, stomach ulcers, and GERD
+Cefixime 200mg | Remedia | prescription | tablet | blister | 10 | 850.00 | 35 | 100 | true | Antibiotic used to treat bacterial infections such as urinary tract infections and respiratory infections
+Amoxicillin 500mg | GSK | prescription | capsule | blister | 10 | 380.00 | 80 | 100 | true | Broad-spectrum antibiotic used to treat various bacterial infections including respiratory and skin infections
+Azithromycin 500mg | Sunshine | prescription | tablet | blister | 3 | 520.00 | 50 | 30 | true | Macrolide antibiotic used to treat respiratory infections, skin infections, and sexually transmitted diseases
+Metoprolol 50mg | Astron | prescription | tablet | blister | 10 | 240.00 | 55 | 100 | true | Beta-blocker used to treat high blood pressure, chest pain, and heart rhythm disorders
+Sertraline 50mg | Lankem | prescription | tablet | blister | 10 | 450.00 | 40 | 100 | true | Antidepressant medication used to treat depression, anxiety disorders, and obsessive-compulsive disorder
+Risperidone 2mg | Remedia | prescription | tablet | blister | 10 | 300.00 | 35 | 100 | true | Antipsychotic medication used to treat schizophrenia, bipolar disorder, and irritability in autism
+Warfarin 5mg | Astron | prescription | tablet | blister | 10 | 200.00 | 30 | 100 | true | Anticoagulant medication used to prevent and treat blood clots, requires regular monitoring
+Levothyroxine 50mcg | State Pharma | prescription | tablet | blister | 10 | 160.00 | 70 | 100 | true | Thyroid hormone replacement medication used to treat hypothyroidism
+Diclofenac Sodium 50mg | State Pharma | prescription | tablet | blister | 10 | 140.00 | 80 | 100 | true | Nonsteroidal anti-inflammatory drug (NSAID) used to treat pain, inflammation, and arthritis
+Montelukast 10mg | Astron | prescription | tablet | blister | 10 | 320.00 | 50 | 100 | true | Leukotriene receptor antagonist used to prevent asthma attacks and treat allergic rhinitis
+Insulin 10ml | Biocon | prescription | ml | bottle | 10 | 1500.00 | 25 | 50 | true | Injectable hormone used to treat diabetes by regulating blood sugar levels
+Panadol 500mg | Panadol | otc | tablet | card | 10 | 70.00 | 100 | 200 | false | Paracetamol-based pain reliever and fever reducer, safe for most adults and children
+Ibuprofen 200mg | Advil | otc | tablet | blister | 10 | 160.00 | 90 | 150 | false | Nonsteroidal anti-inflammatory drug used to relieve pain, reduce inflammation, and lower fever
+Cetirizine 10mg | Histazin | otc | tablet | blister | 10 | 180.00 | 85 | 150 | false | Antihistamine medication used to treat allergy symptoms such as sneezing, runny nose, and itchy eyes
+Benadryl Syrup | GSK | otc | ml | bottle | 100 | 450.00 | 60 | 200 | false | Antihistamine syrup for children and adults to relieve allergy symptoms, cough, and cold
+Vicks Vaporub | Vicks | otc | gram | tube | 25 | 350.00 | 75 | 100 | false | Topical ointment containing menthol and camphor to relieve cough, congestion, and muscle aches
+Saline Nasal Spray | Cleanso | otc | ml | bottle | 50 | 420.00 | 70 | 100 | false | Sterile saline solution used to moisturize nasal passages and relieve nasal congestion
+Gastric Relief (Sodium Bicarb) | Eno | otc | gram | sachet | 1 | 50.00 | 150 | 200 | false | Antacid medication used to relieve heartburn, indigestion, and acid reflux
+Strepsils Lemon | Strepsils | otc | piece | box | 6 | 200.00 | 80 | 100 | false | Medicated lozenges containing antiseptic to soothe sore throat and reduce throat irritation
+Chloraseptic Spray | Pharmatech | otc | ml | bottle | 30 | 500.00 | 55 | 100 | false | Throat spray containing local anesthetic to provide temporary relief from sore throat pain
+Ayur Pain Balm | Siddhalepa | otc | gram | tube | 10 | 120.00 | 90 | 150 | false | Herbal pain relief balm containing natural ingredients to relieve muscle pain and joint stiffness
+Orsaline | UNICEF | otc | gram | sachet | 1 | 40.00 | 200 | 300 | false | Oral rehydration solution used to treat dehydration caused by diarrhea and vomiting
+Hydrocortisone Cream | Hemas | otc | gram | tube | 15 | 320.00 | 65 | 100 | false | Topical corticosteroid cream used to treat skin inflammation, itching, and rashes
+Burnol | Dr Reddy | otc | gram | tube | 15 | 350.00 | 60 | 100 | false | Antiseptic cream used to treat minor burns, cuts, and skin infections
+Iodex Balm | Iodex | otc | gram | tube | 20 | 250.00 | 75 | 100 | false | Iodine-based topical ointment used to relieve muscle pain, joint pain, and inflammation
+D-Cold | CIPLA | otc | tablet | blister | 10 | 200.00 | 80 | 150 | false | Combination medication for cold and flu symptoms including nasal congestion, headache, and body aches
+Gaviscon Liquid | Reckitt | otc | ml | bottle | 120 | 950.00 | 50 | 100 | false | Antacid liquid that forms a protective layer to relieve heartburn and acid reflux
+Piriton Syrup | GSK | otc | ml | bottle | 100 | 420.00 | 65 | 150 | false | Antihistamine syrup for children to treat allergy symptoms and allergic reactions
+Kalpol Syrup | Kalbe | otc | ml | bottle | 100 | 480.00 | 70 | 150 | false | Paracetamol-based syrup for children to reduce fever and relieve pain
+Betadine Solution | Betadine | otc | ml | bottle | 100 | 780.00 | 55 | 100 | false | Antiseptic solution containing povidone-iodine used to disinfect wounds and prevent infection
+Oral Pain Gel | Dentinox | otc | gram | tube | 10 | 340.00 | 60 | 100 | false | Topical gel containing local anesthetic to relieve teething pain in infants and oral discomfort
+Siddhalepa Balm | Siddhalepa | herbal | gram | tube | 25 | 180.00 | 100 | 150 | false | Traditional Ayurvedic balm containing herbal extracts to relieve muscle pain, joint pain, and headaches
+Samahan Drink | Link | herbal | gram | sachet | 4 | 25.00 | 200 | 300 | false | Herbal drink mix containing traditional Sri Lankan herbs to boost immunity and relieve cold symptoms
+Link Samahan Box | Link | herbal | piece | box | 30 | 750.00 | 50 | 100 | false | Box of 30 sachets of Samahan herbal drink mix for daily immune support and cold prevention
+Hela Osu Toothpaste | Hela | herbal | gram | tube | 100 | 350.00 | 80 | 150 | false | Ayurvedic toothpaste containing natural herbs to maintain oral hygiene and prevent dental problems
+Ayurvedic Pain Oil | Hettigoda | herbal | ml | bottle | 100 | 600.00 | 60 | 100 | false | Traditional Ayurvedic oil containing herbal extracts for massage to relieve muscle pain and joint stiffness
+Venivel Capsules | Ayur | herbal | capsule | blister | 10 | 250.00 | 70 | 100 | false | Herbal supplement capsules containing natural ingredients to support joint health and reduce inflammation
+Koththamalli Pack | MD | herbal | gram | box | 50 | 180.00 | 90 | 150 | false | Coriander seed powder pack used in traditional medicine for digestive health and cooling properties
+Belimal Tea | Link | herbal | piece | box | 20 | 350.00 | 75 | 100 | false | Herbal tea bags containing belimal leaves for digestive health and natural detoxification
+Aralu Nelli Rasakinda | Hela | herbal | ml | bottle | 200 | 300.00 | 65 | 100 | false | Traditional Ayurvedic herbal preparation for digestive health and immune support
+Jeewani Rasayanaya | Link | herbal | ml | bottle | 200 | 450.00 | 55 | 100 | false | Traditional Ayurvedic herbal tonic for overall health, vitality, and immune system support
+Bee Honey | Pure Ceylon | herbal | ml | bottle | 150 | 900.00 | 40 | 80 | false | Pure natural honey with antibacterial properties, used for cough relief and as a natural sweetener
+Ayur Herbal Hair Oil | Kumarika | herbal | ml | bottle | 100 | 350.00 | 70 | 100 | false | Herbal hair oil containing natural ingredients to promote hair growth and prevent hair fall
+Kesha Oil | Hemas | herbal | ml | bottle | 100 | 420.00 | 65 | 100 | false | Ayurvedic hair oil with herbal extracts to nourish scalp, strengthen hair, and prevent premature graying
+Hathawariya Powder | Nature's | herbal | gram | box | 50 | 280.00 | 60 | 100 | false | Asparagus root powder used in traditional medicine for kidney health and urinary tract support
+Dalu Kola Porridge | MD | herbal | gram | sachet | 40 | 60.00 | 120 | 200 | false | Herbal porridge mix containing dalu kola for digestive health and nutritional support
+Ayur Digestive Tonic | Link | herbal | ml | bottle | 200 | 550.00 | 50 | 100 | false | Herbal digestive tonic containing traditional ingredients to improve digestion and relieve stomach discomfort
+Herbal Muscle Rub | Samahan | herbal | gram | tube | 20 | 220.00 | 80 | 100 | false | Herbal topical ointment containing natural extracts to relieve muscle pain and stiffness
+Kola Kanda Mix | Hela | herbal | gram | box | 50 | 150.00 | 85 | 150 | false | Traditional herbal porridge mix containing various medicinal leaves for overall health and wellness
+Ginger Herbal Tea | Dilmah | herbal | piece | box | 20 | 450.00 | 70 | 100 | false | Herbal tea bags containing ginger for digestive health, nausea relief, and immune support
+King Coconut Water | Ezy | herbal | ml | bottle | 500 | 200.00 | 100 | 200 | false | Natural coconut water rich in electrolytes, vitamins, and minerals for hydration and health
+Vitamin C 500mg | CIC | vitamins | tablet | blister | 10 | 200.00 | 90 | 150 | false | Essential vitamin supplement to boost immune system, promote collagen production, and support overall health
+Vitamin C Chewable | Redoxon | vitamins | tablet | blister | 10 | 450.00 | 75 | 100 | false | Chewable vitamin C tablets with pleasant taste, ideal for children and adults who prefer chewable supplements
+B-Complex | Astron | vitamins | tablet | blister | 10 | 250.00 | 85 | 150 | false | B-vitamin complex supplement to support energy metabolism, nervous system health, and reduce fatigue
+Zinc 20mg | Hemas | vitamins | tablet | blister | 10 | 200.00 | 80 | 150 | false | Essential mineral supplement to support immune function, wound healing, and overall health
+Fish Oil | Nature's Way | vitamins | capsule | bottle | 60 | 2800.00 | 40 | 80 | false | Omega-3 fatty acid supplement from fish oil to support heart health, brain function, and reduce inflammation
+Calcium + Vitamin D | Remedia | vitamins | tablet | blister | 10 | 350.00 | 70 | 100 | false | Combined supplement for bone health, calcium absorption, and prevention of osteoporosis
+Magnesium Tablets | Nature's | vitamins | tablet | blister | 10 | 450.00 | 60 | 100 | false | Essential mineral supplement to support muscle function, nerve health, and energy production
+Multivitamin Syrup | Seven Seas | vitamins | ml | bottle | 100 | 900.00 | 55 | 100 | false | Liquid multivitamin supplement for children and adults who have difficulty swallowing tablets
+Vitamin D3 | Astron | vitamins | capsule | blister | 10 | 300.00 | 75 | 100 | false | Essential vitamin for bone health, immune function, and calcium absorption
+Iron Tablets | Hemas | vitamins | tablet | blister | 10 | 220.00 | 70 | 100 | false | Iron supplement to prevent and treat iron deficiency anemia
+Prenatal Vitamins | Materna | vitamins | tablet | bottle | 30 | 1500.00 | 35 | 60 | false | Comprehensive multivitamin supplement specially formulated for pregnant and breastfeeding women
+Kids Gummies Multivitamin | GummyKids | vitamins | piece | bottle | 30 | 1600.00 | 50 | 80 | false | Delicious gummy multivitamin for children with essential vitamins and minerals for healthy growth
+Omega-3 | Blackmores | vitamins | capsule | bottle | 60 | 3500.00 | 30 | 60 | false | High-quality omega-3 supplement for cardiovascular health, brain function, and joint health
+Vitamin B12 | Astron | vitamins | tablet | blister | 10 | 300.00 | 65 | 100 | false | Essential vitamin for nerve health, red blood cell formation, and energy metabolism
+Probiotic Capsules | Probiotech | vitamins | capsule | bottle | 30 | 1800.00 | 45 | 80 | false | Beneficial bacteria supplement to support digestive health and immune system
+Glucosamine | Nature's | vitamins | capsule | bottle | 30 | 2800.00 | 40 | 80 | false | Joint health supplement to support cartilage health and reduce joint pain
+Collagen Powder | Nutra | vitamins | gram | box | 100 | 3500.00 | 25 | 50 | false | Protein supplement to support skin health, joint function, and overall wellness
+Vitamin E | Everlast | vitamins | capsule | blister | 10 | 300.00 | 70 | 100 | false | Antioxidant vitamin to protect cells from damage and support skin and eye health
+Hair Skin Nail Supplement | NutraLife | vitamins | capsule | bottle | 30 | 2500.00 | 40 | 80 | false | Comprehensive supplement containing biotin and other nutrients for healthy hair, skin, and nails
+Folic Acid | State Pharma | vitamins | tablet | blister | 10 | 150.00 | 80 | 150 | false | Essential B-vitamin for cell growth, especially important during pregnancy
+Cotton Wool Roll | SoftWool | non-medical | gram | pack | 50 | 150.00 | 100 | 200 | false | Sterile cotton wool for wound dressing, cleaning, and medical applications
+Bandage Roll | FastAid | non-medical | gram | roll | 5 | 120.00 | 120 | 200 | false | Elastic bandage roll for supporting injured joints and securing dressings
+Plasters (Small) | Elastoplast | non-medical | piece | box | 10 | 180.00 | 150 | 300 | false | Adhesive bandages for covering small cuts, wounds, and blisters
+Surgical Face Mask | SoftMask | non-medical | piece | box | 50 | 450.00 | 80 | 150 | false | Disposable surgical masks for protection against airborne particles and respiratory droplets
+Digital Thermometer | Omron | non-medical | piece | box | 1 | 1200.00 | 40 | 80 | false | Electronic thermometer for accurate body temperature measurement
+Hot Water Bag | HotLife | non-medical | piece | box | 1 | 900.00 | 30 | 50 | false | Reusable hot water bag for pain relief and warmth therapy
+Nebulizer Kit | NebuFlow | non-medical | piece | box | 1 | 3500.00 | 15 | 30 | false | Medical device for delivering medication directly to the lungs for respiratory conditions
+Glucose Meter Strips | AccuChek | non-medical | piece | box | 25 | 2500.00 | 35 | 60 | false | Test strips for blood glucose monitoring in diabetic patients
+Hand Sanitizer | Swadeshi | non-medical | ml | bottle | 100 | 300.00 | 150 | 300 | false | Alcohol-based hand sanitizer for killing germs and maintaining hand hygiene
+Adult Diapers (M) | EvaCare | non-medical | piece | pack | 10 | 1800.00 | 50 | 100 | false | Disposable adult diapers for incontinence management and comfort
+Baby Diapers | Huggies | non-medical | piece | pack | 20 | 1900.00 | 60 | 120 | false | Disposable baby diapers for infants and toddlers
+Surgical Gloves | MediSafe | non-medical | piece | box | 50 | 1500.00 | 40 | 80 | false | Disposable latex-free surgical gloves for medical procedures and hygiene
+Crepe Bandage | FastAid | non-medical | gram | roll | 1 | 200.00 | 100 | 200 | false | Elastic crepe bandage for supporting sprains, strains, and joint injuries
+Heat Pack | ReliefPad | non-medical | piece | box | 1 | 750.00 | 35 | 60 | false | Reusable heat pack for muscle pain relief and warmth therapy
+Ice Pack | ReliefCold | non-medical | piece | box | 1 | 550.00 | 40 | 80 | false | Reusable cold pack for reducing swelling, inflammation, and pain relief
+Tongue Depressors | FastAid | non-medical | piece | box | 50 | 300.00 | 60 | 100 | false | Disposable wooden tongue depressors for medical examinations
+Alcohol Swabs | MediClean | non-medical | piece | box | 50 | 250.00 | 100 | 200 | false | Pre-moistened alcohol swabs for disinfecting skin before injections
+Pregnancy Test Kit | SureCheck | non-medical | piece | box | 1 | 250.00 | 80 | 150 | false | Home pregnancy test kit for early detection of pregnancy
+BP Monitor | Omron | non-medical | piece | box | 1 | 9000.00 | 20 | 40 | false | Digital blood pressure monitor for home use to track blood pressure readings
+First Aid Kit | Hemas | non-medical | piece | box | 1 | 1500.00 | 30 | 60 | false | Comprehensive first aid kit containing essential medical supplies for emergency situations
+

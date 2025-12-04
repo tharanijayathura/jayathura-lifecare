@@ -26,6 +26,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  InputAdornment,
+  Divider,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
@@ -44,19 +49,67 @@ import {
   Warning,
   Error as ErrorIcon,
   Clear,
+  Close,
+  Search,
+  FilterList,
 } from '@mui/icons-material';
 import { medicineAPI, groceryAPI, adminAPI } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
+import AdminAnalytics from '../components/admin/AdminAnalytics';
+import BulkMedicineImport from '../components/admin/BulkMedicineImport';
+import BulkGroceryImport from '../components/admin/BulkGroceryImport';
 import PageHeader from '../components/common/PageHeader';
 
-const MEDICINE_CATEGORIES = [
-  { value: 'prescription', label: 'Prescription' },
-  { value: 'otc', label: 'OTC' },
-  { value: 'herbal', label: 'Herbal' },
-  { value: 'vitamins', label: 'Vitamins' },
-  { value: 'non-medical', label: 'Non Medical' },
+// Grouped categories for better organization
+const MEDICINE_CATEGORY_GROUPS = [
+  {
+    groupName: 'Medicines',
+    categories: [
+      { value: 'prescription', label: 'Prescription (Rx)' },
+      { value: 'otc', label: 'Over-the-Counter (OTC)' },
+      { value: 'herbal', label: 'Herbal & Ayurvedic' },
+    ]
+  },
+  {
+    groupName: 'Health & Wellness',
+    categories: [
+      { value: 'vitamins', label: 'Vitamins & Supplements' },
+      { value: 'dermatology', label: 'Dermatology & Skin Care' },
+      { value: 'eye-ear-care', label: 'Eye & Ear Care' },
+      { value: 'dental-care', label: 'Dental Care' },
+    ]
+  },
+  {
+    groupName: 'Specialized Care',
+    categories: [
+      { value: 'womens-health', label: "Women's Health" },
+      { value: 'mens-health', label: "Men's Health" },
+      { value: 'baby-care', label: 'Baby & Infant Care' },
+      { value: 'pet-health', label: 'Pet Health' },
+    ]
+  },
+  {
+    groupName: 'Medical Equipment',
+    categories: [
+      { value: 'medical-devices', label: 'Medical Devices' },
+      { value: 'home-healthcare', label: 'Home Healthcare' },
+      { value: 'first-aid', label: 'First Aid & Emergency' },
+    ]
+  },
+  {
+    groupName: 'Lifestyle',
+    categories: [
+      { value: 'personal-care', label: 'Personal Care & Hygiene' },
+      { value: 'fitness-weight', label: 'Fitness & Weight Management' },
+      { value: 'seasonal', label: 'Seasonal & Special' },
+      { value: 'cold-chain', label: 'Cold Chain Products' },
+    ]
+  }
 ];
+
+// Flattened list for dropdown
+const MEDICINE_CATEGORIES = MEDICINE_CATEGORY_GROUPS.flatMap(group => group.categories);
 
 const BASE_UNITS = [
   { value: 'tablet', label: 'Tablet' },
@@ -133,8 +186,9 @@ const AdminPortal = () => {
   }, [user, authLoading, navigate]);
 
   // State management
-  const [mainTabIndex, setMainTabIndex] = useState(0); // Medicines, Groceries, Users
+  const [mainTabIndex, setMainTabIndex] = useState(0); // Analytics, Medicines, Groceries, Users
   const [medicineCategoryTab, setMedicineCategoryTab] = useState(0); // Category tabs for medicines
+  const [medicineSearchTerm, setMedicineSearchTerm] = useState(''); // Search term for medicines
   const [medicines, setMedicines] = useState([]);
   const [groceries, setGroceries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -145,6 +199,9 @@ const AdminPortal = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [alertDialog, setAlertDialog] = useState({ open: false, item: null, type: null });
+  const [deleteAllDialog, setDeleteAllDialog] = useState({ open: false, type: null }); // 'medicine' or 'grocery'
+  const [medicineViewMode, setMedicineViewMode] = useState('single'); // 'single' or 'bulk'
+  const [groceryViewMode, setGroceryViewMode] = useState('single'); // 'single' or 'bulk'
 
   // Fetch medicines
   const fetchMedicines = async () => {
@@ -213,20 +270,35 @@ const AdminPortal = () => {
       return;
     }
     
-    if (mainTabIndex === 0) {
+    if (mainTabIndex === 1) {
       fetchMedicines();
-    } else if (mainTabIndex === 1) {
-      fetchGroceries();
     } else if (mainTabIndex === 2) {
+      fetchGroceries();
+    } else if (mainTabIndex === 3) {
       fetchPendingUsers();
     }
   }, [mainTabIndex, user, authLoading]);
 
-  // Filter medicines by category
-  const filteredMedicines = medicines.filter((med) => {
-    const selectedCategory = MEDICINE_CATEGORIES[medicineCategoryTab]?.value;
-    return selectedCategory ? med.category === selectedCategory : true;
-  });
+  // Filter medicines by category and search
+  const filteredMedicines = React.useMemo(() => {
+    if (!medicines || medicines.length === 0) return [];
+    
+    // Get selected category from tabs
+    const selectedCategory = medicineCategoryTab === 0 ? 'all' : MEDICINE_CATEGORIES[medicineCategoryTab - 1]?.value;
+    
+    return medicines.filter((med) => {
+      // Category filter
+      const categoryMatch = selectedCategory === 'all' || !selectedCategory || med.category === selectedCategory;
+      
+      // Search filter
+      const searchMatch = !medicineSearchTerm || 
+        (med.name && med.name.toLowerCase().includes(medicineSearchTerm.toLowerCase())) ||
+        (med.brand && med.brand.toLowerCase().includes(medicineSearchTerm.toLowerCase())) ||
+        (med.description && med.description.toLowerCase().includes(medicineSearchTerm.toLowerCase()));
+      
+      return categoryMatch && searchMatch;
+    });
+  }, [medicines, medicineCategoryTab, medicineSearchTerm]);
 
   // Helper functions
   const handleFormChange = (setter) => (event) => {
@@ -240,12 +312,32 @@ const AdminPortal = () => {
   const handleImageUpload = (setter) => (event) => {
     const file = event.target.files?.[0];
     if (file) {
-      setter((prev) => ({
-        ...prev,
-        image: file,
-        imageUrl: URL.createObjectURL(file),
-      }));
+      setter((prev) => {
+        // Revoke old object URL if it exists
+        if (prev.imageUrl && prev.imageUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(prev.imageUrl);
+        }
+        return {
+          ...prev,
+          image: file,
+          imageUrl: URL.createObjectURL(file),
+        };
+      });
     }
+  };
+
+  const handleRemoveImage = (setter) => () => {
+    setter((prev) => {
+      // Revoke object URL if it exists
+      if (prev.imageUrl && prev.imageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(prev.imageUrl);
+      }
+      return {
+        ...prev,
+        image: null,
+        imageUrl: '',
+      };
+    });
   };
 
   // Medicine form handlers
@@ -289,11 +381,15 @@ const AdminPortal = () => {
       // Min stock
       formData.append('minStockUnits', medicineForm.minStockUnits);
       
-      // Image
+      // Image - only append if there's a new image or existing imageUrl
+      // If both are empty/null, we'll send empty string to remove image
       if (medicineForm.image) {
         formData.append('image', medicineForm.image);
-      } else if (medicineForm.imageUrl) {
+      } else if (medicineForm.imageUrl && medicineForm.imageUrl.trim() !== '') {
         formData.append('image', medicineForm.imageUrl);
+      } else {
+        // Explicitly send empty string to remove image
+        formData.append('image', '');
       }
 
       if (editingMedicineId) {
@@ -340,6 +436,18 @@ const AdminPortal = () => {
     setEditingMedicineId(medicine._id);
   };
 
+  const handleDeleteAllMedicines = async () => {
+    try {
+      const response = await medicineAPI.deleteAll();
+      alert(`Successfully deleted ${response.data.deletedCount} medicines.`);
+      await fetchMedicines();
+      setDeleteAllDialog({ open: false, type: null });
+    } catch (error) {
+      console.error('Error deleting all medicines:', error);
+      alert('Failed to delete all medicines. Please try again.');
+    }
+  };
+
   const handleDeleteMedicine = async (id) => {
     if (!window.confirm('Are you sure you want to delete this medicine?')) return;
     setLoading(true);
@@ -367,8 +475,15 @@ const AdminPortal = () => {
     try {
       const formData = new FormData();
       Object.keys(groceryForm).forEach((key) => {
-        if (key === 'image' && groceryForm.image) {
-          formData.append('image', groceryForm.image);
+        if (key === 'image') {
+          if (groceryForm.image) {
+            formData.append('image', groceryForm.image);
+          } else if (groceryForm.imageUrl && groceryForm.imageUrl.trim() !== '') {
+            formData.append('image', groceryForm.imageUrl);
+          } else {
+            // Explicitly send empty string to remove image
+            formData.append('image', '');
+          }
         } else if (key !== 'image' && key !== 'imageUrl' && groceryForm[key] !== null && groceryForm[key] !== '') {
           formData.append(key, groceryForm[key]);
         }
@@ -686,12 +801,28 @@ const AdminPortal = () => {
                 />
               </Button>
               {medicineForm.imageUrl && (
-                <Box
-                  component="img"
-                  src={medicineForm.imageUrl}
-                  alt="Preview"
-                  sx={{ maxHeight: 100, maxWidth: 100, objectFit: 'cover', borderRadius: 1 }}
-                />
+                <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                  <Box
+                    component="img"
+                    src={medicineForm.imageUrl}
+                    alt="Preview"
+                    sx={{ maxHeight: 100, maxWidth: 100, objectFit: 'cover', borderRadius: 1 }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={handleRemoveImage(setMedicineForm)}
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      bgcolor: 'error.main',
+                      color: 'white',
+                      '&:hover': { bgcolor: 'error.dark' },
+                    }}
+                  >
+                    <Close fontSize="small" />
+                  </IconButton>
+                </Box>
               )}
               <TextField
                 label="Or Image URL"
@@ -700,6 +831,23 @@ const AdminPortal = () => {
                 onChange={handleFormChange(setMedicineForm)}
                 fullWidth
                 placeholder="https://..."
+                InputProps={{
+                  endAdornment: medicineForm.imageUrl && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setMedicineForm((prev) => {
+                          if (prev.imageUrl && prev.imageUrl.startsWith('blob:')) {
+                            URL.revokeObjectURL(prev.imageUrl);
+                          }
+                          return { ...prev, imageUrl: '', image: null };
+                        });
+                      }}
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
               />
             </Stack>
           </Grid>
@@ -725,7 +873,7 @@ const AdminPortal = () => {
     </Paper>
   );
 
-  // Render medicine list with category tabs
+  // Render medicine list with improved UI
   const renderMedicineList = () => {
     if (loading) {
       return (
@@ -735,47 +883,160 @@ const AdminPortal = () => {
       );
     }
 
+    // Calculate category statistics
+    const categoryStats = MEDICINE_CATEGORIES.map(cat => {
+      const categoryMedicines = medicines.filter(m => m.category === cat.value);
+      const alertCount = categoryMedicines.filter(m => m.stockAlert?.isAlerted || isOutOfStock(m)).length;
+      return { ...cat, count: categoryMedicines.length, alertCount };
+    });
+
+    const totalMedicines = medicines.length;
+    const totalAlerts = medicines.filter(m => m.stockAlert?.isAlerted || isOutOfStock(m)).length;
+
     return (
       <Box>
-        <Tabs
-          value={medicineCategoryTab}
-          onChange={(e, newValue) => setMedicineCategoryTab(newValue)}
-          variant={isMobile ? 'scrollable' : 'standard'}
-          scrollButtons={isMobile ? 'auto' : false}
-          sx={{ 
-            borderBottom: 1, 
-            borderColor: 'divider', 
-            mb: { xs: 2, md: 3 },
-            '& .MuiTab-root': {
-              fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.875rem' },
-              minWidth: { xs: 60, sm: 80 },
-            },
-          }}
-        >
-          {MEDICINE_CATEGORIES.map((cat, index) => {
-            const categoryMedicines = medicines.filter((m) => m.category === cat.value);
-            const alertCount = categoryMedicines.filter((m) => m.stockAlert?.isAlerted || isOutOfStock(m)).length;
-            return (
-              <Tab
-                key={cat.value}
-                label={
-                  <Badge badgeContent={alertCount} color="error">
-                    {cat.label}
-                  </Badge>
-                }
+        {/* Search Bar */}
+        <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={8}>
+              <TextField
+                fullWidth
+                placeholder="Search medicines by name, brand, or description..."
+                value={medicineSearchTerm}
+                onChange={(e) => setMedicineSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: medicineSearchTerm && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setMedicineSearchTerm('')}
+                      >
+                        <Clear fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                size="small"
               />
-            );
-          })}
-        </Tabs>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                {medicineSearchTerm && (
+                  <Chip
+                    label={`Search: "${medicineSearchTerm}"`}
+                    onDelete={() => setMedicineSearchTerm('')}
+                    color="secondary"
+                    variant="outlined"
+                    size="small"
+                  />
+                )}
+                {totalAlerts > 0 && (
+                  <Chip
+                    label={`${totalAlerts} Alerts`}
+                    color="error"
+                    size="small"
+                  />
+                )}
+                <Chip
+                  label={`Total: ${totalMedicines}`}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Category Tabs - Organized by Groups */}
+        <Box sx={{ mb: 3 }}>
+          <Tabs
+            value={medicineCategoryTab}
+            onChange={(e, newValue) => setMedicineCategoryTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ 
+              borderBottom: 1, 
+              borderColor: 'divider',
+              '& .MuiTab-root': {
+                fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.875rem' },
+                minWidth: { xs: 80, sm: 100, md: 120 },
+                px: { xs: 1, sm: 1.5, md: 2 },
+                textTransform: 'none',
+              },
+            }}
+          >
+            <Tab 
+              label={
+                <Badge badgeContent={totalAlerts > 0 ? totalAlerts : null} color="error">
+                  All Medicines
+                </Badge>
+              }
+            />
+            {MEDICINE_CATEGORIES.map((cat, index) => {
+              const categoryMedicines = medicines.filter((m) => m.category === cat.value);
+              const alertCount = categoryMedicines.filter((m) => m.stockAlert?.isAlerted || isOutOfStock(m)).length;
+              return (
+                <Tab
+                  key={cat.value}
+                  label={
+                    <Badge badgeContent={alertCount > 0 ? alertCount : null} color="error">
+                      {cat.label}
+                    </Badge>
+                  }
+                />
+              );
+            })}
+          </Tabs>
+        </Box>
+
+        {/* Results Summary */}
+        {filteredMedicines.length > 0 && (
+          <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography variant="body2" color="text.secondary">
+              Showing <strong>{filteredMedicines.length}</strong> of <strong>{totalMedicines}</strong> medicines
+            </Typography>
+            {medicineSearchTerm && (
+              <Button
+                size="small"
+                onClick={() => setMedicineSearchTerm('')}
+                startIcon={<Clear />}
+              >
+                Clear Search
+              </Button>
+            )}
+          </Box>
+        )}
 
         <Grid container spacing={{ xs: 1.5, sm: 2 }}>
           {filteredMedicines.length === 0 ? (
             <Grid item xs={12}>
-              <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
-                <AddCircle color="disabled" sx={{ fontSize: 48 }} />
-                <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-                  No medicines in this category. Add your first medicine using the form.
+              <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+                <Search sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  {medicineSearchTerm || medicineCategoryTab !== 0
+                    ? 'No medicines found matching your filters'
+                    : 'No medicines in the database'}
                 </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                  {medicineSearchTerm || medicineCategoryTab !== 0
+                    ? 'Try adjusting your search or selecting a different category'
+                    : 'Add your first medicine using the form above'}
+                </Typography>
+                {medicineSearchTerm && (
+                  <Button
+                    variant="outlined"
+                    onClick={() => setMedicineSearchTerm('')}
+                    startIcon={<Clear />}
+                  >
+                    Clear Search
+                  </Button>
+                )}
               </Paper>
             </Grid>
           ) : (
@@ -1020,12 +1281,28 @@ const AdminPortal = () => {
                 />
               </Button>
               {groceryForm.imageUrl && (
-                <Box
-                  component="img"
-                  src={groceryForm.imageUrl}
-                  alt="Preview"
-                  sx={{ maxHeight: 100, maxWidth: 100, objectFit: 'cover', borderRadius: 1 }}
-                />
+                <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                  <Box
+                    component="img"
+                    src={groceryForm.imageUrl}
+                    alt="Preview"
+                    sx={{ maxHeight: 100, maxWidth: 100, objectFit: 'cover', borderRadius: 1 }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={handleRemoveImage(setGroceryForm)}
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      bgcolor: 'error.main',
+                      color: 'white',
+                      '&:hover': { bgcolor: 'error.dark' },
+                    }}
+                  >
+                    <Close fontSize="small" />
+                  </IconButton>
+                </Box>
               )}
               <TextField
                 label="Or Image URL"
@@ -1034,6 +1311,23 @@ const AdminPortal = () => {
                 onChange={handleFormChange(setGroceryForm)}
                 fullWidth
                 placeholder="https://..."
+                InputProps={{
+                  endAdornment: groceryForm.imageUrl && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setGroceryForm((prev) => {
+                          if (prev.imageUrl && prev.imageUrl.startsWith('blob:')) {
+                            URL.revokeObjectURL(prev.imageUrl);
+                          }
+                          return { ...prev, imageUrl: '', image: null };
+                        });
+                      }}
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
               />
             </Stack>
           </Grid>
@@ -1336,8 +1630,8 @@ const AdminPortal = () => {
         }}
       >
         <Typography variant="body2" sx={{ fontSize: { xs: '0.85rem', md: '0.875rem' } }}>
-          Add and manage medicines by category (Prescription, OTC, Herbal, Vitamins, Non-Medical). 
-          Red indicators show items with stock alerts. Pharmacists can create alerts for low stock items.
+          Manage your pharmacy inventory: <strong>Medicines</strong> (prescription, OTC, herbal, medical devices, etc.) and <strong>Groceries</strong> are managed separately. 
+          Use search and category filters to quickly find items. Red indicators show stock alerts.
         </Typography>
       </Alert>
 
@@ -1354,34 +1648,147 @@ const AdminPortal = () => {
             },
           }}
         >
+          <Tab label="Analytics" />
           <Tab label="Medicines" />
           <Tab label="Groceries" />
           <Tab label="User Approvals" />
         </Tabs>
         <Box sx={{ mt: { xs: 2, md: 3 } }}>
-          {mainTabIndex === 0 && (
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
-              <Grid item xs={12} md={4}>
-                {renderMedicineForm()}
-              </Grid>
-              <Grid item xs={12} md={8}>
-                {renderMedicineList()}
-              </Grid>
-            </Grid>
-          )}
+          {mainTabIndex === 0 && <AdminAnalytics />}
           {mainTabIndex === 1 && (
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
-              <Grid item xs={12} md={4}>
-                {renderGroceryForm()}
-              </Grid>
-              <Grid item xs={12} md={8}>
-                {renderGroceryList()}
-              </Grid>
-            </Grid>
+            <Box>
+              {/* Action Buttons */}
+              <Paper sx={{ p: 2, mb: 3, borderRadius: 2, bgcolor: 'background.default' }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Button
+                    variant={medicineViewMode === 'single' ? 'contained' : 'outlined'}
+                    onClick={() => setMedicineViewMode('single')}
+                    size="small"
+                    startIcon={<AddCircle />}
+                  >
+                    Add Single Medicine
+                  </Button>
+                  <Button
+                    variant={medicineViewMode === 'bulk' ? 'contained' : 'outlined'}
+                    onClick={() => setMedicineViewMode('bulk')}
+                    size="small"
+                    startIcon={<Save />}
+                  >
+                    Bulk Import
+                  </Button>
+                  <Divider orientation="vertical" flexItem />
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => setDeleteAllDialog({ open: true, type: 'medicine' })}
+                    size="small"
+                    startIcon={<Delete />}
+                  >
+                    Delete All Medicines
+                  </Button>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Chip 
+                    label={`Total: ${medicines.length} medicines`} 
+                    color="primary" 
+                    variant="outlined"
+                    size="small"
+                  />
+                </Box>
+              </Paper>
+              {medicineViewMode === 'single' ? (
+                <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
+                  <Grid item xs={12} md={4}>
+                    {renderMedicineForm()}
+                  </Grid>
+                  <Grid item xs={12} md={8}>
+                    {renderMedicineList()}
+                  </Grid>
+                </Grid>
+              ) : (
+                <Box>
+                  <BulkMedicineImport onImportComplete={fetchMedicines} />
+                  <Box sx={{ mt: 3 }}>
+                    {renderMedicineList()}
+                  </Box>
+                </Box>
+              )}
+            </Box>
           )}
-          {mainTabIndex === 2 && renderUserApprovals()}
+          {mainTabIndex === 2 && (
+            <Box>
+              <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Button
+                  variant={groceryViewMode === 'single' ? 'contained' : 'outlined'}
+                  onClick={() => setGroceryViewMode('single')}
+                  size="small"
+                >
+                  Add Single Grocery
+                </Button>
+                <Button
+                  variant={groceryViewMode === 'bulk' ? 'contained' : 'outlined'}
+                  onClick={() => setGroceryViewMode('bulk')}
+                  size="small"
+                >
+                  Bulk Import
+                </Button>
+              </Box>
+              {groceryViewMode === 'single' ? (
+                <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
+                  <Grid item xs={12} md={4}>
+                    {renderGroceryForm()}
+                  </Grid>
+                  <Grid item xs={12} md={8}>
+                    {renderGroceryList()}
+                  </Grid>
+                </Grid>
+              ) : (
+                <Box>
+                  <BulkGroceryImport onImportComplete={fetchGroceries} />
+                  <Box sx={{ mt: 3 }}>
+                    {renderGroceryList()}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          )}
+          {mainTabIndex === 3 && renderUserApprovals()}
         </Box>
       </Paper>
+
+      {/* Delete All Confirmation Dialog */}
+      <Dialog
+        open={deleteAllDialog.open}
+        onClose={() => setDeleteAllDialog({ open: false, type: null })}
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ErrorIcon color="error" />
+            Confirm Delete All
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete ALL {deleteAllDialog.type === 'medicine' ? 'medicines' : 'groceries'}? 
+            This action cannot be undone and will permanently remove all items from the database.
+          </Typography>
+          <Alert severity="error" sx={{ mt: 2 }}>
+            <strong>Warning:</strong> This will delete {deleteAllDialog.type === 'medicine' ? medicines.length : groceries.length} items permanently!
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteAllDialog({ open: false, type: null })}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAllMedicines}
+            color="error"
+            variant="contained"
+            startIcon={<Delete />}
+          >
+            Delete All
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
