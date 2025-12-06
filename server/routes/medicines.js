@@ -35,12 +35,41 @@ const upload = multer({
 });
 
 // GET /api/medicines - Get all medicines (public, but filtered for patients)
+// Patients cannot see prescription medicines, but pharmacists and admins can see all
 router.get('/', async (req, res) => {
   try {
     const { category, search } = req.query;
     const query = { isActive: true };
     
+    // Check if user is authenticated and get their role
+    const token = req.headers.authorization?.split(' ')[1];
+    let userRole = null;
+    
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        const User = require('../models/User');
+        const user = await User.findById(decoded.id).select('role');
+        if (user) {
+          userRole = user.role;
+        }
+      } catch (err) {
+        // Token invalid or expired, treat as public
+      }
+    }
+    
+    // If user is patient or not authenticated, exclude prescription medicines
+    if (userRole !== 'pharmacist' && userRole !== 'admin') {
+      query.category = { $ne: 'prescription' };
+      query.requiresPrescription = { $ne: true };
+    }
+    
     if (category && category !== 'all') {
+      // If patient tries to access prescription category, deny it
+      if (category === 'prescription' && userRole !== 'pharmacist' && userRole !== 'admin') {
+        return res.status(403).json({ message: 'Prescription medicines are not available for patients' });
+      }
       query.category = category;
     }
     
@@ -71,6 +100,50 @@ router.get('/', async (req, res) => {
     res.json(availableMedicines);
   } catch (error) {
     console.error('Get medicines error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/medicines/pharmacist - Get all medicines for pharmacist (including prescription medicines)
+router.get('/pharmacist', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'pharmacist' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Pharmacist or admin access required' });
+    }
+
+    const { category, search } = req.query;
+    const query = { isActive: true };
+    
+    if (category && category !== 'all') {
+      query.category = category;
+    }
+    
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const medicines = await Medicine.find(query)
+      .select('-stockAlert -stock.units -minStockUnits')
+      .sort({ createdAt: -1 });
+    
+    // Format for frontend
+    const formattedMedicines = medicines.map(med => {
+      const medObj = med.toObject();
+      return {
+        ...medObj,
+        stock: med.stock.packs,
+        price: med.price.perPack,
+        available: med.stock.packs > 0
+      };
+    });
+    
+    res.json(formattedMedicines);
+  } catch (error) {
+    console.error('Get medicines (pharmacist) error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

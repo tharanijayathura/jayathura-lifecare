@@ -2,17 +2,22 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Medicine = require('../models/Medicine');
-const auth = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 
 // Create OTC order - Function 18: createOrder
-router.post('/otc', auth, async (req, res) => {
+router.post('/otc', authMiddleware, async (req, res) => {
   try {
     const { items } = req.body;
     
     // Check medicine availability
     for (let item of items) {
       const medicine = await Medicine.findById(item.medicineId);
-      if (!medicine || medicine.stock < item.quantity) {
+      if (!medicine) {
+        return res.status(400).json({ 
+          error: `Medicine not found` 
+        });
+      }
+      if (!medicine.stock || medicine.stock.units < item.quantity) {
         return res.status(400).json({ 
           error: `${medicine.name} is out of stock or insufficient quantity` 
         });
@@ -20,7 +25,7 @@ router.post('/otc', auth, async (req, res) => {
     }
 
     const order = new Order({
-      patientId: req.user.id,
+      patientId: req.user._id,
       type: 'otc',
       items,
       status: 'draft'
@@ -36,13 +41,14 @@ router.post('/otc', auth, async (req, res) => {
 });
 
 // Generate bill - Function 33: generateAutoBill
-router.post('/:id/generate-bill', auth, async (req, res) => {
+router.post('/:id/generate-bill', authMiddleware, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('items.medicineId');
     
     let totalAmount = 0;
     order.items.forEach(item => {
-      totalAmount += item.medicineId.price * item.quantity;
+      const price = item.price || (item.medicineId && item.medicineId.price?.perPack) || 0;
+      totalAmount += price * item.quantity;
     });
     
     // Apply delivery fee (simplified)
@@ -63,7 +69,7 @@ router.post('/:id/generate-bill', auth, async (req, res) => {
 });
 
 // Confirm order - Function 11: confirmOrder
-router.put('/:id/confirm', auth, async (req, res) => {
+router.put('/:id/confirm', authMiddleware, async (req, res) => {
   try {
     const { paymentMethod } = req.body;
     const order = await Order.findById(req.params.id);
@@ -72,12 +78,18 @@ router.put('/:id/confirm', auth, async (req, res) => {
     order.status = 'confirmed';
     order.paymentStatus = paymentMethod === 'cod' ? 'pending' : 'paid';
     
-    // Update stock
+    // Update stock (decrease units, which will be recalculated on save)
     for (let item of order.items) {
-      await Medicine.findByIdAndUpdate(
-        item.medicineId,
-        { $inc: { stock: -item.quantity } }
-      );
+      const medicine = await Medicine.findById(item.medicineId);
+      if (medicine) {
+        // Decrease units
+        medicine.stock.units -= item.quantity;
+        // Recalculate packs
+        if (medicine.packaging && medicine.packaging.qtyPerPack > 0) {
+          medicine.stock.packs = Math.floor(medicine.stock.units / medicine.packaging.qtyPerPack);
+        }
+        await medicine.save();
+      }
     }
     
     await order.save();
@@ -88,7 +100,7 @@ router.put('/:id/confirm', auth, async (req, res) => {
 });
 
 // Get order status - Function 5: viewOrderStatus
-router.get('/:id/status', auth, async (req, res) => {
+router.get('/:id/status', authMiddleware, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
       .populate('patientId', 'name email')

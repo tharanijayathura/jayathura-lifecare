@@ -59,6 +59,12 @@ const orderSchema = new mongoose.Schema({
   refillPlanId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'RefillPlan' 
+  },
+  audioInstructions: String,
+  feedback: {
+    rating: Number,
+    comments: String,
+    submittedAt: Date
   }
 }, { timestamps: true });
 

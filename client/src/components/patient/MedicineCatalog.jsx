@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Grid,
   Card,
@@ -14,9 +14,10 @@ import {
   MenuItem,
   InputAdornment,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { AddShoppingCart, Search } from '@mui/icons-material';
-import { useCatalog } from '../../contexts/CatalogContext';
+import { patientAPI } from '../../services/api';
 import medPlaceholder from '../../assets/med.png';
 
 const CATEGORY_OPTIONS = [
@@ -48,7 +49,8 @@ const formatCategory = (value = '') =>
     .join(' ');
 
 const MedicineCatalog = ({ onAddToCart }) => {
-  const { medicines } = useCatalog();
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     category: 'all',
@@ -56,6 +58,23 @@ const MedicineCatalog = ({ onAddToCart }) => {
     priceMin: '',
     priceMax: '',
   });
+
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
+
+  const fetchMedicines = async () => {
+    try {
+      setLoading(true);
+      const response = await patientAPI.browseOTC();
+      setMedicines(response.data || []);
+    } catch (error) {
+      console.error('Error fetching medicines:', error);
+      setMedicines([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const brandOptions = useMemo(() => {
     const brands = new Set(
@@ -68,26 +87,43 @@ const MedicineCatalog = ({ onAddToCart }) => {
   }, [medicines]);
 
   const filteredMedicines = useMemo(() => {
+    if (searchTerm) {
+      // If searching, use search API
+      return [];
+    }
+    
     return medicines
       .filter(
         (medicine) =>
-          medicine.isActive !== false &&
           medicine.stock > 0 &&
-          !medicine.requiresPrescription &&
           (filters.category === 'all' || medicine.category === filters.category) &&
           (filters.brand === 'all' || medicine.brand === filters.brand) &&
           (filters.priceMin === '' || medicine.price >= Number(filters.priceMin)) &&
           (filters.priceMax === '' || medicine.price <= Number(filters.priceMax)),
-      )
-      .filter((medicine) => {
-        const query = searchTerm.toLowerCase();
-        return (
-          medicine.name.toLowerCase().includes(query) ||
-          medicine.brand?.toLowerCase().includes(query) ||
-          medicine.description?.toLowerCase().includes(query)
-        );
-      });
+      );
   }, [medicines, searchTerm, filters]);
+
+  // Handle search with debounce
+  useEffect(() => {
+    if (!searchTerm) {
+      fetchMedicines();
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const response = await patientAPI.searchMedicines(searchTerm);
+        setMedicines(response.data || []);
+      } catch (error) {
+        console.error('Error searching medicines:', error);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
@@ -109,18 +145,26 @@ const MedicineCatalog = ({ onAddToCart }) => {
     });
   };
 
+  if (loading && medicines.length === 0) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        OTC Medicine Catalog
+        Medicine Catalog (Function 6)
       </Typography>
       <Alert
         severity="info"
         sx={{ mb: 3, bgcolor: 'success.50', color: 'success.dark' }}
       >
         Browse all non-prescription items such as Panadol, Siddhalepa, ENO, Vicks, vitamins, baby products,
-        and medical supplies like cotton wool, masks, and bandages. Use filters to sort by category, price,
-        or brand, and add items directly to your cart without a prescription.
+        and medical supplies like cotton wool, masks, and bandages. Prescription medicines are not shown here.
+        Use filters to sort by category, price, or brand, and add items directly to your cart without a prescription.
       </Alert>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -232,13 +276,20 @@ const MedicineCatalog = ({ onAddToCart }) => {
                 </Box>
               </CardContent>
 
-              <CardActions>
+              <CardActions sx={{ p: 2, pt: 0 }}>
                 <Button
                   fullWidth
                   variant="contained"
+                  size="medium"
                   startIcon={<AddShoppingCart />}
                   onClick={() => handleAddToCart(medicine)}
                   disabled={medicine.stock === 0}
+                  sx={{
+                    bgcolor: medicine.stock === 0 ? 'grey.400' : 'primary.main',
+                    '&:hover': {
+                      bgcolor: medicine.stock === 0 ? 'grey.400' : 'primary.dark',
+                    }
+                  }}
                 >
                   {medicine.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
                 </Button>
@@ -248,10 +299,24 @@ const MedicineCatalog = ({ onAddToCart }) => {
         ))}
       </Grid>
 
-      {filteredMedicines.length === 0 && (
-        <Typography textAlign="center" sx={{ mt: 4, color: 'text.secondary' }}>
-          No medicines found matching your search.
-        </Typography>
+      {!loading && filteredMedicines.length === 0 && (
+        <Card sx={{ mt: 4, p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            {searchTerm ? 'No medicines found' : 'No medicines available'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {searchTerm 
+              ? `Try searching with different keywords or browse all categories.`
+              : `Please check back later or contact support.`
+            }
+          </Typography>
+        </Card>
+      )}
+
+      {loading && filteredMedicines.length === 0 && (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <CircularProgress />
+        </Box>
       )}
     </Box>
   );

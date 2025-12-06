@@ -6,6 +6,7 @@ const messageSchema = new mongoose.Schema({
   senderName: { type: String, required: true },
   senderRole: { type: String, enum: ['patient', 'pharmacist', 'admin', 'bot'], required: true },
   message: { type: String, required: true },
+  audioUrl: String,
   isBot: { type: Boolean, default: false },
   timestamp: { type: Date, default: Date.now },
 });

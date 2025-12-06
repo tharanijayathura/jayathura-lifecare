@@ -12,6 +12,14 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.warn('⚠️  MongoDB not connected, but attempting to proceed...');
+      // Still try to query, but handle errors gracefully
+    }
+
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
@@ -32,8 +40,20 @@ const authMiddleware = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    return res.status(401).json({ message: 'Invalid token' });
+    // Distinguish between JWT errors and MongoDB errors
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      console.error('Auth middleware JWT error:', error.message);
+      return res.status(401).json({ message: 'Invalid or expired token' });
+    } else if (error.name === 'MongoServerSelectionError' || error.name === 'MongoNetworkError') {
+      console.error('Auth middleware MongoDB connection error:', error.message);
+      // Don't expose MongoDB errors to client, return generic error
+      return res.status(503).json({ 
+        message: 'Database connection issue. Please try again in a moment.' 
+      });
+    } else {
+      console.error('Auth middleware error:', error.message || error);
+      return res.status(401).json({ message: 'Authentication failed' });
+    }
   }
 };
 

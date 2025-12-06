@@ -17,6 +17,9 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/medicines', require('./routes/medicines'));
 app.use('/api/groceries', require('./routes/groceries'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/patients', require('./routes/patients'));
+app.use('/api/pharmacists', require('./routes/pharmacists'));
 
 // Serve uploaded images
 app.use('/uploads', express.static('uploads'));
@@ -33,11 +36,38 @@ app.get('/', (req, res) => {
 });
 
 // Health check route
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStates = {
+    0: 'Disconnected',
+    1: 'Connected',
+    2: 'Connecting',
+    3: 'Disconnecting'
+  };
+
+  let dbStatus = dbStates[dbState] || 'Unknown';
+  let dbHealthy = dbState === 1;
+
+  // Try a simple query to verify connection is actually working
+  if (dbState === 1) {
+    try {
+      await mongoose.connection.db.admin().ping();
+      dbStatus = 'Connected & Healthy';
+    } catch (err) {
+      dbStatus = 'Connected but Unhealthy';
+      dbHealthy = false;
+    }
+  }
+
   res.json({ 
-    status: 'OK',
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString()
+    status: dbHealthy ? 'OK' : 'Degraded',
+    database: {
+      state: dbStatus,
+      readyState: dbState,
+      healthy: dbHealthy
+    },
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
@@ -190,42 +220,96 @@ if (MONGO_URI) {
     console.log('📋 Final URI to use (masked):', cleanedUri.replace(/:([^:@]+)@/, ':***@').substring(0, 80) + '...');
   }
   
-  // Connect with error handling
+  // MongoDB connection options for better reliability
+  const mongooseOptions = {
+    serverSelectionTimeoutMS: 30000, // Increased to 30 seconds
+    socketTimeoutMS: 45000,
+    connectTimeoutMS: 30000,
+    maxPoolSize: 10, // Maintain up to 10 socket connections
+    minPoolSize: 2, // Maintain at least 2 socket connections
+    retryWrites: true,
+    retryReads: true,
+    // Handle replica set issues
+    readPreference: 'primaryPreferred', // Fallback to secondary if primary unavailable
+  };
+
+  // Connect with error handling and retry logic
   (async () => {
-    try {
-      await mongoose.connect(cleanedUri, {
-        serverSelectionTimeoutMS: 15000,
-        socketTimeoutMS: 45000,
-      });
-      console.log('✅ MongoDB connected successfully');
-      const dbName = mongoose.connection.db.databaseName;
-      console.log('📊 Database:', dbName);
-      
-      // Check if database name matches expected
-      if (dbName !== 'jayathurapharmacy-project') {
-        console.log('⚠️  WARNING: Connected to database "' + dbName + '"');
-        console.log('   Expected: "jayathurapharmacy-project"');
-        console.log('   Check your MONGO_URI in .env file');
-        console.log('   Current URI database:', cleanedUri.split('/').pop()?.split('?')[0] || 'unknown');
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const connectWithRetry = async () => {
+      try {
+        await mongoose.connect(cleanedUri, mongooseOptions);
+        console.log('✅ MongoDB connected successfully');
+        const dbName = mongoose.connection.db.databaseName;
+        console.log('📊 Database:', dbName);
+        
+        // Check if database name matches expected
+        if (dbName !== 'jayathurapharmacy-project') {
+          console.log('⚠️  WARNING: Connected to database "' + dbName + '"');
+          console.log('   Expected: "jayathurapharmacy-project"');
+          console.log('   Check your MONGO_URI in .env file');
+          console.log('   Current URI database:', cleanedUri.split('/').pop()?.split('?')[0] || 'unknown');
+        }
+      } catch (err) {
+        retryCount++;
+        console.log(`❌ MongoDB connection error (Attempt ${retryCount}/${maxRetries}):`, err.message);
+        console.log('💡 Error code:', err.code);
+        
+        if (err.name === 'MongoServerSelectionError' || err.message.includes('ReplicaSetNoPrimary')) {
+          console.log('⚠️  MongoDB Atlas replica set issue detected.');
+          console.log('   This is usually temporary. The connection will retry automatically.');
+          if (retryCount < maxRetries) {
+            console.log(`   Retrying in 5 seconds... (${retryCount}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            return connectWithRetry();
+          } else {
+            console.log('   Max retries reached. Please check:');
+            console.log('   1. MongoDB Atlas cluster is running');
+            console.log('   2. Network Access IP is whitelisted (0.0.0.0/0 for all)');
+            console.log('   3. Database user has correct permissions');
+          }
+        } else if (err.message.includes('port number')) {
+          console.log('⚠️  mongodb+srv URIs cannot have port numbers.');
+          console.log('   The URI cleaning may have failed.');
+          console.log('   Original URI (first 70):', originalUri.substring(0, 70) + '...');
+          console.log('   Cleaned URI (first 70):', cleanedUri.substring(0, 70) + '...');
+          console.log('   Please manually check your .env file and remove any :port');
+          console.log('   Correct format: mongodb+srv://user:pass@cluster.mongodb.net/database');
+        } else if (err.code === 'ENOTFOUND') {
+          console.log('⚠️  DNS resolution failed. Check:');
+          console.log('   1. Cluster URL is correct in MongoDB Atlas');
+          console.log('   2. Network Access IP is whitelisted');
+          console.log('   3. Connection string has no spaces/line breaks');
+        }
       }
-    } catch (err) {
-      console.log('❌ MongoDB connection error:', err.message);
-      console.log('💡 Error code:', err.code);
-      if (err.message.includes('port number')) {
-        console.log('⚠️  mongodb+srv URIs cannot have port numbers.');
-        console.log('   The URI cleaning may have failed.');
-        console.log('   Original URI (first 70):', originalUri.substring(0, 70) + '...');
-        console.log('   Cleaned URI (first 70):', cleanedUri.substring(0, 70) + '...');
-        console.log('   Please manually check your .env file and remove any :port');
-        console.log('   Correct format: mongodb+srv://user:pass@cluster.mongodb.net/database');
-      } else if (err.code === 'ENOTFOUND') {
-        console.log('⚠️  DNS resolution failed. Check:');
-        console.log('   1. Cluster URL is correct in MongoDB Atlas');
-        console.log('   2. Network Access IP is whitelisted');
-        console.log('   3. Connection string has no spaces/line breaks');
-      }
-    }
+    };
+
+    await connectWithRetry();
   })();
+
+  // Handle connection events
+  mongoose.connection.on('connected', () => {
+    console.log('✅ Mongoose connected to MongoDB');
+  });
+
+  mongoose.connection.on('error', (err) => {
+    console.error('❌ Mongoose connection error:', err.message);
+    // Don't crash the app, just log the error
+  });
+
+  mongoose.connection.on('disconnected', () => {
+    console.log('⚠️  Mongoose disconnected from MongoDB');
+    console.log('   Attempting to reconnect...');
+  });
+
+  // Handle process termination
+  process.on('SIGINT', async () => {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
+  });
 } else {
   console.log('⚠️  MongoDB URI not set, using mock data');
 }
