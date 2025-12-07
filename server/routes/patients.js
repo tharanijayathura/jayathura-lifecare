@@ -1,5 +1,6 @@
 // server/routes/patients.js
 const express = require('express');
+const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -176,13 +177,52 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
     const prescription = new Prescription({
       patientId: req.user._id,
       imageUrl: imageUrl,
-      status: 'pending'
+      status: 'pending',
+      items: [] // Start with empty items, pharmacist will add medicines
     });
 
     await prescription.save();
-    res.status(201).json(prescription);
+
+    // Create a draft order for this prescription (so pharmacist can add items)
+    const order = new Order({
+      patientId: req.user._id,
+      prescriptionId: prescription._id,
+      type: 'prescription',
+      status: 'draft',
+      items: []
+    });
+
+    await order.save();
+
+    res.status(201).json({
+      prescription: prescription,
+      order: order,
+      message: 'Prescription uploaded successfully. Pharmacist will review and add medicines.'
+    });
   } catch (error) {
     console.error('Upload prescription error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get prescription orders for patient
+router.get('/prescription-orders', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const orders = await Order.find({ 
+      patientId: req.user._id,
+      prescriptionId: { $exists: true, $ne: null }
+    })
+      .populate('prescriptionId', 'status imageUrl verifiedAt')
+      .populate('items.medicineId', 'name price stock')
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Get prescription orders error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -198,9 +238,9 @@ router.get('/order/:orderId/status', authMiddleware, async (req, res) => {
       _id: req.params.orderId, 
       patientId: req.user._id 
     })
-      .populate('items.medicineId', 'name price')
+      .populate('items.medicineId', 'name price stock')
       .populate('assignedTo', 'name phone')
-      .populate('prescriptionId');
+      .populate('prescriptionId', 'status imageUrl verifiedAt verifiedBy');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -299,7 +339,7 @@ router.get('/medicines/search', authMiddleware, async (req, res) => {
   }
 });
 
-// 8. addToCart(orderId, medicineId, quantity) - Add OTC items
+// 8. addToCart(orderId, medicineId, quantity) - Add OTC items (can add to prescription orders too)
 router.post('/cart/add', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'patient') {
@@ -317,6 +357,13 @@ router.post('/cart/add', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Medicine not found' });
     }
 
+    // Check if it's a prescription medicine - patients can't add prescription medicines directly
+    if (medicine.category === 'prescription' || medicine.requiresPrescription) {
+      return res.status(400).json({ 
+        message: 'Prescription medicines can only be added by pharmacists. Please upload your prescription.' 
+      });
+    }
+
     if (medicine.stock.units < quantity) {
       return res.status(400).json({ message: 'Insufficient stock' });
     }
@@ -326,6 +373,11 @@ router.post('/cart/add', authMiddleware, async (req, res) => {
       order = await Order.findOne({ _id: orderId, patientId: req.user._id });
       if (!order) {
         return res.status(404).json({ message: 'Order not found' });
+      }
+      
+      // If order has prescription, change type to 'mixed'
+      if (order.prescriptionId && order.type === 'prescription') {
+        order.type = 'mixed';
       }
     } else {
       // Create new draft order
@@ -339,7 +391,7 @@ router.post('/cart/add', authMiddleware, async (req, res) => {
 
     // Check if medicine already in cart
     const existingItem = order.items.find(
-      item => item.medicineId.toString() === medicineId
+      item => item.medicineId && item.medicineId.toString() === medicineId
     );
 
     if (existingItem) {
@@ -351,51 +403,204 @@ router.post('/cart/add', authMiddleware, async (req, res) => {
         medicineName: medicine.name,
         quantity: quantity,
         price: medicine.price.perPack,
-        isAvailable: true
+        isAvailable: true,
+        isPrescription: false // Mark as OTC item
       });
     }
 
     await order.save();
     await order.populate('items.medicineId', 'name price');
 
-    res.json(order);
+    res.json({
+      message: 'Item added to cart successfully',
+      order: order
+    });
   } catch (error) {
     console.error('Add to cart error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// 9. removeItem(orderItemId) - Remove items
-router.delete('/cart/item/:orderItemId', authMiddleware, async (req, res) => {
+// 9. removeItem(orderItemId) - Remove items (can remove from prescription orders too)
+router.delete('/order/:orderId/item/:itemId', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    const { orderId } = req.query;
-    if (!orderId) {
-      return res.status(400).json({ message: 'Order ID is required' });
-    }
-
+    const { orderId, itemId } = req.params;
     const order = await Order.findOne({ _id: orderId, patientId: req.user._id });
+    
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    order.items = order.items.filter(
-      item => item._id.toString() !== req.params.orderItemId
+    // Check if order can be edited
+    if (order.status !== 'draft' && order.status !== 'pending') {
+      return res.status(400).json({ 
+        message: 'Cannot remove items from confirmed orders. Please contact support.' 
+      });
+    }
+
+    const itemToRemove = order.items.find(
+      item => item._id.toString() === itemId
     );
 
+    if (!itemToRemove) {
+      return res.status(404).json({ message: 'Item not found in order' });
+    }
+
+    // Don't allow removing prescription items (only pharmacist can do that)
+    if (itemToRemove.isPrescription) {
+      return res.status(403).json({ 
+        message: 'Cannot remove prescription medicines. Please contact pharmacist.' 
+      });
+    }
+
+    // Remove the item
+    order.items = order.items.filter(
+      item => item._id.toString() !== itemId
+    );
+
+    // Recalculate totals
+    if (order.items.length > 0) {
+      let subtotal = 0;
+      order.items.forEach(item => {
+        const price = item.price || 0;
+        subtotal += price * item.quantity;
+      });
+      order.totalAmount = subtotal;
+      order.deliveryFee = subtotal > 1000 ? 0 : 200;
+      order.finalAmount = subtotal + order.deliveryFee;
+    } else {
+      order.totalAmount = 0;
+      order.deliveryFee = 0;
+      order.finalAmount = 0;
+    }
+
     await order.save();
-    res.json(order);
+    await order.populate('items.medicineId', 'name price');
+
+    res.json({
+      message: 'Item removed successfully',
+      order: order
+    });
   } catch (error) {
     console.error('Remove item error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// 10. viewAutoGeneratedBill(orderId) - Review invoice
+// 10. viewAutoGeneratedBill(orderId) - Review invoice (allows item removal)
 router.get('/order/:orderId/bill', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const orderId = req.params.orderId;
+    console.log('Fetching bill for order:', orderId, 'Patient:', req.user._id);
+
+    // Validate orderId format
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
+    }
+
+    const order = await Order.findOne({ 
+      _id: orderId, 
+      patientId: req.user._id 
+    })
+      .populate({
+        path: 'items.medicineId',
+        select: 'name price stock',
+        model: 'Medicine'
+      })
+      .populate({
+        path: 'prescriptionId',
+        select: 'status imageUrl',
+        model: 'Prescription'
+      });
+
+    if (!order) {
+      console.log('Order not found:', orderId);
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    console.log('Order found:', order._id, 'Status:', order.status, 'Items:', order.items.length);
+
+    // Calculate bill if not already calculated
+    if (!order.finalAmount && order.items.length > 0) {
+      let subtotal = 0;
+      order.items.forEach(item => {
+        // Handle both populated and non-populated medicineId
+        const medicinePrice = item.medicineId?.price?.perPack || item.medicineId?.price || 0;
+        const price = item.price || medicinePrice || 0;
+        const quantity = item.quantity || 0;
+        subtotal += price * quantity;
+      });
+
+      const deliveryFee = subtotal > 1000 ? 0 : 200;
+      const finalAmount = subtotal + deliveryFee;
+
+      order.totalAmount = subtotal;
+      order.deliveryFee = deliveryFee;
+      order.finalAmount = finalAmount;
+      await order.save();
+    }
+
+    // Find or create invoice (optional - don't fail if invoice creation fails)
+    let invoice = null;
+    try {
+      invoice = await Invoice.findOne({ orderId: order._id });
+      
+      if (!invoice && order.finalAmount) {
+        invoice = new Invoice({
+          orderId: order._id,
+          patientId: order.patientId,
+          items: order.items.map(item => ({
+            medicineId: item.medicineId,
+            medicineName: item.medicineName || item.medicineId?.name || 'Unknown',
+            quantity: item.quantity || 0,
+            price: item.price || 0,
+            subtotal: (item.price || 0) * (item.quantity || 0)
+          })),
+          subtotal: order.totalAmount || 0,
+          deliveryFee: order.deliveryFee || 0,
+          totalAmount: order.finalAmount || 0,
+          paymentMethod: order.paymentMethod || 'online',
+          paymentStatus: order.paymentStatus || 'pending'
+        });
+        await invoice.save();
+      }
+    } catch (invoiceError) {
+      // Log invoice error but don't fail the request
+      console.error('Invoice creation error (non-fatal):', invoiceError);
+      // Continue without invoice - order data is still returned
+    }
+
+    console.log('Bill calculated successfully. Final amount:', order.finalAmount);
+    
+    res.json({
+      order: order,
+      invoice: invoice,
+      canEdit: order.status === 'draft' || order.status === 'pending', // Can edit if not confirmed
+      patientAddress: req.user.address || {}
+    });
+  } catch (error) {
+    console.error('View bill error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Order ID:', req.params.orderId);
+    console.error('Patient ID:', req.user._id);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Send order to pharmacist (after adding optional items)
+router.post('/order/:orderId/send-to-pharmacist', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
@@ -405,70 +610,217 @@ router.get('/order/:orderId/bill', authMiddleware, async (req, res) => {
       _id: req.params.orderId, 
       patientId: req.user._id 
     })
-      .populate('items.medicineId', 'name price');
+      .populate('prescriptionId');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Find or create invoice
-    let invoice = await Invoice.findOne({ orderId: order._id });
-    
-    if (!invoice && order.finalAmount) {
-      // Generate invoice if not exists
-      invoice = new Invoice({
-        orderId: order._id,
-        patientId: order.patientId,
-        items: order.items.map(item => ({
-          medicineId: item.medicineId,
-          medicineName: item.medicineName,
-          quantity: item.quantity,
-          price: item.price,
-          subtotal: item.price * item.quantity
-        })),
-        subtotal: order.totalAmount || 0,
-        deliveryFee: order.deliveryFee || 0,
-        totalAmount: order.finalAmount || 0,
-        paymentMethod: order.paymentMethod || 'online',
-        paymentStatus: order.paymentStatus || 'pending'
-      });
-      await invoice.save();
+    if (!order.prescriptionId) {
+      return res.status(400).json({ message: 'This is not a prescription order' });
     }
 
-    res.json(invoice || order);
+    if (order.status !== 'draft') {
+      return res.status(400).json({ message: 'Order has already been sent to pharmacist' });
+    }
+
+    // Change status to pending so pharmacist can see it
+    // Note: Delivery address is NOT required at this stage
+    // It will be required later when patient confirms the final order after pharmacist generates bill
+    order.status = 'pending';
+    await order.save();
+
+    res.json({
+      message: 'Order sent to pharmacist successfully. Pharmacist will review your prescription and add medicines.',
+      order: order
+    });
   } catch (error) {
-    console.error('View bill error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Send to pharmacist error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// 11. confirmOrder(orderId) - Approve order
+// 11. confirmOrder(orderId) - Approve order with address
 router.put('/order/:orderId/confirm', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
+    const { deliveryAddress, paymentMethod, requestAudioInstructions } = req.body;
     const order = await Order.findOne({ 
       _id: req.params.orderId, 
       patientId: req.user._id 
-    });
+    })
+      .populate('items.medicineId', 'name price stock');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    if (order.status !== 'draft' && order.status !== 'pending') {
-      return res.status(400).json({ message: 'Order cannot be confirmed in current status' });
+    if (order.items.length === 0) {
+      return res.status(400).json({ message: 'Cannot confirm empty order' });
     }
 
+    // Allow confirmation if order is in draft or pending status
+    // 'draft' = just created, patient can confirm directly
+    // 'pending' = pharmacist has reviewed and generated bill, ready for patient confirmation
+    // If already confirmed, just return success (idempotent operation)
+    if (order.status === 'confirmed') {
+      console.log('Order already confirmed, returning existing order:', order._id);
+      return res.json({
+        message: 'Order is already confirmed',
+        order: order,
+        alreadyConfirmed: true
+      });
+    }
+    
+    if (order.status !== 'draft' && order.status !== 'pending') {
+      return res.status(400).json({ 
+        message: `Order cannot be confirmed in current status: ${order.status}. Order must be in 'draft' or 'pending' status.` 
+      });
+    }
+    
+    console.log('Confirming order:', {
+      orderId: order._id,
+      currentStatus: order.status,
+      itemsCount: order.items.length,
+      finalAmount: order.finalAmount
+    });
+
+    // Validate delivery address
+    if (!deliveryAddress) {
+      return res.status(400).json({ message: 'Delivery address is required' });
+    }
+    
+    if (!deliveryAddress.street || !deliveryAddress.street.trim()) {
+      return res.status(400).json({ message: 'Street address is required' });
+    }
+    
+    if (!deliveryAddress.city || !deliveryAddress.city.trim()) {
+      return res.status(400).json({ message: 'City is required' });
+    }
+
+    // Recalculate bill before confirming
+    let subtotal = 0;
+    order.items.forEach(item => {
+      // Handle both populated and non-populated medicineId
+      const medicinePrice = item.medicineId?.price?.perPack || item.medicineId?.price || 0;
+      const price = item.price || medicinePrice || 0;
+      const quantity = item.quantity || 0;
+      subtotal += price * quantity;
+    });
+
+    const deliveryFee = subtotal > 1000 ? 0 : 200;
+    const finalAmount = subtotal + deliveryFee;
+
+    // Update order with cleaned address
+    order.deliveryAddress = {
+      street: deliveryAddress.street.trim(),
+      city: deliveryAddress.city.trim(),
+      postalCode: deliveryAddress.postalCode?.trim() || ''
+    };
+    order.totalAmount = subtotal;
+    order.deliveryFee = deliveryFee;
+    order.finalAmount = finalAmount;
+    order.paymentMethod = paymentMethod || 'online';
+    order.paymentStatus = paymentMethod === 'cod' ? 'pending' : 'pending';
     order.status = 'confirmed';
+    
+    // Handle audio instruction request
+    if (requestAudioInstructions) {
+      order.audioInstructions = {
+        requested: true,
+        requestedAt: new Date()
+      };
+    }
+
+    // Update stock for confirmed orders
+    for (let item of order.items) {
+      // Handle both populated and non-populated medicineId
+      const medicineId = item.medicineId?._id || item.medicineId;
+      if (!medicineId) {
+        console.warn('Item missing medicineId:', item);
+        continue;
+      }
+      
+      const medicine = await Medicine.findById(medicineId);
+      if (medicine) {
+        // Ensure stock object exists
+        if (!medicine.stock) {
+          medicine.stock = { units: 0, packs: 0 };
+        }
+        
+        if (medicine.stock.units < item.quantity) {
+          return res.status(400).json({ 
+            message: `${medicine.name || 'Medicine'} is out of stock. Please remove it or reduce quantity.` 
+          });
+        }
+        
+        medicine.stock.units -= item.quantity;
+        if (medicine.packaging && medicine.packaging.qtyPerPack > 0) {
+          medicine.stock.packs = Math.floor(medicine.stock.units / medicine.packaging.qtyPerPack);
+        }
+        await medicine.save();
+      } else {
+        console.warn('Medicine not found for ID:', medicineId);
+      }
+    }
+
     await order.save();
 
-    res.json(order);
+    // Create/update invoice (non-fatal - don't fail if invoice creation fails)
+    let invoice = null;
+    try {
+      invoice = await Invoice.findOne({ orderId: order._id });
+      if (!invoice) {
+        // Handle both populated and non-populated medicineId
+        invoice = new Invoice({
+          orderId: order._id,
+          patientId: order.patientId,
+          items: order.items.map(item => {
+            const medicineId = item.medicineId?._id || item.medicineId;
+            const medicineName = item.medicineName || item.medicineId?.name || 'Unknown';
+            const price = item.price || 0;
+            const quantity = item.quantity || 0;
+            
+            return {
+              medicineId: medicineId,
+              medicineName: medicineName,
+              quantity: quantity,
+              price: price,
+              subtotal: price * quantity
+            };
+          }),
+          subtotal: subtotal,
+          deliveryFee: deliveryFee,
+          totalAmount: finalAmount,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus
+        });
+        await invoice.save();
+      }
+    } catch (invoiceError) {
+      // Log invoice error but don't fail the request
+      console.error('Invoice creation error (non-fatal):', invoiceError);
+      // Continue without invoice - order is still confirmed
+    }
+
+    res.json({
+      message: 'Order confirmed successfully',
+      order: order,
+      invoice: invoice
+    });
   } catch (error) {
     console.error('Confirm order error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error stack:', error.stack);
+    console.error('Order ID:', req.params.orderId);
+    console.error('Patient ID:', req.user._id);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

@@ -48,21 +48,54 @@ const pharmacistMiddleware = async (req, res, next) => {
   next();
 };
 
-// 27. getPendingPrescriptions() - Fetch unverified prescriptions
+// 27. getPendingPrescriptions() - Fetch unverified prescriptions (both draft and pending orders)
 router.get('/prescriptions/pending', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
-    const prescriptions = await Prescription.find({ status: 'pending' })
+    // First, get all pending prescriptions (not verified or rejected)
+    const prescriptions = await Prescription.find({ 
+      status: 'pending' // Only show pending prescriptions (not verified or rejected)
+    })
       .populate('patientId', 'name email phone')
       .sort({ createdAt: -1 });
 
-    res.json(prescriptions);
+    // Then find orders for these prescriptions
+    const prescriptionIds = prescriptions.map(p => p._id);
+    const orders = await Order.find({ 
+      prescriptionId: { $in: prescriptionIds },
+      status: { $in: ['draft', 'pending'] } // Show both draft and pending
+    })
+      .populate('patientId', 'name email phone')
+      .sort({ createdAt: -1 });
+
+    console.log('Found prescriptions:', prescriptions.length);
+    console.log('Found orders:', orders.length);
+
+    // Add order status info to each prescription for frontend
+    const prescriptionsWithOrderInfo = prescriptions.map(prescription => {
+      const relatedOrder = orders.find(o => {
+        if (!o.prescriptionId) return false;
+        // Handle both ObjectId and string comparisons
+        const orderPrescriptionId = o.prescriptionId._id || o.prescriptionId;
+        return orderPrescriptionId.toString() === prescription._id.toString();
+      });
+      return {
+        ...prescription.toObject(),
+        orderStatus: relatedOrder?.status || 'draft', // Default to draft if no order found
+        orderId: relatedOrder?._id || null
+      };
+    });
+
+    console.log('Returning prescriptions:', prescriptionsWithOrderInfo.length);
+
+    res.json(prescriptionsWithOrderInfo);
   } catch (error) {
     console.error('Get pending prescriptions error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// 28. getPrescriptionDetails(prescriptionId) - View prescription
+// 28. getPrescriptionDetails(prescriptionId) - View prescription and associated order
 router.get('/prescription/:prescriptionId', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.prescriptionId)
@@ -73,25 +106,41 @@ router.get('/prescription/:prescriptionId', authMiddleware, pharmacistMiddleware
       return res.status(404).json({ message: 'Prescription not found' });
     }
 
-    res.json(prescription);
+    // Find the order associated with this prescription
+    const order = await Order.findOne({ 
+      prescriptionId: prescription._id,
+      status: { $in: ['draft', 'pending'] }
+    })
+      .populate('items.medicineId', 'name price stock')
+      .populate('patientId', 'name email phone address');
+
+    res.json({
+      prescription: prescription,
+      order: order || null // Order might not exist yet if pharmacist hasn't added items
+    });
   } catch (error) {
     console.error('Get prescription details error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// 29. addPrescriptionItemToOrder(prescriptionId, medicineId, quantity) - Add verified medicines
+// 29. addPrescriptionItemToOrder(prescriptionId, medicineId, quantity, dosage, frequency) - Add verified medicines
 router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
-    const { medicineId, quantity } = req.body;
+    const { medicineId, quantity, dosage, frequency, instructions } = req.body;
+    
+    if (!medicineId || !quantity) {
+      return res.status(400).json({ message: 'Medicine ID and quantity are required' });
+    }
+
     const prescription = await Prescription.findById(req.params.prescriptionId);
 
     if (!prescription) {
       return res.status(404).json({ message: 'Prescription not found' });
     }
 
-    if (prescription.status !== 'pending') {
-      return res.status(400).json({ message: 'Prescription is not pending' });
+    if (prescription.status !== 'pending' && prescription.status !== 'verified') {
+      return res.status(400).json({ message: 'Prescription is not in a valid state for adding items' });
     }
 
     const medicine = await Medicine.findById(medicineId);
@@ -99,25 +148,40 @@ router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacist
       return res.status(404).json({ message: 'Medicine not found' });
     }
 
-    // Check if medicine already in prescription items
-    const existingItem = prescription.items.find(
+    // Check stock availability
+    if (medicine.stock.units < quantity) {
+      return res.status(400).json({ 
+        message: `Insufficient stock. Available: ${medicine.stock.units} units, Requested: ${quantity}` 
+      });
+    }
+
+    // Add to prescription items
+    const existingPrescriptionItem = prescription.items.find(
       item => item.medicineId && item.medicineId.toString() === medicineId
     );
 
-    if (existingItem) {
-      existingItem.quantity += quantity;
+    if (existingPrescriptionItem) {
+      existingPrescriptionItem.quantity += quantity;
+      if (dosage) existingPrescriptionItem.dosage = dosage;
+      if (frequency) existingPrescriptionItem.frequency = frequency;
     } else {
       prescription.items.push({
         medicineId: medicineId,
         medicineName: medicine.name,
-        quantity: quantity
+        quantity: quantity,
+        dosage: dosage || '',
+        frequency: frequency || ''
       });
     }
 
     await prescription.save();
 
     // Find or create order for this prescription
-    let order = await Order.findOne({ prescriptionId: prescription._id });
+    let order = await Order.findOne({ 
+      prescriptionId: prescription._id,
+      status: { $in: ['draft', 'pending'] }
+    });
+    
     if (!order) {
       order = new Order({
         patientId: prescription.patientId,
@@ -128,7 +192,7 @@ router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacist
       });
     }
 
-    // Add item to order
+    // Add item to order with prescription details
     const orderItem = order.items.find(
       item => item.medicineId && item.medicineId.toString() === medicineId
     );
@@ -142,23 +206,39 @@ router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacist
         medicineName: medicine.name,
         quantity: quantity,
         price: medicine.price.perPack,
-        isAvailable: medicine.stock.units >= quantity
+        isAvailable: medicine.stock.units >= quantity,
+        isPrescription: true, // Mark as prescription medicine
+        dosage: dosage || '',
+        frequency: frequency || '',
+        instructions: instructions || ''
       });
     }
 
-    await order.save();
+    // Update order type to 'mixed' if it already has OTC items
+    const hasOTCItems = order.items.some(item => !item.isPrescription);
+    if (hasOTCItems && order.type === 'prescription') {
+      order.type = 'mixed';
+    }
 
-    res.json({ prescription, order });
+    await order.save();
+    await order.populate('items.medicineId', 'name price stock');
+
+    res.json({ 
+      message: 'Medicine added to order successfully',
+      prescription: await Prescription.findById(prescription._id).populate('items.medicineId'),
+      order: order 
+    });
   } catch (error) {
     console.error('Add prescription item to order error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// 30. markPrescriptionVerified(prescriptionId) - Approve prescription
+// 30. markPrescriptionVerified(prescriptionId) - Approve prescription and generate bill
 router.put('/prescription/:prescriptionId/verify', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
-    const prescription = await Prescription.findById(req.params.prescriptionId);
+    const prescription = await Prescription.findById(req.params.prescriptionId)
+      .populate('items.medicineId', 'name price stock');
 
     if (!prescription) {
       return res.status(404).json({ message: 'Prescription not found' });
@@ -170,29 +250,52 @@ router.put('/prescription/:prescriptionId/verify', authMiddleware, pharmacistMid
 
     await prescription.save();
 
-    // Create order if not exists
-    let order = await Order.findOne({ prescriptionId: prescription._id });
+    // Find or create order for this prescription
+    let order = await Order.findOne({ 
+      prescriptionId: prescription._id,
+      status: { $in: ['draft', 'pending'] }
+    })
+      .populate('items.medicineId', 'name price stock');
+
     if (!order) {
       order = new Order({
         patientId: prescription.patientId,
         prescriptionId: prescription._id,
-        type: 'prescription',
+        type: prescription.items.length > 0 ? 'prescription' : 'prescription',
         status: 'pending',
-        items: prescription.items.map(item => ({
-          medicineId: item.medicineId,
-          medicineName: item.medicineName,
-          quantity: item.quantity,
-          price: 0, // Will be calculated
-          isAvailable: true
-        }))
+        items: []
       });
-      await order.save();
     }
 
-    res.json({ prescription, order });
+    // Calculate bill if order has items
+    if (order.items.length > 0) {
+      let subtotal = 0;
+      order.items.forEach(item => {
+        const price = item.price || (item.medicineId && item.medicineId.price?.perPack) || 0;
+        subtotal += price * item.quantity;
+      });
+
+      const deliveryFee = subtotal > 1000 ? 0 : 200;
+      const finalAmount = subtotal + deliveryFee;
+
+      order.totalAmount = subtotal;
+      order.deliveryFee = deliveryFee;
+      order.finalAmount = finalAmount;
+    }
+    
+    // Always set status to 'pending' after verification so patient can confirm
+    order.status = 'pending'; // Ready for patient review
+
+    await order.save();
+
+    res.json({ 
+      message: 'Prescription verified and bill generated',
+      prescription: prescription,
+      order: order 
+    });
   } catch (error) {
     console.error('Mark prescription verified error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -262,6 +365,70 @@ router.post('/order/:orderId/add-otc', authMiddleware, pharmacistMiddleware, asy
     res.json(order);
   } catch (error) {
     console.error('Add OTC to order error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Remove prescription item from order (pharmacist can remove prescription items)
+router.delete('/order/:orderId/prescription-item/:itemId', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId)
+      .populate('prescriptionId');
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (!order.prescriptionId) {
+      return res.status(400).json({ message: 'This is not a prescription order' });
+    }
+
+    const itemToRemove = order.items.find(
+      item => item._id.toString() === req.params.itemId && item.isPrescription
+    );
+
+    if (!itemToRemove) {
+      return res.status(404).json({ message: 'Prescription item not found' });
+    }
+
+    // Remove from order
+    order.items = order.items.filter(
+      item => item._id.toString() !== req.params.itemId
+    );
+
+    // Remove from prescription items too
+    const prescription = await Prescription.findById(order.prescriptionId);
+    if (prescription) {
+      prescription.items = prescription.items.filter(
+        item => item.medicineId && item.medicineId.toString() !== itemToRemove.medicineId.toString()
+      );
+      await prescription.save();
+    }
+
+    // Recalculate totals
+    if (order.items.length > 0) {
+      let subtotal = 0;
+      order.items.forEach(item => {
+        const price = item.price || 0;
+        subtotal += price * item.quantity;
+      });
+      order.totalAmount = subtotal;
+      order.deliveryFee = subtotal > 1000 ? 0 : 200;
+      order.finalAmount = subtotal + order.deliveryFee;
+    } else {
+      order.totalAmount = 0;
+      order.deliveryFee = 0;
+      order.finalAmount = 0;
+    }
+
+    await order.save();
+
+    res.json({
+      message: 'Prescription item removed successfully',
+      order: await Order.findById(order._id).populate('items.medicineId', 'name price')
+    });
+  } catch (error) {
+    console.error('Remove prescription item error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -449,6 +616,24 @@ router.post('/medicine/:originalId/suggest-alternative', authMiddleware, pharmac
   }
 });
 
+// Get orders requesting audio instructions
+router.get('/orders/audio-requests', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const orders = await Order.find({
+      'audioInstructions.requested': true,
+      'audioInstructions.url': { $exists: false }
+    })
+      .populate('patientId', 'name email phone')
+      .populate('items.medicineId', 'name')
+      .sort({ 'audioInstructions.requestedAt': -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Get audio requests error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // 37. provideAudioInstructions(orderId, audioFile) - Upload audio
 router.post('/order/:orderId/audio', authMiddleware, pharmacistMiddleware, audioUpload.single('audioFile'), async (req, res) => {
   try {
@@ -464,8 +649,14 @@ router.post('/order/:orderId/audio', authMiddleware, pharmacistMiddleware, audio
 
     const audioUrl = `/uploads/audio/${req.file.filename}`;
 
-    // Store audio URL in order (you may want to add an audioUrl field to Order model)
-    order.audioInstructions = audioUrl;
+    // Store audio URL in order with metadata
+    order.audioInstructions = {
+      url: audioUrl,
+      requested: order.audioInstructions?.requested || false,
+      requestedAt: order.audioInstructions?.requestedAt || new Date(),
+      providedBy: req.user._id,
+      providedAt: new Date()
+    };
     await order.save();
 
     // Also send a chat message with the audio

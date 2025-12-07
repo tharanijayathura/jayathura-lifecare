@@ -23,7 +23,7 @@ import {
   TableRow,
   Paper as MuiPaper,
 } from '@mui/material';
-import { Visibility, Download, LocalShipping, Payment, CheckCircle } from '@mui/icons-material';
+import { Visibility, Download, LocalShipping, Payment, CheckCircle, VolumeUp, PlayArrow, Pause } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
 
 const OrderHistory = () => {
@@ -32,6 +32,8 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     fetchOrders();
@@ -250,6 +252,62 @@ const OrderHistory = () => {
                     size="small"
                   />
                 </Grid>
+                
+                {/* Audio Instructions */}
+                {selectedOrder.audioInstructions?.url && (
+                  <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} />
+                    <Card variant="outlined" sx={{ bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                      <CardContent>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <VolumeUp />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                              Audio Instructions
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                              Listen to personalized instructions from your pharmacist
+                            </Typography>
+                          </Box>
+                          <audio
+                            ref={audioRef}
+                            src={selectedOrder.audioInstructions.url}
+                            onPlay={() => setIsPlayingAudio(true)}
+                            onPause={() => setIsPlayingAudio(false)}
+                            onEnded={() => setIsPlayingAudio(false)}
+                            style={{ display: 'none' }}
+                          />
+                          <Button
+                            variant="contained"
+                            color="inherit"
+                            startIcon={isPlayingAudio ? <Pause /> : <PlayArrow />}
+                            onClick={() => {
+                              if (audioRef.current) {
+                                if (isPlayingAudio) {
+                                  audioRef.current.pause();
+                                } else {
+                                  audioRef.current.play();
+                                }
+                              }
+                            }}
+                          >
+                            {isPlayingAudio ? 'Pause' : 'Play'}
+                          </Button>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
+                
+                {selectedOrder.audioInstructions?.requested && !selectedOrder.audioInstructions?.url && (
+                  <Grid item xs={12}>
+                    <Divider sx={{ my: 2 }} />
+                    <Alert severity="info" icon={<VolumeUp />}>
+                      Audio instructions have been requested. Your pharmacist will provide them soon.
+                    </Alert>
+                  </Grid>
+                )}
+
                 {selectedOrder.items && selectedOrder.items.length > 0 && (
                   <Grid item xs={12}>
                     <Divider sx={{ my: 2 }} />

@@ -44,6 +44,8 @@ import ShoppingCart from '../components/patient/ShoppingCart';
 import OrderHistory from '../components/patient/OrderHistory';
 import GroceryCatalog from '../components/patient/GroceryCatalog';
 import ChatWidget from '../components/chat/ChatWidget';
+import BillReview from '../components/patient/BillReview';
+import AddItemsToPrescription from '../components/patient/AddItemsToPrescription';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
 import { patientAPI } from '../services/api';
@@ -61,11 +63,16 @@ const PatientPortal = () => {
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [prescriptionOrders, setPrescriptionOrders] = useState([]);
+  const [billReviewOpen, setBillReviewOpen] = useState(false);
+  const [selectedOrderForBill, setSelectedOrderForBill] = useState(null);
+  const [addItemsDialogOpen, setAddItemsDialogOpen] = useState(false);
+  const [selectedPrescriptionOrderId, setSelectedPrescriptionOrderId] = useState(null);
 
   const handleAddToCart = async (item) => {
     try {
       setLoading(true);
-      // Create order if doesn't exist
+      // Use current order ID if set (could be prescription order), otherwise create new
       let orderId = currentOrderId;
       if (!orderId) {
         const orderResponse = await patientAPI.createOrder();
@@ -73,27 +80,42 @@ const PatientPortal = () => {
         setCurrentOrderId(orderId);
       }
 
-      // Add item to cart via API
-      await patientAPI.addToCart({
+      // Add item to cart via API (works for both OTC and prescription orders)
+      const response = await patientAPI.addToCart({
         orderId: orderId,
         medicineId: item.itemId,
         quantity: item.quantity || 1
       });
 
-      // Update local cart state
-      setCartItems((prev) => {
-        const existingItem = prev.find(
-          (cartItem) => cartItem.itemId === item.itemId && cartItem.itemType === item.itemType,
-        );
-        if (existingItem) {
-          return prev.map((cartItem) =>
-            cartItem.itemId === item.itemId && cartItem.itemType === item.itemType
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
-              : cartItem,
+      // If this is a prescription order, refresh cart from order to show all items
+      if (response.data?.order) {
+        const order = response.data.order;
+        const orderItems = (order.items || []).map(orderItem => ({
+          itemId: orderItem.medicineId?._id || orderItem.medicineId,
+          name: orderItem.medicineName || orderItem.medicineId?.name,
+          price: orderItem.price || 0,
+          quantity: orderItem.quantity || 1,
+          itemType: orderItem.isPrescription ? 'Prescription' : 'OTC',
+          image: orderItem.medicineId?.image,
+          orderItemId: orderItem._id
+        }));
+        setCartItems(orderItems);
+      } else {
+        // Update local cart state for regular OTC orders
+        setCartItems((prev) => {
+          const existingItem = prev.find(
+            (cartItem) => cartItem.itemId === item.itemId && cartItem.itemType === item.itemType,
           );
-        }
-        return [...prev, item];
-      });
+          if (existingItem) {
+            return prev.map((cartItem) =>
+              cartItem.itemId === item.itemId && cartItem.itemType === item.itemType
+                ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                : cartItem,
+            );
+          }
+          return [...prev, item];
+        });
+      }
       setOrderStatus('');
       setSnackbar({ 
         open: true, 
@@ -116,9 +138,27 @@ const PatientPortal = () => {
     const item = cartItems[index];
     try {
       if (currentOrderId && item.orderItemId) {
-        await patientAPI.removeFromCart(item.orderItemId, currentOrderId);
+        // Use the endpoint that works for both OTC and prescription orders
+        await patientAPI.removeOrderItem(currentOrderId, item.orderItemId);
+        // Refresh cart from order
+        const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
+        if (orderResponse.data?.items) {
+          const orderItems = orderResponse.data.items.map(orderItem => ({
+            itemId: orderItem.medicineId?._id || orderItem.medicineId,
+            name: orderItem.medicineName || orderItem.medicineId?.name,
+            price: orderItem.price || 0,
+            quantity: orderItem.quantity || 1,
+            itemType: orderItem.isPrescription ? 'Prescription' : 'OTC',
+            image: orderItem.medicineId?.image,
+            orderItemId: orderItem._id
+          }));
+          setCartItems(orderItems);
+        } else {
+          setCartItems((prev) => prev.filter((_, i) => i !== index));
+        }
+      } else {
+        setCartItems((prev) => prev.filter((_, i) => i !== index));
       }
-      setCartItems((prev) => prev.filter((_, i) => i !== index));
     } catch (error) {
       console.error('Error removing item:', error);
       // Still remove from local state even if API call fails
@@ -131,31 +171,39 @@ const PatientPortal = () => {
 
     try {
       setLoading(true);
-      // Generate bill first (using orders endpoint)
-      await API.post(`/orders/${currentOrderId}/generate-bill`);
       
-      // Set payment method if COD
-      if (paymentMethod === 'cod') {
-        await patientAPI.chooseCOD(currentOrderId);
+      // Check if this is a prescription order
+      const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
+      const order = orderResponse.data;
+      
+      // If it's a prescription order in draft status, send to pharmacist (no address needed)
+      if (order.prescriptionId && order.status === 'draft') {
+        await patientAPI.sendOrderToPharmacist(currentOrderId);
+        setSnackbar({ 
+          open: true, 
+          message: 'Order sent to pharmacist! They will review your prescription and add medicines. You will receive a bill to review.', 
+          severity: 'success' 
+        });
+        setCartItems([]);
+        setCurrentOrderId(null);
+        fetchPrescriptionOrders(); // Refresh prescription orders list
+        return;
       }
       
-      // Confirm order
-      await patientAPI.confirmOrder(currentOrderId);
+      // For regular OTC orders or prescription orders with a bill ready, show BillReview dialog
+      // This will ask for delivery address before confirming
+      if (order.finalAmount || order.status === 'pending') {
+        // Order has a bill, show BillReview to get address and confirm
+        setSelectedOrderForBill(currentOrderId);
+        setBillReviewOpen(true);
+        setLoading(false);
+        return;
+      }
       
-      const successMessage = `Order confirmed successfully! ${paymentMethod === 'cod' ? 'You will pay on delivery.' : 'Payment will be processed.'} ${attachPrescription && latestPrescription ? 'Prescription attached.' : ''}`;
-      setOrderStatus(successMessage);
-      setSnackbar({ 
-        open: true, 
-        message: successMessage, 
-        severity: 'success' 
-      });
-      setCartItems([]);
-      setCurrentOrderId(null);
-      
-      // Auto-refresh after 5 seconds
-      setTimeout(() => {
-        setOrderStatus('');
-      }, 5000);
+      // For regular OTC orders without a bill, generate bill first, then show BillReview
+      await API.post(`/orders/${currentOrderId}/generate-bill`);
+      setSelectedOrderForBill(currentOrderId);
+      setBillReviewOpen(true);
     } catch (error) {
       console.error('Error submitting order:', error);
       const errorMessage = error.response?.data?.message || 'Failed to submit order. Please try again.';
@@ -170,9 +218,104 @@ const PatientPortal = () => {
     }
   };
 
-  const handlePrescriptionUploaded = (prescriptionMeta) => {
+  const handlePrescriptionUploaded = async (prescriptionMeta) => {
     setLatestPrescription(prescriptionMeta);
+    
+    // If order ID is provided in the meta, use it
+    if (prescriptionMeta.orderId) {
+      setCurrentOrderId(prescriptionMeta.orderId);
+      setSnackbar({
+        open: true,
+        message: 'Prescription uploaded! Add optional items or send directly to pharmacist.',
+        severity: 'success'
+      });
+      // Refresh prescription orders list
+      fetchPrescriptionOrders();
+      // Open dialog to add items or send directly
+      setSelectedPrescriptionOrderId(prescriptionMeta.orderId);
+      setAddItemsDialogOpen(true);
+    } else {
+      // Fallback: fetch prescription orders to get the order ID
+      try {
+        const response = await patientAPI.getPrescriptionOrders();
+        const orders = response.data || [];
+        // Find the most recent draft order
+        const latestOrder = orders.find(order => 
+          order.prescriptionId && 
+          order.status === 'draft'
+        ) || orders[0];
+        
+        if (latestOrder) {
+          setCurrentOrderId(latestOrder._id);
+          setPrescriptionOrders(orders);
+          setSnackbar({
+            open: true,
+            message: 'Prescription uploaded! You can now add OTC items to this order.',
+            severity: 'success'
+          });
+          setTimeout(() => {
+            setActiveTab(2); // Shop Pharmacy tab
+          }, 1500);
+        }
+      } catch (error) {
+        console.error('Error fetching prescription order:', error);
+      }
+    }
   };
+
+  const fetchPrescriptionOrders = async () => {
+    try {
+      const response = await patientAPI.getPrescriptionOrders();
+      setPrescriptionOrders(response.data || []);
+    } catch (error) {
+      console.error('Error fetching prescription orders:', error);
+    }
+  };
+
+  const handleViewBill = (order) => {
+    setSelectedOrderForBill(order);
+    setBillReviewOpen(true);
+  };
+
+  const handleBillConfirmed = async (orderData) => {
+    // Order has been confirmed with address
+    setSnackbar({ 
+      open: true, 
+      message: 'Order confirmed successfully! You will receive updates on your order status.', 
+      severity: 'success' 
+    });
+    setCartItems([]);
+    setCurrentOrderId(null);
+    setBillReviewOpen(false);
+    setSelectedOrderForBill(null);
+    fetchPrescriptionOrders(); // Refresh prescription orders
+  };
+
+  // Load cart items when currentOrderId is set (for prescription orders)
+  useEffect(() => {
+    const loadCartFromOrder = async () => {
+      if (currentOrderId) {
+        try {
+          const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
+          if (orderResponse.data?.items) {
+            const orderItems = orderResponse.data.items.map(orderItem => ({
+              itemId: orderItem.medicineId?._id || orderItem.medicineId,
+              name: orderItem.medicineName || orderItem.medicineId?.name,
+              price: orderItem.price || 0,
+              quantity: orderItem.quantity || 1,
+              itemType: orderItem.isPrescription ? 'Prescription' : 'OTC',
+              image: orderItem.medicineId?.image,
+              orderItemId: orderItem._id
+            }));
+            setCartItems(orderItems);
+          }
+        } catch (error) {
+          console.error('Error loading cart from order:', error);
+        }
+      }
+    };
+    loadCartFromOrder();
+  }, [currentOrderId]);
 
   const tabs = [
     { label: 'Dashboard', component: <DashboardOverview onNavigate={setActiveTab} /> },
@@ -233,6 +376,7 @@ const PatientPortal = () => {
               onSubmitOrder={handleOrderSubmit}
               latestPrescription={latestPrescription}
               loading={loading}
+              orderId={currentOrderId}
             />
             {orderStatus && (
               <Alert severity="success" sx={{ mt: 2, fontSize: { xs: '0.85rem', md: '0.875rem' } }}>
@@ -241,6 +385,92 @@ const PatientPortal = () => {
             )}
           </Grid>
         </Grid>
+      ),
+    },
+    {
+      label: 'Prescription Orders',
+      component: (
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            My Prescription Orders
+          </Typography>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            View your prescription orders. You can add OTC items to pending orders and review bills before confirming.
+          </Alert>
+          {prescriptionOrders.length === 0 ? (
+            <Alert severity="info">
+              No prescription orders yet. Upload a prescription to get started.
+            </Alert>
+          ) : (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              {prescriptionOrders.map((order) => (
+                <Grid item xs={12} key={order._id}>
+                  <Card>
+                    <CardContent>
+                      <Stack direction="row" justifyContent="space-between" alignItems="start">
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="h6">Order #{order.orderId}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Prescription Status: {order.prescriptionId?.status || 'N/A'}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Items: {order.items.length} | 
+                            {order.items.filter(i => i.isPrescription).length} Prescription, 
+                            {order.items.filter(i => !i.isPrescription).length} OTC
+                          </Typography>
+                          {order.finalAmount && (
+                            <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
+                              Total: Rs. {order.finalAmount.toFixed(2)}
+                            </Typography>
+                          )}
+                          {order.status === 'pending' && !order.finalAmount && (
+                            <Alert severity="warning" sx={{ mt: 1 }}>
+                              Waiting for pharmacist to add medicines and generate bill
+                            </Alert>
+                          )}
+                        </Box>
+                        <Stack spacing={1}>
+                          <Chip 
+                            label={order.status} 
+                            color={
+                              order.status === 'confirmed' ? 'success' :
+                              order.status === 'pending' ? 'warning' :
+                              'default'
+                            }
+                          />
+                          {order.status === 'pending' && order.finalAmount && (
+                            <Button
+                              variant="contained"
+                              onClick={() => handleViewBill(order)}
+                            >
+                              Review Bill
+                            </Button>
+                          )}
+                          {order.status === 'pending' && (
+                            <Button
+                              variant="outlined"
+                              onClick={() => {
+                                setActiveTab(2); // Switch to Shop Pharmacy tab
+                                setCurrentOrderId(order._id);
+                                setSnackbar({
+                                  open: true,
+                                  message: 'You can now add OTC items to this prescription order',
+                                  severity: 'info'
+                                });
+                              }}
+                            >
+                              Add OTC Items
+                            </Button>
+                          )}
+                        </Stack>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
       ),
     },
     { label: 'Order History', component: <OrderHistory /> },
@@ -297,6 +527,37 @@ const PatientPortal = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Bill Review Dialog */}
+      {selectedOrderForBill && (
+        <BillReview
+          orderId={typeof selectedOrderForBill === 'string' ? selectedOrderForBill : selectedOrderForBill._id}
+          open={billReviewOpen}
+          onClose={() => {
+            setBillReviewOpen(false);
+            setSelectedOrderForBill(null);
+          }}
+          onConfirm={handleBillConfirmed}
+        />
+      )}
+
+      {/* Add Items to Prescription Dialog */}
+      <AddItemsToPrescription
+        orderId={selectedPrescriptionOrderId}
+        open={addItemsDialogOpen}
+        onClose={() => {
+          setAddItemsDialogOpen(false);
+          setSelectedPrescriptionOrderId(null);
+        }}
+        onSent={() => {
+          fetchPrescriptionOrders();
+          setSnackbar({
+            open: true,
+            message: 'Order sent to pharmacist successfully!',
+            severity: 'success'
+          });
+        }}
+      />
     </Container>
   );
 };

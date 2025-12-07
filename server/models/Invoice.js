@@ -42,8 +42,13 @@ const invoiceSchema = new mongoose.Schema({
 // Generate invoice ID before saving
 invoiceSchema.pre('save', async function(next) {
   if (!this.invoiceId) {
-    const count = await mongoose.model('Invoice').countDocuments();
-    this.invoiceId = `INV${String(count + 1).padStart(6, '0')}`;
+    try {
+      const count = await mongoose.model('Invoice').countDocuments();
+      this.invoiceId = `INV${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      // Fallback: use timestamp-based ID if count fails
+      this.invoiceId = `INV${Date.now().toString().slice(-8)}`;
+    }
   }
   next();
 });

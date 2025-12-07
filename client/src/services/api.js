@@ -113,17 +113,20 @@ export const patientAPI = {
   uploadPrescription: (formData) => API.post('/patients/prescription/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  getPrescriptionOrders: () => API.get('/patients/prescription-orders'),
+  sendOrderToPharmacist: (orderId) => API.post(`/patients/order/${orderId}/send-to-pharmacist`),
   
   // Orders
   createOrder: () => API.post('/patients/order/create'),
   getOrderStatus: (orderId) => API.get(`/patients/order/${orderId}/status`),
-  confirmOrder: (orderId) => API.put(`/patients/order/${orderId}/confirm`),
+  confirmOrder: (orderId, data) => API.put(`/patients/order/${orderId}/confirm`, data),
   trackDelivery: (orderId) => API.get(`/patients/order/${orderId}/track`),
   getOrdersHistory: () => API.get('/patients/orders/history'),
   
   // Cart
   addToCart: (data) => API.post('/patients/cart/add', data),
   removeFromCart: (orderItemId, orderId) => API.delete(`/patients/cart/item/${orderItemId}?orderId=${orderId}`),
+  removeOrderItem: (orderId, itemId) => API.delete(`/patients/order/${orderId}/item/${itemId}`),
   
   // Billing
   viewBill: (orderId) => API.get(`/patients/order/${orderId}/bill`),
@@ -151,7 +154,12 @@ export const pharmacistAPI = {
   // Prescriptions
   getPendingPrescriptions: () => API.get('/pharmacists/prescriptions/pending'),
   getPrescriptionDetails: (prescriptionId) => API.get(`/pharmacists/prescription/${prescriptionId}`),
-  addPrescriptionItemToOrder: (prescriptionId, medicineId, quantity) => API.post(`/pharmacists/prescription/${prescriptionId}/add-item`, { medicineId, quantity }),
+  addPrescriptionItemToOrder: (prescriptionId, medicineId, quantity, dosage, frequency, instructions) => API.post(`/pharmacists/prescription/${prescriptionId}/add-item`, { medicineId, quantity, dosage, frequency, instructions }),
+  removePrescriptionItem: (orderId, itemId) => API.delete(`/pharmacists/order/${orderId}/prescription-item/${itemId}`),
+  getAudioRequests: () => API.get('/pharmacists/orders/audio-requests'),
+  provideAudioInstructions: (orderId, formData) => API.post(`/pharmacists/order/${orderId}/audio`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   markPrescriptionVerified: (prescriptionId) => API.put(`/pharmacists/prescription/${prescriptionId}/verify`),
   markPrescriptionRejected: (prescriptionId, reason) => API.put(`/pharmacists/prescription/${prescriptionId}/reject`, { reason }),
   

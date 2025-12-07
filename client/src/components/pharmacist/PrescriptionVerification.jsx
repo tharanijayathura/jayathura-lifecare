@@ -11,10 +11,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Alert
 } from '@mui/material';
-import { Check, Close, Visibility } from '@mui/icons-material';
-import { prescriptionAPI } from '../../services/api';
+import { Check, Close, Visibility, Refresh } from '@mui/icons-material';
+import { pharmacistAPI } from '../../services/api';
+import PrescriptionDetail from './PrescriptionDetail';
 
 const PrescriptionVerification = () => {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -30,21 +32,12 @@ const PrescriptionVerification = () => {
 
   const fetchPendingPrescriptions = async () => {
     try {
-      const response = await prescriptionAPI.getAll();
-      const pending = response.data.filter(p => p.status === 'pending');
-      setPrescriptions(pending);
+      const response = await pharmacistAPI.getPendingPrescriptions();
+      console.log('Fetched prescriptions:', response.data);
+      setPrescriptions(response.data || []);
     } catch (error) {
       console.error('Failed to fetch prescriptions:', error);
-    }
-  };
-
-  // Function 30: markPrescriptionVerified
-  const handleVerify = async (prescriptionId) => {
-    try {
-      await prescriptionAPI.verify(prescriptionId, 'verified');
-      fetchPendingPrescriptions(); // Refresh list
-    } catch (error) {
-      console.error('Verification failed:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
@@ -53,12 +46,15 @@ const PrescriptionVerification = () => {
     if (!selectedPrescription || !rejectionReason) return;
 
     try {
-      await prescriptionAPI.verify(selectedPrescription._id, 'rejected', rejectionReason);
+      await pharmacistAPI.markPrescriptionRejected(selectedPrescription._id, rejectionReason);
       setRejectDialogOpen(false);
       setRejectionReason('');
+      setSelectedPrescription(null);
       fetchPendingPrescriptions();
+      alert('Prescription rejected successfully');
     } catch (error) {
       console.error('Rejection failed:', error);
+      alert('Failed to reject prescription');
     }
   };
 
@@ -72,13 +68,31 @@ const PrescriptionVerification = () => {
     setViewDialogOpen(true);
   };
 
+  const handlePrescriptionUpdate = () => {
+    fetchPendingPrescriptions();
+  };
+
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        Prescription Verification
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5">
+          Prescription Verification
+        </Typography>
+        <Button
+          startIcon={<Refresh />}
+          variant="outlined"
+          onClick={fetchPendingPrescriptions}
+        >
+          Refresh
+        </Button>
+      </Box>
 
-      <Grid container spacing={3}>
+      {prescriptions.length === 0 ? (
+        <Alert severity="info">
+          No pending prescriptions at the moment. Prescriptions will appear here once patients upload them.
+        </Alert>
+      ) : (
+        <Grid container spacing={3}>
         {prescriptions.map((prescription) => (
           <Grid item xs={12} md={6} key={prescription._id}>
             <Card>
@@ -87,11 +101,21 @@ const PrescriptionVerification = () => {
                   <Typography variant="h6">
                     Prescription #{prescription._id.slice(-6)}
                   </Typography>
-                  <Chip 
-                    label="Pending" 
-                    color="warning" 
-                    size="small" 
-                  />
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Chip 
+                      label="Pending" 
+                      color="warning" 
+                      size="small" 
+                    />
+                    {prescription.orderStatus && (
+                      <Chip 
+                        label={prescription.orderStatus === 'draft' ? 'New Upload' : 'Sent by Patient'} 
+                        color={prescription.orderStatus === 'draft' ? 'info' : 'primary'} 
+                        size="small" 
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -111,13 +135,13 @@ const PrescriptionVerification = () => {
                     View
                   </Button>
                   <Button
-                    startIcon={<Check />}
+                    startIcon={<Visibility />}
                     variant="contained"
                     size="small"
-                    color="success"
-                    onClick={() => handleVerify(prescription._id)}
+                    color="primary"
+                    onClick={() => openViewDialog(prescription)}
                   >
-                    Verify
+                    View & Add Medicines
                   </Button>
                   <Button
                     startIcon={<Close />}
@@ -133,26 +157,21 @@ const PrescriptionVerification = () => {
             </Card>
           </Grid>
         ))}
-      </Grid>
+        </Grid>
+      )}
 
-      {/* View Prescription Dialog */}
-      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Prescription Details</DialogTitle>
-        <DialogContent>
-          {selectedPrescription && (
-            <Box>
-              <img 
-                src={selectedPrescription.imageUrl} 
-                alt="Prescription" 
-                style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }}
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      {/* Prescription Detail Dialog with Medicine Selection */}
+      {selectedPrescription && (
+        <PrescriptionDetail
+          prescription={selectedPrescription}
+          open={viewDialogOpen}
+          onClose={() => {
+            setViewDialogOpen(false);
+            setSelectedPrescription(null);
+          }}
+          onUpdate={handlePrescriptionUpdate}
+        />
+      )}
 
       {/* Reject Prescription Dialog */}
       <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)}>

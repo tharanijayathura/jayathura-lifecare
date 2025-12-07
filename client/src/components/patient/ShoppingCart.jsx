@@ -31,7 +31,7 @@ import {
 } from '@mui/material';
 import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping } from '@mui/icons-material';
 
-const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading }) => {
+const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading, orderId }) => {
   const [attachPrescription, setAttachPrescription] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online');

@@ -38,11 +38,14 @@ const PrescriptionUpload = ({ onUploaded }) => {
     try {
       const response = await prescriptionAPI.upload(formData);
       const payload = response.data?.prescription || response.data || {};
+      const orderData = response.data?.order || {};
       const meta = {
         id: payload._id || payload.id || `rx-${Date.now()}`,
         fileName: selectedFile.name,
         status: payload.status || 'pending',
         uploadedAt: new Date().toISOString(),
+        orderId: orderData._id || orderData.id, // Include order ID
+        order: orderData // Include full order data
       };
       onUploaded?.(meta);
       setMessage('Prescription uploaded successfully! It will be verified by our pharmacist.');

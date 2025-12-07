@@ -1,273 +1,474 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Paper,
-  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
+  Box,
+  Typography,
   Grid,
+  TextField,
+  Autocomplete,
+  Card,
+  CardContent,
+  Chip,
+  IconButton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
-  Chip,
+  Paper,
+  Alert,
+  CircularProgress,
   Stack,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
+  Divider
 } from '@mui/material';
-import {
-  ArrowBack,
-  ZoomIn,
-  Edit,
-  Delete,
-  Add,
-  CheckCircle,
-  Cancel,
-  Phone,
-} from '@mui/icons-material';
+import { Add, Delete, CheckCircle, Close } from '@mui/icons-material';
+import { pharmacistAPI, medicineAPI } from '../../services/api';
 
-const PrescriptionDetail = ({ prescription, onBack }) => {
-  const [medicines, setMedicines] = useState([
-    { id: 1, name: 'Metformin 500mg', dosage: '1-0-1', qty: 30, stock: 45, status: 'available' },
-    { id: 2, name: 'Losartan 50mg', dosage: '0-0-1', qty: 30, stock: 12, status: 'low' },
-    { id: 3, name: 'Atorvastatin 20mg', dosage: '0-0-1', qty: 30, stock: 68, status: 'available' },
-  ]);
-  const [pharmacyNotes, setPharmacyNotes] = useState('');
-  const [rejectionDialog, setRejectionDialog] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
+const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
+  const [medicines, setMedicines] = useState([]);
+  const [selectedMedicine, setSelectedMedicine] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [dosage, setDosage] = useState('');
+  const [frequency, setFrequency] = useState('');
+  const [instructions, setInstructions] = useState('');
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleApprove = () => {
-    alert('Prescription approved and added to order!');
-    onBack();
-  };
+  useEffect(() => {
+    if (open && prescription) {
+      fetchPrescriptionDetails();
+      fetchMedicines();
+    }
+  }, [open, prescription]);
 
-  const handleReject = () => {
-    if (rejectionReason) {
-      alert('Prescription rejected. Patient will be notified.');
-      onBack();
+  const fetchPrescriptionDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await pharmacistAPI.getPrescriptionDetails(prescription._id);
+      // Response now includes both prescription and order
+      if (response.data?.order) {
+        setOrder(response.data.order);
+      } else {
+        // If no order exists yet, create one or find it
+        // The order should have been created when prescription was uploaded
+        setOrder(null);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching prescription details:', error);
+      setLoading(false);
     }
   };
 
+  const fetchMedicines = async () => {
+    try {
+      const response = await medicineAPI.getAllPharmacist({ search: searchTerm });
+      setMedicines(response.data || []);
+    } catch (error) {
+      console.error('Error fetching medicines:', error);
+    }
+  };
+
+  const handleAddMedicine = async () => {
+    if (!selectedMedicine || !quantity) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await pharmacistAPI.addPrescriptionItemToOrder(
+        prescription._id,
+        selectedMedicine.id || selectedMedicine._id,
+        quantity,
+        dosage,
+        frequency,
+        instructions
+      );
+      
+      if (response.data?.order) {
+        setOrder(response.data.order);
+      }
+      setSelectedMedicine(null);
+      setQuantity(1);
+      setDosage('');
+      setFrequency('');
+      setInstructions('');
+      // Refresh order data
+      await fetchPrescriptionDetails();
+      onUpdate?.();
+    } catch (error) {
+      console.error('Error adding medicine:', error);
+      alert(error.response?.data?.message || 'Failed to add medicine');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveItem = async (itemId) => {
+    if (!order) return;
+    
+    try {
+      setLoading(true);
+      await pharmacistAPI.removePrescriptionItem(order._id, itemId);
+      // Refresh order
+      const response = await pharmacistAPI.getPrescriptionDetails(prescription._id);
+      setOrder(response.data.order);
+      onUpdate?.();
+    } catch (error) {
+      console.error('Error removing item:', error);
+      alert('Failed to remove item');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateBill = async () => {
+    if (!order || order.items.length === 0) {
+      alert('Please add medicines to the order first');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await pharmacistAPI.generateAutoBill(order._id);
+      alert('Bill generated successfully! Patient can now review and confirm.');
+      onUpdate?.();
+      onClose();
+    } catch (error) {
+      console.error('Error generating bill:', error);
+      alert('Failed to generate bill');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    try {
+      setLoading(true);
+      await pharmacistAPI.markPrescriptionVerified(prescription._id);
+      alert('Prescription verified and bill sent to patient!');
+      onUpdate?.();
+      onClose();
+    } catch (error) {
+      console.error('Error verifying prescription:', error);
+      alert('Failed to verify prescription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!prescription) return null;
+
   return (
-    <Box>
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <IconButton onClick={onBack}>
-          <ArrowBack />
-        </IconButton>
-        <Box>
-          <Typography variant="h5">
-            PRESCRIPTION #{prescription.id} | Patient: {prescription.patient}
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-            <Chip label="Pending" color="warning" size="small" />
-            <Chip label={prescription.priority} color={prescription.priority === 'High' ? 'error' : 'default'} size="small" />
-            <Typography variant="body2" color="text.secondary">
-              Upload: {prescription.time}
-            </Typography>
-          </Stack>
-        </Box>
-      </Box>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">Prescription Verification</Typography>
+          <Chip 
+            label={prescription.status.toUpperCase()} 
+            color={prescription.status === 'verified' ? 'success' : 'warning'}
+          />
+        </Stack>
+      </DialogTitle>
+      <DialogContent>
+        <Grid container spacing={3}>
+          {/* Prescription Image */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Prescription Image</Typography>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <img 
+                    src={prescription.imageUrl} 
+                    alt="Prescription" 
+                    style={{ 
+                      maxWidth: '100%', 
+                      maxHeight: '400px', 
+                      objectFit: 'contain',
+                      border: '1px solid #ddd',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Patient: {prescription.patientId?.name || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Submitted: {new Date(prescription.createdAt).toLocaleString()}
+                </Typography>
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    View the prescription image and manually select medicines. The patient can also add OTC items to this order.
+                  </Typography>
+                </Alert>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      <Grid container spacing={3}>
-        {/* Prescription Image */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              PRESCRIPTION IMAGE
-            </Typography>
-            <Box
-              sx={{
-                width: '100%',
-                height: 400,
-                bgcolor: 'grey.200',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 1,
-                mb: 2,
-              }}
-            >
-              <Typography color="text.secondary">Prescription Image Preview</Typography>
-            </Box>
-            <Stack direction="row" spacing={1}>
-              <Button size="small" startIcon={<ZoomIn />}>Zoom In</Button>
-              <Button size="small">Enhance</Button>
-              <Button size="small">Rotate</Button>
-            </Stack>
-          </Paper>
-        </Grid>
+          {/* Add Medicines */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Add Medicines from Prescription</Typography>
+                
+                <Autocomplete
+                  options={medicines}
+                  getOptionLabel={(option) => `${option.name}${option.brand ? ` (${option.brand})` : ''} - Rs. ${option.price}`}
+                  value={selectedMedicine}
+                  onChange={(e, newValue) => setSelectedMedicine(newValue)}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      label="Search Medicine" 
+                      variant="outlined"
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    />
+                  )}
+                />
 
-        {/* Patient Information */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              PATIENT INFORMATION
-            </Typography>
-            <Stack spacing={1.5}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">Name</Typography>
-                <Typography variant="body1" fontWeight="bold">Kumar Perera</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Quantity"
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                      inputProps={{ min: 1 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Dosage (e.g., 500mg)"
+                      value={dosage}
+                      onChange={(e) => setDosage(e.target.value)}
+                      placeholder="500mg"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Frequency (e.g., Twice daily)"
+                      value={frequency}
+                      onChange={(e) => setFrequency(e.target.value)}
+                      placeholder="Twice daily"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Instructions"
+                      value={instructions}
+                      onChange={(e) => setInstructions(e.target.value)}
+                      placeholder="After meals"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<Add />}
+                      onClick={handleAddMedicine}
+                      disabled={!selectedMedicine || loading}
+                    >
+                      Add to Order
+                    </Button>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Order Items - Shows both prescription medicines and OTC items */}
+          {order && (
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Order Items
+                    {order.items.length > 0 && (
+                      <Chip 
+                        label={`${order.items.filter(i => i.isPrescription).length} Prescription, ${order.items.filter(i => !i.isPrescription).length} OTC`}
+                        size="small"
+                        sx={{ ml: 2 }}
+                        color="info"
+                      />
+                    )}
+                  </Typography>
+                  
+                  {order.items.length === 0 ? (
+                    <Alert severity="info">
+                      No items in order yet. Add prescription medicines or wait for patient to add OTC items.
+                    </Alert>
+                  ) : (
+                    <>
+                      {/* Prescription Medicines Section */}
+                      {order.items.filter(i => i.isPrescription).length > 0 && (
+                        <Box sx={{ mb: 3 }}>
+                          <Typography variant="subtitle2" color="primary" gutterBottom sx={{ fontWeight: 600 }}>
+                            Prescription Medicines (Added by Pharmacist)
+                          </Typography>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Medicine</TableCell>
+                                  <TableCell>Quantity</TableCell>
+                                  <TableCell>Dosage</TableCell>
+                                  <TableCell>Frequency</TableCell>
+                                  <TableCell align="right">Price</TableCell>
+                                  <TableCell align="right">Total</TableCell>
+                                  <TableCell align="right">Action</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {order.items.filter(i => i.isPrescription).map((item, index) => (
+                                  <TableRow key={`rx-${index}`}>
+                                    <TableCell>
+                                      <Stack direction="row" spacing={1} alignItems="center">
+                                        <Typography>{item.medicineName || item.medicineId?.name}</Typography>
+                                        <Chip label="Rx" size="small" color="primary" />
+                                      </Stack>
+                                    </TableCell>
+                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell>{item.dosage || '-'}</TableCell>
+                                    <TableCell>{item.frequency || '-'}</TableCell>
+                                    <TableCell align="right">Rs. {item.price?.toFixed(2) || '0.00'}</TableCell>
+                                    <TableCell align="right">
+                                      Rs. {((item.price || 0) * item.quantity).toFixed(2)}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                      <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => handleRemoveItem(item._id)}
+                                        disabled={loading}
+                                      >
+                                        <Delete />
+                                      </IconButton>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+                      )}
+
+                      {/* OTC Items Section */}
+                      {order.items.filter(i => !i.isPrescription).length > 0 && (
+                        <Box>
+                          <Typography variant="subtitle2" color="secondary" gutterBottom sx={{ fontWeight: 600 }}>
+                            OTC Items (Added by Patient)
+                          </Typography>
+                          <TableContainer>
+                            <Table size="small">
+                              <TableHead>
+                                <TableRow>
+                                  <TableCell>Medicine</TableCell>
+                                  <TableCell>Quantity</TableCell>
+                                  <TableCell align="right">Price</TableCell>
+                                  <TableCell align="right">Total</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {order.items.filter(i => !i.isPrescription).map((item, index) => (
+                                  <TableRow key={`otc-${index}`}>
+                                    <TableCell>
+                                      <Stack direction="row" spacing={1} alignItems="center">
+                                        <Typography>{item.medicineName || item.medicineId?.name}</Typography>
+                                        <Chip label="OTC" size="small" color="secondary" />
+                                      </Stack>
+                                    </TableCell>
+                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell align="right">Rs. {item.price?.toFixed(2) || '0.00'}</TableCell>
+                                    <TableCell align="right">
+                                      Rs. {((item.price || 0) * item.quantity).toFixed(2)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+                      )}
+                    </>
+                  )}
+                  
+                  {order.finalAmount && (
+                    <Box sx={{ mt: 2 }}>
+                      <Divider sx={{ my: 2 }} />
+                      <Stack spacing={1}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography>Subtotal:</Typography>
+                          <Typography>Rs. {(order.totalAmount || 0).toFixed(2)}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography>Delivery Fee:</Typography>
+                          <Typography>Rs. {(order.deliveryFee || 0).toFixed(2)}</Typography>
+                        </Box>
+                        <Divider />
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography variant="h6">Total:</Typography>
+                          <Typography variant="h6" color="primary">
+                            Rs. {(order.finalAmount || 0).toFixed(2)}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+
+          {loading && (
+            <Grid item xs={12}>
+              <Box display="flex" justifyContent="center" p={2}>
+                <CircularProgress />
               </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">Age | Gender</Typography>
-                <Typography variant="body1">52 | Male</Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">Contact</Typography>
-                <Typography variant="body1">077-123-4567</Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">Allergies</Typography>
-                <Typography variant="body1" color="error">Penicillin</Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">Chronic Conditions</Typography>
-                <Typography variant="body1">Diabetes, Hypertension</Typography>
-              </Box>
-              <Button variant="outlined" size="small" startIcon={<Phone />} sx={{ mt: 1 }}>
-                Call Patient
-              </Button>
-            </Stack>
-          </Paper>
+            </Grid>
+          )}
         </Grid>
-
-        {/* Medicines List */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              EXTRACT MEDICINES FROM PRESCRIPTION
-            </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>#</TableCell>
-                    <TableCell>Medicine Name</TableCell>
-                    <TableCell>Dosage</TableCell>
-                    <TableCell>Qty</TableCell>
-                    <TableCell>Stock</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {medicines.map((med) => (
-                    <TableRow key={med.id}>
-                      <TableCell>{med.id}</TableCell>
-                      <TableCell>{med.name}</TableCell>
-                      <TableCell>{med.dosage}</TableCell>
-                      <TableCell>{med.qty} tabs</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={med.stock}
-                          size="small"
-                          color={med.status === 'low' ? 'warning' : 'success'}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <IconButton size="small">
-                            <Edit fontSize="small" />
-                          </IconButton>
-                          <IconButton size="small">
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Button startIcon={<Add />} sx={{ mt: 2 }}>
-              Add Medicine
-            </Button>
-          </Paper>
-        </Grid>
-
-        {/* Pharmacy Notes */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              ADDITIONAL NOTES
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              placeholder="Pharmacy Notes..."
-              value={pharmacyNotes}
-              onChange={(e) => setPharmacyNotes(e.target.value)}
-            />
-          </Paper>
-        </Grid>
-
-        {/* Verification Actions */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              VERIFICATION ACTIONS
-            </Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap" gap={1}>
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<CheckCircle />}
-                onClick={handleApprove}
-              >
-                Approve & Add to Order
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<Cancel />}
-                onClick={() => setRejectionDialog(true)}
-              >
-                Reject Prescription
-              </Button>
-              <Button variant="outlined">Request Clarification</Button>
-            </Stack>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Rejection Dialog */}
-      <Dialog open={rejectionDialog} onClose={() => setRejectionDialog(false)}>
-        <DialogTitle>Reject Prescription</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Rejection Reason</InputLabel>
-            <Select
-              value={rejectionReason}
-              label="Rejection Reason"
-              onChange={(e) => setRejectionReason(e.target.value)}
-            >
-              <MenuItem value="illegible">Illegible Prescription</MenuItem>
-              <MenuItem value="expired">Expired Prescription</MenuItem>
-              <MenuItem value="invalid">Invalid Doctor Signature</MenuItem>
-              <MenuItem value="missing">Missing Information</MenuItem>
-              <MenuItem value="other">Other</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setRejectionDialog(false)}>Cancel</Button>
-          <Button onClick={handleReject} variant="contained" color="error" disabled={!rejectionReason}>
-            Reject
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Close</Button>
+        {order && order.items.length > 0 && !order.finalAmount && (
+          <Button
+            variant="contained"
+            onClick={handleGenerateBill}
+            disabled={loading}
+          >
+            Generate Bill ({order.items.length} items)
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        )}
+        {order && order.finalAmount && (
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<CheckCircle />}
+            onClick={handleVerify}
+            disabled={loading}
+          >
+            Send Bill to Patient (Rs. {order.finalAmount?.toFixed(2)})
+          </Button>
+        )}
+        {(!order || order.items.length === 0) && (
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            Add prescription medicines from the image above. Patient can also add OTC items to this order.
+          </Typography>
+        )}
+      </DialogActions>
+    </Dialog>
   );
 };
 
 export default PrescriptionDetail;
-

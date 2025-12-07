@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  orderId: { type: String, unique: true, required: true },
+  orderId: { type: String, unique: true }, // Auto-generated in pre-save hook
   patientId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 
@@ -9,7 +9,7 @@ const orderSchema = new mongoose.Schema({
   },
   type: { 
     type: String, 
-    enum: ['prescription', 'otc', 'refill'], 
+    enum: ['prescription', 'otc', 'refill', 'mixed'], // mixed = prescription + OTC
     required: true 
   },
   prescriptionId: { 
@@ -24,7 +24,11 @@ const orderSchema = new mongoose.Schema({
     medicineName: String,
     quantity: Number,
     price: Number,
-    isAvailable: { type: Boolean, default: true }
+    isAvailable: { type: Boolean, default: true },
+    isPrescription: { type: Boolean, default: false }, // Mark if from prescription
+    dosage: String, // e.g., "500mg", "1 tablet"
+    frequency: String, // e.g., "Twice daily", "After meals"
+    instructions: String // Additional instructions
   }],
   status: { 
     type: String, 
@@ -60,7 +64,13 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'RefillPlan' 
   },
-  audioInstructions: String,
+  audioInstructions: {
+    url: String,
+    requested: { type: Boolean, default: false },
+    requestedAt: Date,
+    providedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    providedAt: Date
+  },
   feedback: {
     rating: Number,
     comments: String,
@@ -71,8 +81,13 @@ const orderSchema = new mongoose.Schema({
 // Generate order ID before saving
 orderSchema.pre('save', async function(next) {
   if (!this.orderId) {
-    const count = await mongoose.model('Order').countDocuments();
-    this.orderId = `JLC${String(count + 1).padStart(6, '0')}`;
+    try {
+      const count = await mongoose.model('Order').countDocuments();
+      this.orderId = `JLC${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      // Fallback if countDocuments fails
+      this.orderId = `JLC${String(Date.now()).slice(-6)}`;
+    }
   }
   next();
 });

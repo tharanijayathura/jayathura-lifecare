@@ -20,6 +20,7 @@ import PatientProfile from './PatientProfile';
 import DeliveryAssignment from './DeliveryAssignment';
 import ChatDashboard from './ChatDashboard';
 import DailyReport from './DailyReport';
+import AudioInstructions from './AudioInstructions';
 
 const PharmacistDashboard = () => {
   const theme = useTheme();
@@ -38,7 +39,8 @@ const PharmacistDashboard = () => {
     { label: 'Patients', value: 5 },
     { label: 'Delivery', value: 6 },
     { label: 'Chat', value: 7 },
-    { label: 'Reports', value: 8 },
+    { label: 'Audio Instructions', value: 8 },
+    { label: 'Reports', value: 9 },
   ];
 
   const handleTabChange = (event, newValue) => {
@@ -54,7 +56,12 @@ const PharmacistDashboard = () => {
       return (
         <PrescriptionDetail
           prescription={selectedPrescription}
-          onBack={() => setSelectedPrescription(null)}
+          open={!!selectedPrescription}
+          onClose={() => setSelectedPrescription(null)}
+          onUpdate={() => {
+            // Refresh prescriptions list if needed
+            setSelectedPrescription(null);
+          }}
         />
       );
     }
@@ -107,6 +114,8 @@ const PharmacistDashboard = () => {
       case 7:
         return <ChatDashboard />;
       case 8:
+        return <AudioInstructions />;
+      case 9:
         return <DailyReport />;
       default:
         return <DashboardOverview />;
