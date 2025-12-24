@@ -22,7 +22,7 @@ import medPlaceholder from '../../assets/med.png';
 
 const CATEGORY_OPTIONS = [
   { value: 'all', label: 'All categories' },
-  { value: 'otc', label: 'Over-the-Counter (OTC)' },
+  { value: 'otc', label: 'Non Prescription Items' },
   { value: 'herbal', label: 'Herbal & Ayurvedic' },
   { value: 'vitamins', label: 'Vitamins & Supplements' },
   { value: 'medical-devices', label: 'Medical Devices & Equipment' },
@@ -67,7 +67,34 @@ const MedicineCatalog = ({ onAddToCart }) => {
     try {
       setLoading(true);
       const response = await patientAPI.browseOTC();
-      setMedicines(response.data || []);
+      const medicinesData = response.data || [];
+      
+      
+      const seenIds = new Map();
+      const seenNames = new Map(); // Also check by name+brand as fallback
+      const uniqueMedicines = medicinesData.filter(medicine => {
+        const medicineId = medicine._id?.toString() || medicine.id?.toString();
+        const nameKey = `${medicine.name || ''}_${medicine.brand || ''}`.toLowerCase();
+        
+        // Check by ID first
+        if (medicineId && seenIds.has(medicineId)) {
+          
+          return false;
+        }
+        
+        // Also check by name+brand combination (in case IDs are different but same medicine)
+        if (nameKey && seenNames.has(nameKey)) {
+          
+          return false;
+        }
+        
+        if (medicineId) seenIds.set(medicineId, true);
+        if (nameKey) seenNames.set(nameKey, true);
+        return true;
+      });
+      
+      
+      setMedicines(uniqueMedicines);
     } catch (error) {
       console.error('Error fetching medicines:', error);
       setMedicines([]);
@@ -87,12 +114,30 @@ const MedicineCatalog = ({ onAddToCart }) => {
   }, [medicines]);
 
   const filteredMedicines = useMemo(() => {
-    if (searchTerm) {
-      // If searching, use search API
-      return [];
-    }
     
-    return medicines
+    const seenIds = new Map();
+    const seenNames = new Map();
+    const uniqueMedicines = medicines.filter(medicine => {
+      const medicineId = medicine._id?.toString() || medicine.id?.toString();
+      const nameKey = `${medicine.name || ''}_${medicine.brand || ''}`.toLowerCase();
+      
+      
+      if (medicineId && seenIds.has(medicineId)) {
+        return false;
+      }
+      
+      
+      if (nameKey && seenNames.has(nameKey)) {
+        return false;
+      }
+      
+      if (medicineId) seenIds.set(medicineId, true);
+      if (nameKey) seenNames.set(nameKey, true);
+      return true;
+    });
+    
+    
+    return uniqueMedicines
       .filter(
         (medicine) =>
           medicine.stock > 0 &&
@@ -101,11 +146,12 @@ const MedicineCatalog = ({ onAddToCart }) => {
           (filters.priceMin === '' || medicine.price >= Number(filters.priceMin)) &&
           (filters.priceMax === '' || medicine.price <= Number(filters.priceMax)),
       );
-  }, [medicines, searchTerm, filters]);
+  }, [medicines, filters]);
 
-  // Handle search with debounce
+  
   useEffect(() => {
     if (!searchTerm) {
+      
       fetchMedicines();
       return;
     }
@@ -114,9 +160,28 @@ const MedicineCatalog = ({ onAddToCart }) => {
       try {
         setLoading(true);
         const response = await patientAPI.searchMedicines(searchTerm);
-        setMedicines(response.data || []);
+        const medicinesData = response.data || [];
+        
+        
+        const seenIds = new Map();
+        const seenNames = new Map();
+        const uniqueMedicines = medicinesData.filter(medicine => {
+          const medicineId = medicine._id?.toString() || medicine.id?.toString();
+          const nameKey = `${medicine.name || ''}_${medicine.brand || ''}`.toLowerCase();
+          
+          if (medicineId && seenIds.has(medicineId)) return false;
+          if (nameKey && seenNames.has(nameKey)) return false;
+          
+          if (medicineId) seenIds.set(medicineId, true);
+          if (nameKey) seenNames.set(nameKey, true);
+          return true;
+        });
+        
+        
+        setMedicines(uniqueMedicines);
       } catch (error) {
         console.error('Error searching medicines:', error);
+        setMedicines([]);
       } finally {
         setLoading(false);
       }
@@ -134,8 +199,10 @@ const MedicineCatalog = ({ onAddToCart }) => {
   };
 
   const handleAddToCart = (medicine) => {
+    
+    const medicineId = medicine._id?.toString() || medicine.id?.toString();
     onAddToCart({
-      itemId: medicine.id,
+      itemId: medicineId,
       name: medicine.name,
       quantity: 1,
       price: medicine.price,
@@ -241,8 +308,11 @@ const MedicineCatalog = ({ onAddToCart }) => {
       </Grid>
 
       <Grid container spacing={3}>
-        {filteredMedicines.map((medicine) => (
-          <Grid item xs={12} sm={6} md={4} key={medicine.id}>
+        {filteredMedicines.map((medicine) => {
+          // Use _id or id for the key
+          const medicineId = medicine._id?.toString() || medicine.id?.toString() || Math.random().toString();
+          return (
+          <Grid item xs={12} sm={6} md={4} key={medicineId}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardMedia
                 component="img"
@@ -296,7 +366,8 @@ const MedicineCatalog = ({ onAddToCart }) => {
               </CardActions>
             </Card>
           </Grid>
-        ))}
+          );
+        })}
       </Grid>
 
       {!loading && filteredMedicines.length === 0 && (

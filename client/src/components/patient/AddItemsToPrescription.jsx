@@ -57,7 +57,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
           price: orderItem.price || 0,
           quantity: orderItem.quantity || 1,
           itemType: orderItem.isPrescription ? 'Prescription' : 
-                   orderItem.category === 'groceries' ? 'Grocery' : 'OTC',
+                   orderItem.category === 'groceries' ? 'Grocery' : 'Non Prescription',
           image: orderItem.medicineId?.image,
           orderItemId: orderItem._id
         }));
@@ -85,7 +85,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
           price: orderItem.price || 0,
           quantity: orderItem.quantity || 1,
           itemType: orderItem.isPrescription ? 'Prescription' : 
-                   orderItem.category === 'groceries' ? 'Grocery' : 'OTC',
+                   orderItem.category === 'groceries' ? 'Grocery' : 'Non Prescription',
           image: orderItem.medicineId?.image,
           orderItemId: orderItem._id
         }));
@@ -127,7 +127,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
   };
 
   const prescriptionItems = cartItems.filter(i => i.itemType === 'Prescription');
-  const otcItems = cartItems.filter(i => i.itemType === 'OTC');
+  const otcItems = cartItems.filter(i => i.itemType === 'Non Prescription' || i.itemType === 'OTC');
   const groceryItems = cartItems.filter(i => i.itemType === 'Grocery');
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -151,7 +151,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
 
           <Alert severity="info" sx={{ mb: 2 }}>
             <Typography variant="body2">
-              <strong>Optional:</strong> You can add OTC medicines and groceries to your prescription order, or send it directly to the pharmacist without adding any items.
+              <strong>Optional:</strong> You can add non prescription items and groceries to your prescription order, or send it directly to the pharmacist without adding any items.
             </Typography>
             <Typography variant="body2" sx={{ mt: 1, fontSize: '0.875rem' }}>
               <strong>Note:</strong> Delivery address will be required later when you confirm the final order after pharmacist generates the bill.
@@ -169,7 +169,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
                     onChange={(e, newValue) => setCatalogTab(newValue)}
                     sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
                   >
-                    <Tab label="OTC Medicines" icon={<LocalPharmacy />} />
+                    <Tab label="Non Prescription Items" icon={<LocalPharmacy />} />
                     <Tab label="Groceries" icon={<ShoppingCart />} />
                   </Tabs>
 
@@ -192,7 +192,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
 
                   {cartItems.length === 0 ? (
                     <Alert severity="info">
-                      No items added yet. You can add OTC medicines or groceries, or skip and send directly.
+                      No items added yet. You can add non prescription items or groceries, or skip and send directly.
                     </Alert>
                   ) : (
                     <Stack spacing={1} sx={{ mt: 2 }}>
@@ -211,7 +211,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
                       {otcItems.length > 0 && (
                         <Box>
                           <Typography variant="subtitle2" color="secondary" fontWeight={600}>
-                            OTC Medicines: {otcItems.length}
+                            Non Prescription Items: {otcItems.length}
                           </Typography>
                           {otcItems.map((item, idx) => (
                             <Typography key={idx} variant="body2" sx={{ pl: 2 }}>
@@ -273,7 +273,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
                   {otcItems.length > 0 && (
                     <Box>
                       <Typography variant="subtitle1" color="secondary" gutterBottom>
-                        OTC Medicines ({otcItems.length})
+                        Non Prescription Items ({otcItems.length})
                       </Typography>
                       {otcItems.map((item, idx) => (
                         <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>

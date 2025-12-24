@@ -270,19 +270,30 @@ router.get('/medicines/otc', authMiddleware, async (req, res) => {
       .select('name brand category price packaging stock image description')
       .sort({ name: 1 });
 
-    // Format response for frontend
-    const formattedMedicines = medicines.map(med => ({
-      id: med._id,
-      name: med.name,
-      brand: med.brand,
-      category: med.category,
-      description: med.description,
-      price: med.price.perPack,
-      stock: med.stock.packs,
-      image: med.image,
-      packaging: med.packaging,
-      requiresPrescription: false
-    }));
+    // Format response for frontend and deduplicate by _id
+    const seenIds = new Map();
+    const formattedMedicines = medicines
+      .filter(med => {
+        const medId = med._id.toString();
+        if (seenIds.has(medId)) {
+          return false; // Duplicate, skip it
+        }
+        seenIds.set(medId, true);
+        return true;
+      })
+      .map(med => ({
+        id: med._id.toString(),
+        _id: med._id.toString(), // Include both for compatibility
+        name: med.name,
+        brand: med.brand,
+        category: med.category,
+        description: med.description,
+        price: med.price.perPack,
+        stock: med.stock.packs,
+        image: med.image,
+        packaging: med.packaging,
+        requiresPrescription: false
+      }));
 
     res.json(formattedMedicines);
   } catch (error) {
@@ -318,19 +329,30 @@ router.get('/medicines/search', authMiddleware, async (req, res) => {
       .select('name brand category price packaging stock image description')
       .limit(50);
 
-    // Format response for frontend
-    const formattedMedicines = medicines.map(med => ({
-      id: med._id,
-      name: med.name,
-      brand: med.brand,
-      category: med.category,
-      description: med.description,
-      price: med.price.perPack,
-      stock: med.stock.packs,
-      image: med.image,
-      packaging: med.packaging,
-      requiresPrescription: false
-    }));
+    // Format response for frontend and deduplicate by _id
+    const seenIds = new Map();
+    const formattedMedicines = medicines
+      .filter(med => {
+        const medId = med._id.toString();
+        if (seenIds.has(medId)) {
+          return false; // Duplicate, skip it
+        }
+        seenIds.set(medId, true);
+        return true;
+      })
+      .map(med => ({
+        id: med._id.toString(),
+        _id: med._id.toString(), // Include both for compatibility
+        name: med.name,
+        brand: med.brand,
+        category: med.category,
+        description: med.description,
+        price: med.price.perPack,
+        stock: med.stock.packs,
+        image: med.image,
+        packaging: med.packaging,
+        requiresPrescription: false
+      }));
 
     res.json(formattedMedicines);
   } catch (error) {
@@ -462,12 +484,18 @@ router.delete('/order/:orderId/item/:itemId', authMiddleware, async (req, res) =
       item => item._id.toString() !== itemId
     );
 
-    // Recalculate totals
+    // Recalculate totals (improved price access)
     if (order.items.length > 0) {
       let subtotal = 0;
       order.items.forEach(item => {
-        const price = item.price || 0;
+        // Handle both populated and non-populated medicineId
+        const medicinePrice = item.medicineId?.price?.perPack || item.medicineId?.price || 0;
+        const price = item.price || medicinePrice || 0;
         subtotal += price * item.quantity;
+        // Update item price if missing
+        if (!item.price && medicinePrice) {
+          item.price = medicinePrice;
+        }
       });
       order.totalAmount = subtotal;
       order.deliveryFee = subtotal > 1000 ? 0 : 200;
@@ -1224,14 +1252,43 @@ router.get('/orders/history', authMiddleware, async (req, res) => {
     }
 
     const orders = await Order.find({ patientId: req.user._id })
-      .populate('items.medicineId', 'name price')
+      .populate({
+        path: 'items.medicineId',
+        select: 'name price image',
+        model: 'Medicine'
+      })
+      .populate({
+        path: 'prescriptionId',
+        select: 'status imageUrl',
+        model: 'Prescription'
+      })
+      .populate({
+        path: 'assignedTo',
+        select: 'name phone',
+        model: 'User'
+      })
       .sort({ createdAt: -1 })
       .limit(50);
 
-    res.json(orders);
+    // Format orders for frontend
+    const formattedOrders = orders.map(order => {
+      const orderObj = order.toObject();
+      // Ensure items have proper structure
+      orderObj.items = (orderObj.items || []).map(item => ({
+        ...item,
+        medicineName: item.medicineName || item.medicineId?.name || 'Unknown',
+        name: item.medicineName || item.medicineId?.name || 'Unknown',
+        price: item.price || item.medicineId?.price?.perPack || 0,
+        quantity: item.quantity || 0
+      }));
+      return orderObj;
+    });
+
+    res.json(formattedOrders);
   } catch (error) {
     console.error('View orders history error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

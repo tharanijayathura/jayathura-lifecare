@@ -222,7 +222,7 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
           ) : (
             <Alert severity="info">
               <Typography variant="body2">
-                Review your order below. You can remove OTC items if needed. 
+                Review your order below. You can remove non prescription items if needed. 
                 Prescription medicines cannot be removed.
               </Typography>
             </Alert>
@@ -277,7 +277,7 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Additional Items (OTC)
+                  Additional Items (Non Prescription)
                 </Typography>
                 <TableContainer>
                   <Table size="small">

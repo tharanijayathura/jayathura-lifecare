@@ -82,8 +82,11 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
         ) : (
           <>
             <List>
-              {cartItems.map((item, index) => (
-                <ListItem key={`${item.itemId}-${index}`} alignItems="flex-start">
+              {cartItems.map((item, index) => {
+                // Use uniqueKey if available, otherwise use orderItemId or itemId
+                const uniqueKey = item.uniqueKey || item.orderItemId || `${item.itemId}-${index}`;
+                return (
+                <ListItem key={uniqueKey} alignItems="flex-start">
                   <ListItemAvatar>
                     <Avatar
                       variant="rounded"
@@ -110,7 +113,8 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
-              ))}
+                );
+              })}
             </List>
 
             <Divider sx={{ my: 2 }} />

@@ -90,15 +90,32 @@ const PatientPortal = () => {
       // If this is a prescription order, refresh cart from order to show all items
       if (response.data?.order) {
         const order = response.data.order;
-        const orderItems = (order.items || []).map(orderItem => ({
-          itemId: orderItem.medicineId?._id || orderItem.medicineId,
-          name: orderItem.medicineName || orderItem.medicineId?.name,
-          price: orderItem.price || 0,
-          quantity: orderItem.quantity || 1,
-          itemType: orderItem.isPrescription ? 'Prescription' : 'OTC',
-          image: orderItem.medicineId?.image,
-          orderItemId: orderItem._id
-        }));
+        // Deduplicate items
+        const seenItems = new Map();
+        const orderItems = (order.items || [])
+          .map(orderItem => {
+            const itemId = orderItem.medicineId?._id || orderItem.medicineId;
+            const orderItemId = orderItem._id?.toString();
+            const uniqueKey = orderItemId || itemId?.toString();
+            
+            // Skip if we've already seen this item
+            if (seenItems.has(uniqueKey)) {
+              return null;
+            }
+            seenItems.set(uniqueKey, true);
+            
+            return {
+              itemId: itemId,
+              name: orderItem.medicineName || orderItem.medicineId?.name,
+              price: orderItem.price || 0,
+              quantity: orderItem.quantity || 1,
+              itemType: orderItem.isPrescription ? 'Prescription' : 'Non Prescription',
+              image: orderItem.medicineId?.image,
+              orderItemId: orderItem._id,
+              uniqueKey: uniqueKey
+            };
+          })
+          .filter(item => item !== null); // Remove nulls from deduplication
         setCartItems(orderItems);
       } else {
         // Update local cart state for regular OTC orders
@@ -140,18 +157,35 @@ const PatientPortal = () => {
       if (currentOrderId && item.orderItemId) {
         // Use the endpoint that works for both OTC and prescription orders
         await patientAPI.removeOrderItem(currentOrderId, item.orderItemId);
-        // Refresh cart from order
+        // Refresh cart from order with deduplication
         const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
         if (orderResponse.data?.items) {
-          const orderItems = orderResponse.data.items.map(orderItem => ({
-            itemId: orderItem.medicineId?._id || orderItem.medicineId,
-            name: orderItem.medicineName || orderItem.medicineId?.name,
-            price: orderItem.price || 0,
-            quantity: orderItem.quantity || 1,
-            itemType: orderItem.isPrescription ? 'Prescription' : 'OTC',
-            image: orderItem.medicineId?.image,
-            orderItemId: orderItem._id
-          }));
+          // Deduplicate items
+          const seenItems = new Map();
+          const orderItems = orderResponse.data.items
+            .map(orderItem => {
+              const itemId = orderItem.medicineId?._id || orderItem.medicineId;
+              const orderItemId = orderItem._id?.toString();
+              const uniqueKey = orderItemId || itemId?.toString();
+              
+              // Skip if we've already seen this item
+              if (seenItems.has(uniqueKey)) {
+                return null;
+              }
+              seenItems.set(uniqueKey, true);
+              
+              return {
+                itemId: itemId,
+                name: orderItem.medicineName || orderItem.medicineId?.name,
+                price: orderItem.price || 0,
+                quantity: orderItem.quantity || 1,
+                itemType: orderItem.isPrescription ? 'Prescription' : 'Non Prescription',
+                image: orderItem.medicineId?.image,
+                orderItemId: orderItem._id,
+                uniqueKey: uniqueKey
+              };
+            })
+            .filter(item => item !== null); // Remove nulls from deduplication
           setCartItems(orderItems);
         } else {
           setCartItems((prev) => prev.filter((_, i) => i !== index));
@@ -250,7 +284,7 @@ const PatientPortal = () => {
           setPrescriptionOrders(orders);
           setSnackbar({
             open: true,
-            message: 'Prescription uploaded! You can now add OTC items to this order.',
+            message: 'Prescription uploaded! You can now add non prescription items to this order.',
             severity: 'success'
           });
           setTimeout(() => {
@@ -291,27 +325,92 @@ const PatientPortal = () => {
     fetchPrescriptionOrders(); // Refresh prescription orders
   };
 
+  // Clear cart and order ID on component mount if no valid draft/pending order
+  useEffect(() => {
+    const checkAndClearInvalidOrder = async () => {
+      if (currentOrderId) {
+        try {
+          const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
+          const order = orderResponse.data;
+          
+          // If order is confirmed or doesn't exist, clear it
+          if (!order || (order.status !== 'draft' && order.status !== 'pending')) {
+            setCurrentOrderId(null);
+            setCartItems([]);
+          }
+        } catch (error) {
+          // Order doesn't exist or error - clear it
+          setCurrentOrderId(null);
+          setCartItems([]);
+        }
+      } else {
+        // No order ID - ensure cart is empty
+        setCartItems([]);
+      }
+    };
+    
+    // Only run once on mount
+    checkAndClearInvalidOrder();
+  }, []); // Empty dependency array - only run on mount
+
   // Load cart items when currentOrderId is set (for prescription orders)
+  // Only load if order is in draft or pending status (not confirmed)
   useEffect(() => {
     const loadCartFromOrder = async () => {
       if (currentOrderId) {
         try {
           const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
-          if (orderResponse.data?.items) {
-            const orderItems = orderResponse.data.items.map(orderItem => ({
-              itemId: orderItem.medicineId?._id || orderItem.medicineId,
-              name: orderItem.medicineName || orderItem.medicineId?.name,
-              price: orderItem.price || 0,
-              quantity: orderItem.quantity || 1,
-              itemType: orderItem.isPrescription ? 'Prescription' : 'OTC',
-              image: orderItem.medicineId?.image,
-              orderItemId: orderItem._id
-            }));
-            setCartItems(orderItems);
+          const order = orderResponse.data;
+          
+          // Only load cart if order is in draft or pending status
+          // Don't auto-load confirmed orders
+          if (order && (order.status === 'draft' || order.status === 'pending')) {
+            if (order.items && order.items.length > 0) {
+              // Deduplicate items by orderItemId or itemId
+              const seenItems = new Map();
+              const orderItems = order.items
+                .map(orderItem => {
+                  const itemId = orderItem.medicineId?._id || orderItem.medicineId;
+                  const orderItemId = orderItem._id?.toString();
+                  const uniqueKey = orderItemId || itemId?.toString();
+                  
+                  // Skip if we've already seen this item
+                  if (seenItems.has(uniqueKey)) {
+                    return null;
+                  }
+                  seenItems.set(uniqueKey, true);
+                  
+                  return {
+                    itemId: itemId,
+                    name: orderItem.medicineName || orderItem.medicineId?.name,
+                    price: orderItem.price || 0,
+                    quantity: orderItem.quantity || 1,
+                    itemType: orderItem.isPrescription ? 'Prescription' : 'Non Prescription',
+                    image: orderItem.medicineId?.image,
+                    orderItemId: orderItem._id,
+                    uniqueKey: uniqueKey
+                  };
+                })
+                .filter(item => item !== null); // Remove nulls from deduplication
+              
+              setCartItems(orderItems);
+            } else {
+              // If order has no items, clear cart
+              setCartItems([]);
+            }
+          } else {
+            // If order is confirmed or other status, clear cart
+            setCartItems([]);
+            setCurrentOrderId(null);
           }
         } catch (error) {
           console.error('Error loading cart from order:', error);
+          // On error, clear cart to prevent stale data
+          setCartItems([]);
         }
+      } else {
+        // If no currentOrderId, clear cart
+        setCartItems([]);
       }
     };
     loadCartFromOrder();
@@ -357,7 +456,7 @@ const PatientPortal = () => {
                 }}
                 variant={isMobile ? 'fullWidth' : 'standard'}
               >
-                <Tab label="OTC Medicines" />
+                <Tab label="Non Prescription Items" />
                 <Tab label="Groceries & Wellness" />
               </Tabs>
               <Box sx={{ mt: 2 }}>
@@ -395,7 +494,7 @@ const PatientPortal = () => {
             My Prescription Orders
           </Typography>
           <Alert severity="info" sx={{ mb: 2 }}>
-            View your prescription orders. You can add OTC items to pending orders and review bills before confirming.
+            View your prescription orders. You can add non prescription items to pending orders and review bills before confirming.
           </Alert>
           {prescriptionOrders.length === 0 ? (
             <Alert severity="info">
@@ -416,7 +515,7 @@ const PatientPortal = () => {
                           <Typography variant="body2" color="text.secondary">
                             Items: {order.items.length} | 
                             {order.items.filter(i => i.isPrescription).length} Prescription, 
-                            {order.items.filter(i => !i.isPrescription).length} OTC
+                            {order.items.filter(i => !i.isPrescription).length} Non Prescription
                           </Typography>
                           {order.finalAmount && (
                             <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
@@ -454,12 +553,12 @@ const PatientPortal = () => {
                                 setCurrentOrderId(order._id);
                                 setSnackbar({
                                   open: true,
-                                  message: 'You can now add OTC items to this prescription order',
+                                  message: 'You can now add non prescription items to this prescription order',
                                   severity: 'info'
                                 });
                               }}
                             >
-                              Add OTC Items
+                              Add Non Prescription Items
                             </Button>
                           )}
                         </Stack>
@@ -593,7 +692,7 @@ const DashboardOverview = ({ onNavigate }) => {
     {
       icon: <ShoppingCartIcon sx={{ fontSize: 40 }} />,
       title: 'Shop Medicines',
-      description: 'Browse and order OTC medicines and health products',
+      description: 'Browse and order non prescription medicines and health products',
       color: '#2196F3',
       tabIndex: 2
     },
@@ -624,7 +723,7 @@ const DashboardOverview = ({ onNavigate }) => {
     {
       step: 2,
       title: 'Browse & Add to Cart',
-      description: 'Explore our medicine catalog. Add OTC medicines, vitamins, and health products to your cart.',
+      description: 'Explore our medicine catalog. Add non prescription medicines, vitamins, and health products to your cart.',
       icon: <MedicalServices color="primary" />
     },
     {
@@ -850,7 +949,7 @@ const DashboardOverview = ({ onNavigate }) => {
         <Typography variant="body2" component="div">
           <ul style={{ margin: 0, paddingLeft: 20 }}>
             <li>Prescription medicines require a valid doctor's prescription</li>
-            <li>OTC medicines can be ordered directly without a prescription</li>
+            <li>Non prescription medicines can be ordered directly without a prescription</li>
             <li>Orders are typically processed within 2-4 hours</li>
             <li>Free delivery for orders above Rs. 1,000</li>
             <li>Chat with our pharmacists for any questions or concerns</li>

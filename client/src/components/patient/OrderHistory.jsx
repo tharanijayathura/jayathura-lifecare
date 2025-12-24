@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -42,12 +42,16 @@ const OrderHistory = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await patientAPI.getOrdersHistory();
-      setOrders(response.data || []);
       setError(null);
+      const response = await patientAPI.getOrdersHistory();
+      console.log('Orders history response:', response);
+      const ordersData = response.data || [];
+      console.log('Orders data:', ordersData);
+      setOrders(ordersData);
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError('Failed to load order history');
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.message || 'Failed to load order history. Please try again.');
       setOrders([]);
     } finally {
       setLoading(false);
@@ -112,9 +116,11 @@ const OrderHistory = () => {
         Order History (Function 23)
       </Typography>
 
-      {orders.map((order) => {
+      {orders.length > 0 && orders.map((order) => {
         const items = order.items || [];
-        const itemNames = items.map(item => item.medicineName || item.name || 'Unknown').join(', ');
+        const itemNames = items.length > 0 
+          ? items.map(item => item.medicineName || item.medicineId?.name || item.name || 'Unknown').join(', ')
+          : 'No items';
         
         return (
           <Card key={order._id || order.orderId} sx={{ mb: 2 }}>
@@ -122,27 +128,35 @@ const OrderHistory = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                 <Box>
                   <Typography variant="h6" gutterBottom>
-                    Order #{order.orderId || order._id}
+                    Order #{order.orderId || order._id?.slice(-6) || 'N/A'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Date: {new Date(order.createdAt || order.date).toLocaleDateString()}
+                    Date: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
                   </Typography>
-                  <Typography variant="body2">
-                    Items: {itemNames || 'No items'}
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    Items: {itemNames}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Type: {order.type || 'N/A'}
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    Type: {(order.type || 'N/A').toUpperCase()}
+                    {order.prescriptionId && (
+                      <Chip label="Prescription" size="small" color="primary" sx={{ ml: 1 }} />
+                    )}
                   </Typography>
                 </Box>
                 <Box sx={{ textAlign: 'right' }}>
                   <Chip 
-                    label={(order.status || 'pending').toUpperCase().replace('_', ' ')} 
+                    label={(order.status || 'pending').toUpperCase().replace(/_/g, ' ')} 
                     color={getStatusColor(order.status)}
                     sx={{ mb: 1 }}
                   />
-                  <Typography variant="h6">
+                  <Typography variant="h6" color="primary">
                     Rs. {(order.finalAmount || order.totalAmount || 0).toFixed(2)}
                   </Typography>
+                  {order.deliveryFee !== undefined && (
+                    <Typography variant="caption" color="text.secondary">
+                      {order.deliveryFee === 0 ? 'Free delivery' : `Delivery: Rs. ${order.deliveryFee.toFixed(2)}`}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
 
@@ -325,18 +339,33 @@ const OrderHistory = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {selectedOrder.items.map((item, idx) => (
-                            <TableRow key={idx}>
-                              <TableCell>
-                                {item.medicineName || item.name || 'Unknown'}
-                              </TableCell>
-                              <TableCell align="right">{item.quantity}</TableCell>
-                              <TableCell align="right">Rs. {item.price?.toFixed(2) || '0.00'}</TableCell>
-                              <TableCell align="right">
-                                Rs. {((item.price || 0) * item.quantity).toFixed(2)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {selectedOrder.items.map((item, idx) => {
+                            const medicineName = item.medicineName || item.medicineId?.name || item.name || 'Unknown';
+                            const price = item.price || item.medicineId?.price?.perPack || 0;
+                            const quantity = item.quantity || 0;
+                            return (
+                              <TableRow key={item._id || idx}>
+                                <TableCell>
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography>{medicineName}</Typography>
+                                    {item.isPrescription && (
+                                      <Chip label="Rx" size="small" color="primary" />
+                                    )}
+                                  </Stack>
+                                  {item.dosage && (
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                      {item.dosage} {item.frequency ? `- ${item.frequency}` : ''}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell align="right">{quantity}</TableCell>
+                                <TableCell align="right">Rs. {price.toFixed(2)}</TableCell>
+                                <TableCell align="right">
+                                  Rs. {(price * quantity).toFixed(2)}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </TableContainer>

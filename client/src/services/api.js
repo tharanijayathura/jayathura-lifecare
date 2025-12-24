@@ -173,11 +173,6 @@ export const pharmacistAPI = {
   markStockOut: (medicineId) => API.put(`/pharmacists/medicine/${medicineId}/stock-out`),
   suggestAlternativeMedicine: (originalId, alternativeId, orderId) => API.post(`/pharmacists/medicine/${originalId}/suggest-alternative`, { alternativeId, orderId }),
   
-  // Audio
-  provideAudioInstructions: (orderId, formData) => API.post(`/pharmacists/order/${orderId}/audio`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  
   // Patients
   flagChronicPatient: (patientId, conditions) => API.put(`/pharmacists/patient/${patientId}/flag-chronic`, { conditions }),
   

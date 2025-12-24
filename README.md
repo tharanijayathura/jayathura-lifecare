@@ -64,7 +64,7 @@ Create a `.env` file in the `server` directory:
 MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database-name?retryWrites=true&w=majority
 JWT_SECRET=your_long_random_secret_key_here
 PORT=5000
-ADMIN_PASSWORD=AdminPass123!
+ADMIN_PASSWORD=<set_a_secure_password_via_env>
 CLIENT_URL=http://localhost:5173
 
 # Email Configuration (Optional - for password reset)
@@ -97,7 +97,7 @@ npm run seed
 
 This creates a default super admin account:
 - Email: `admin@jayathuralifecare.com`
-- Password: `AdminPass123!`
+- Password: set via the `ADMIN_PASSWORD` environment variable
 
 ## 🚀 Running the Application
 
