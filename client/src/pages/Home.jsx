@@ -38,10 +38,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import symbolImage from '../assets/medical-symbol.png';
 
-// Import images
+// ✅ Images
 import deliveryPerson from '../assets/deliver1-removebg-preview.png';
-import pharImage from '../assets/phar.png';
 import homeBgImage from '../assets/c315609e636d82456e8d2ac8a244ddff.jpg';
+import heroBg from '../assets/hero.png'; // ✅ your new hero background image
 
 function HideOnScroll(props) {
   const { children } = props;
@@ -53,6 +53,19 @@ function HideOnScroll(props) {
     </Slide>
   );
 }
+
+const floatingPill = (color, top, left, duration, opacity = 0.7) => ({
+  position: 'absolute',
+  top,
+  left,
+  width: { xs: 32, md: 40 },
+  height: { xs: 32, md: 40 },
+  backgroundColor: color,
+  borderRadius: '50%',
+  animation: `floatPackage ${duration} ease-in-out infinite`,
+  opacity,
+  zIndex: 1,
+});
 
 const Home = () => {
   const navigate = useNavigate();
@@ -98,7 +111,10 @@ const Home = () => {
   const drawer = (
     <Box sx={{ width: 280, backgroundColor: '#ECF4E8', height: '100%' }}>
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, color: '#2C3E50', display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 700, color: '#2C3E50', display: 'flex', alignItems: 'center', gap: 1 }}
+        >
           <Box component="img" src={symbolImage} alt="Jayathura" sx={{ height: 26 }} /> Jayathura
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
@@ -108,7 +124,14 @@ const Home = () => {
       <Divider />
       <List>
         {navItems.map((item) => (
-          <ListItem button key={item.label} onClick={() => { navigate(item.path); handleDrawerToggle(); }}>
+          <ListItem
+            button
+            key={item.label}
+            onClick={() => {
+              navigate(item.path);
+              handleDrawerToggle();
+            }}
+          >
             <ListItemText primary={item.label} sx={{ color: '#2C3E50', fontWeight: 500 }} />
           </ListItem>
         ))}
@@ -123,7 +146,10 @@ const Home = () => {
             '&:hover': { backgroundColor: '#CBF3BB' },
             mb: 1,
           }}
-          onClick={() => { navigate('/login'); handleDrawerToggle(); }}
+          onClick={() => {
+            navigate('/login');
+            handleDrawerToggle();
+          }}
         >
           Login
         </Button>
@@ -135,7 +161,10 @@ const Home = () => {
             color: '#2C3E50',
             '&:hover': { backgroundColor: '#7AA8B0' },
           }}
-          onClick={() => { navigate('/register'); handleDrawerToggle(); }}
+          onClick={() => {
+            navigate('/register');
+            handleDrawerToggle();
+          }}
         >
           Get Started
         </Button>
@@ -145,7 +174,7 @@ const Home = () => {
 
   return (
     <Box sx={{ flexGrow: 1, backgroundColor: '#ECF4E8', minHeight: '100vh' }}>
-      
+      {/* NAV */}
       <HideOnScroll>
         <AppBar position="fixed" sx={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <Toolbar>
@@ -220,18 +249,22 @@ const Home = () => {
 
       <Toolbar />
 
-      
+      {/* ✅ HERO SECTION (background image + delivery boy animation) */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #ECF4E8 0%, #CBF3BB 100%)',
-          py: { xs: 8, md: 12 },
-          px: 2,
           position: 'relative',
           overflow: 'hidden',
+          py: { xs: 8, md: 12 },
+          px: 2,
+          backgroundImage: `url(${heroBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       >
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
+            {/* LEFT TEXT */}
             <Grid item xs={12} md={6}>
               <Typography
                 variant="h2"
@@ -251,6 +284,7 @@ const Home = () => {
                   Our Priority
                 </Box>
               </Typography>
+
               <Typography
                 variant="h6"
                 sx={{
@@ -260,10 +294,11 @@ const Home = () => {
                   color: '#546E7A',
                   opacity: 0,
                   animation: 'fadeInUp 1s ease-out 0.3s forwards',
+                  maxWidth: 520,
                 }}
               >
-                Discover convenient healthcare solutions with prescription management,
-                medicine delivery, and expert pharmacist support — all in one platform.
+                Discover convenient healthcare solutions with prescription management, medicine delivery, and expert
+                pharmacist support — all in one platform.
               </Typography>
 
               <Box
@@ -295,6 +330,7 @@ const Home = () => {
                 >
                   Start Your Health Journey
                 </Button>
+
                 <Button
                   variant="outlined"
                   size="large"
@@ -316,41 +352,24 @@ const Home = () => {
               </Box>
             </Grid>
 
+            {/* RIGHT DELIVERY BOY */}
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
                   position: 'relative',
-                  height: { xs: 350, sm: 400, md: 450 },
+                  height: { xs: 320, sm: 380, md: 450 },
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: { xs: 'flex-start', sm: 'center', md: 'center' },
-                  pl: { xs: 2, sm: 0 },
+                  justifyContent: { xs: 'center', md: 'flex-end' },
                 }}
               >
-                <Box
-                  component="img"
-                  src={pharImage}
-                  alt="Medicine"
-                  sx={{
-                    position: 'absolute',
-                    width: { xs: '90%', sm: '120%', md: '140%' },
-                    maxWidth: { xs: 200, sm: 400, md: 680 },
-                    height: 'auto',
-                    bottom: { xs: 0, sm: -20, md: -20 },
-                    right: { xs: 20, sm: -40, md: -120 },
-                    zIndex: 1,
-                    opacity: 0.85,
-                    animation: scrollY ? 'floatSlow 6s ease-in-out infinite' : 'none',
-                  }}
-                />
-
                 <Box
                   component="img"
                   src={deliveryPerson}
                   alt="Delivery Person"
                   sx={{
-                    width: { xs: '70%', sm: '90%', md: '88%' },
-                    maxWidth: { xs: 200, sm: 350, md: 440 },
+                    width: { xs: '70%', sm: '80%', md: '75%' },
+                    maxWidth: { xs: 240, sm: 340, md: 420 },
                     height: 'auto',
                     filter: 'drop-shadow(0 12px 24px rgba(171, 231, 178, 0.3))',
                     position: 'relative',
@@ -360,9 +379,9 @@ const Home = () => {
                   }}
                 />
 
-                <Box sx={floatingPill('#ABE7B2', '25%', '15%', '4s')} />
-                <Box sx={floatingPill('#93BFC7', '70%', '20%', '3.2s', 0.7)} />
-                <Box sx={floatingPill('#CBF3BB', '10%', '60%', '5s', 0.6)} />
+                <Box sx={floatingPill('#ABE7B2', '22%', '18%', '4s')} />
+                <Box sx={floatingPill('#93BFC7', '65%', '20%', '3.2s', 0.7)} />
+                <Box sx={floatingPill('#CBF3BB', '28%', '75%', '5s', 0.6)} />
               </Box>
             </Grid>
           </Grid>
@@ -387,18 +406,14 @@ const Home = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(135deg, rgba(236, 244, 232, 0.85) 0%, rgba(203, 243, 187, 0.85) 100%)',
+            background:
+              'linear-gradient(135deg, rgba(236, 244, 232, 0.85) 0%, rgba(203, 243, 187, 0.85) 100%)',
             zIndex: 1,
           },
         }}
       >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-          <Box
-            sx={{
-              textAlign: 'center',
-              py: { xs: 4, md: 6 },
-            }}
-          >
+          <Box sx={{ textAlign: 'center', py: { xs: 4, md: 6 } }}>
             <Typography
               variant="h3"
               component="h2"
@@ -421,12 +436,14 @@ const Home = () => {
                 fontSize: { xs: '1rem', md: '1.25rem' },
               }}
             >
-              Experience the future of healthcare with our innovative platform designed to make pharmaceutical services accessible, convenient, and reliable for everyone in Sri Lanka.
+              Experience the future of healthcare with our innovative platform designed to make pharmaceutical services
+              accessible, convenient, and reliable for everyone in Sri Lanka.
             </Typography>
           </Box>
         </Container>
       </Box>
-      
+
+      {/* Features */}
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Typography
           variant="h4"
@@ -471,37 +488,32 @@ const Home = () => {
         </Grid>
       </Container>
 
-      
-      <Box
-        sx={{
-          backgroundColor: '#ABE7B2',
-          color: '#2C3E50',
-          py: { xs: 6, md: 8 },
-        }}
-      >
+      {/* Footer */}
+      <Box sx={{ backgroundColor: '#ABE7B2', color: '#2C3E50', py: { xs: 6, md: 8 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={4}>
             <Grid item xs={12} md={3} sx={{ textAlign: 'left' }}>
               <Typography
                 variant="h5"
                 gutterBottom
-                sx={{
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  color: '#2C3E50',
-                }}
+                sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1, color: '#2C3E50' }}
               >
                 <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: 26 }} /> Jayathura LifeCare
               </Typography>
               <Typography variant="body2" sx={{ color: '#546E7A', lineHeight: 1.7 }}>
-                Your trusted partner in healthcare. We bring the pharmacy to your doorstep with modern solutions and expert care.
+                Your trusted partner in healthcare. We bring the pharmacy to your doorstep with modern solutions and
+                expert care.
               </Typography>
               <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                <IconButton size="small" sx={{ color: '#2C3E50' }}><Facebook /></IconButton>
-                <IconButton size="small" sx={{ color: '#2C3E50' }}><Twitter /></IconButton>
-                <IconButton size="small" sx={{ color: '#2C3E50' }}><Instagram /></IconButton>
+                <IconButton size="small" sx={{ color: '#2C3E50' }}>
+                  <Facebook />
+                </IconButton>
+                <IconButton size="small" sx={{ color: '#2C3E50' }}>
+                  <Twitter />
+                </IconButton>
+                <IconButton size="small" sx={{ color: '#2C3E50' }}>
+                  <Instagram />
+                </IconButton>
               </Box>
             </Grid>
 
@@ -561,13 +573,14 @@ const Home = () => {
               </Button>
             </Grid>
           </Grid>
+
           <Typography variant="body2" align="center" sx={{ color: '#546E7A', mt: 4 }}>
             © {new Date().getFullYear()} Jayathura LifeCare. All rights reserved.
           </Typography>
         </Container>
       </Box>
 
-      
+      {/* Scroll Top */}
       <Fab
         size="small"
         sx={{
@@ -585,50 +598,60 @@ const Home = () => {
         Up
       </Fab>
 
-      
+      {/* Animations */}
       <style jsx>{`
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         @keyframes floatIn {
-          from { opacity: 0; transform: translateX(100px); }
-          to { opacity: 1; transform: translateX(0); }
+          from {
+            opacity: 0;
+            transform: translateX(100px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
         @keyframes float {
-          0%, 100% { transform: translateX(0) rotate(0deg); }
-          50% { transform: translateX(10px) rotate(1deg); }
-        }
-        @keyframes floatSlow {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(2deg); }
+          0%,
+          100% {
+            transform: translateX(0) rotate(0deg);
+          }
+          50% {
+            transform: translateX(10px) rotate(1deg);
+          }
         }
         @keyframes floatPackage {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-30px) rotate(5deg); }
+          0%,
+          100% {
+            transform: translateY(0) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-30px) rotate(5deg);
+          }
         }
         @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(171, 231, 178, 0.7); }
-          70% { box-shadow: 0 0 0 12px rgba(171, 231, 178, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(171, 231, 178, 0); }
+          0% {
+            box-shadow: 0 0 0 0 rgba(171, 231, 178, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 12px rgba(171, 231, 178, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(171, 231, 178, 0);
+          }
         }
       `}</style>
     </Box>
   );
 };
-
- 
-const floatingPill = (color, top, left, duration, opacity = 0.7) => ({
-  position: 'absolute',
-  top,
-  left,
-  width: { xs: 32, md: 40 },
-  height: { xs: 32, md: 40 },
-  backgroundColor: color,
-  borderRadius: '50%',
-  animation: `floatPackage ${duration} ease-in-out infinite`,
-  opacity,
-  zIndex: 1,
-});
 
 export default Home;
