@@ -89,7 +89,7 @@ const OrderHistory = () => {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Order History (Function 23)
+        Order History
       </Typography>
 
       {orders.length > 0 && orders.map((order) => (

@@ -194,7 +194,7 @@ const MedicineCatalog = ({ onAddToCart }) => {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Medicine Catalog (Function 6)
+        Medicine Catalog
       </Typography>
       <Alert
         severity="info"

@@ -77,7 +77,7 @@ const PrescriptionUpload = ({ onUploaded }) => {
             <ImageIcon color="primary" sx={{ fontSize: 40 }} />
             <Box>
               <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                Upload Prescription (Function 4)
+                Upload Prescription
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Upload your doctor's prescription for verification by our pharmacists
