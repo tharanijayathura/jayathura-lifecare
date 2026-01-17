@@ -200,12 +200,29 @@ const Contact = () => {
     <>
       <Navbar />
 
-      <Box sx={sx.page}>
-        <Container maxWidth="lg" sx={sx.container}>
+      <Box
+        sx={{
+          ...sx.page,
+          position: 'relative',
+          background: 'linear-gradient(135deg, #ECF4E8 0%, #CBF3BB 50%, #ABE7B2 100%)',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+            opacity: 0.3,
+            zIndex: 0,
+          },
+        }}
+      >
+        <Container maxWidth="lg" sx={{ ...sx.container, position: 'relative', zIndex: 1 }}>
           <PageHeader title="Contact Us" showBack={false} />
 
           {/* Hero */}
-          <Box sx={sx.hero}>
+          <Box sx={{ ...sx.hero, position: 'relative', zIndex: 1 }}>
             <Typography variant="h6" sx={sx.heroText}>
               We&apos;re here to help! Get in touch with our team for any questions, support, or inquiries.
             </Typography>
@@ -214,7 +231,14 @@ const Contact = () => {
           <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={sx.grid}>
             {/* Contact Form */}
             <Grid item xs={12} md={7}>
-              <Card sx={sx.card}>
+              <Card
+                sx={{
+                  ...sx.card,
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                }}
+              >
                 <CardContent sx={sx.cardPad}>
                   <Typography variant="h4" sx={sx.titleH4}>
                     Send us a Message
@@ -330,7 +354,13 @@ const Contact = () => {
                 <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                   {contactInfo.map((info, index) => (
                     <Grid item xs={12} key={index}>
-                      <Paper sx={sx.infoPaper(info.color)}>
+                      <Paper
+                        sx={{
+                          ...sx.infoPaper(info.color),
+                          background: `linear-gradient(135deg, ${info.color === 'primary' ? '#ECF4E8' : '#E3F2FD'} 0%, ${info.color === 'primary' ? '#CBF3BB' : '#BBDEFB'} 100%)`,
+                          border: `2px solid ${info.color === 'primary' ? '#ABE7B2' : '#90CAF9'}`,
+                        }}
+                      >
                         <Box sx={sx.infoRow}>
                           <Box sx={sx.iconBox(info.color)}>
                             {React.cloneElement(info.icon, { sx: { fontSize: { xs: 20, md: 24 } } })}
@@ -356,15 +386,33 @@ const Contact = () => {
                 </Grid>
 
                 {/* Live Chat Support */}
-                <Card sx={{ borderRadius: 3, mt: { xs: 2, md: 3 } }}>
+                <Card
+                  sx={{
+                    borderRadius: 3,
+                    mt: { xs: 2, md: 3 },
+                    background: 'linear-gradient(135deg, #ABE7B2 0%, #CBF3BB 100%)',
+                    boxShadow: '0 4px 20px rgba(171, 231, 178, 0.3)',
+                  }}
+                >
                   <CardContent sx={sx.chatCardPad}>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#2C3E50' }}>
                       Live Chat Support
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.7 }}>
+                    <Typography variant="body2" sx={{ mb: 2, lineHeight: 1.7, color: '#546E7A' }}>
                       Need quick assistance? Chat with our team.
                     </Typography>
-                    <Button variant="contained" onClick={() => navigate('/chat')} sx={{ fontWeight: 600, borderRadius: 2 }}>
+                    <Button
+                      variant="contained"
+                      onClick={() => navigate('/chat')}
+                      sx={{
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        backgroundColor: '#2C3E50',
+                        color: '#FFFFFF',
+                        '&:hover': { backgroundColor: '#4A5568', transform: 'translateY(-2px)' },
+                        transition: 'all 0.3s',
+                      }}
+                    >
                       Chat Now
                     </Button>
                   </CardContent>
@@ -376,12 +424,24 @@ const Contact = () => {
           {/* Additional Information */}
           <Grid container spacing={{ xs: 2, md: 3 }} sx={sx.extraGrid} alignItems="stretch">
             <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 3, bgcolor: 'primary.light', height: '100%' }}>
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #ECF4E8 0%, #CBF3BB 100%)',
+                  boxShadow: '0 4px 20px rgba(171, 231, 178, 0.2)',
+                  transition: 'transform 0.3s, box-shadow 0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 30px rgba(171, 231, 178, 0.3)',
+                  },
+                }}
+              >
                 <CardContent sx={sx.extraCardPad}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#2C3E50' }}>
                     Quick Response
                   </Typography>
-                  <Typography variant="body1" sx={{ color: 'text.primary', lineHeight: 1.8 }}>
+                  <Typography variant="body1" sx={{ color: '#546E7A', lineHeight: 1.8, fontSize: { xs: '0.95rem', md: '1rem' } }}>
                     We typically respond to all inquiries within 24 hours. For urgent matters, please call us directly at{' '}
                     <strong>+94 71 259 9785</strong>.
                   </Typography>
@@ -390,12 +450,24 @@ const Contact = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Card sx={{ borderRadius: 3, bgcolor: 'info.light', height: '100%' }}>
+              <Card
+                sx={{
+                  borderRadius: 3,
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                  boxShadow: '0 4px 20px rgba(144, 202, 249, 0.2)',
+                  transition: 'transform 0.3s, box-shadow 0.3s',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 30px rgba(144, 202, 249, 0.3)',
+                  },
+                }}
+              >
                 <CardContent sx={sx.extraCardPad}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#2C3E50' }}>
                     Online Support
                   </Typography>
-                  <Typography variant="body1" sx={{ color: 'text.primary', lineHeight: 1.8 }}>
+                  <Typography variant="body1" sx={{ color: '#546E7A', lineHeight: 1.8, fontSize: { xs: '0.95rem', md: '1rem' } }}>
                     Our online platform is available 24/7 for your convenience. You can access all our services,
                     including prescription uploads and order tracking, at any time.
                   </Typography>

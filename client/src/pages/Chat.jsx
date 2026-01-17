@@ -43,15 +43,17 @@ const Chat = () => {
   const pollIntervalRef = useRef(null);
 
   useEffect(() => {
-    if (!user) return;
-
-    // Load chat data
-    loadData();
-
-    // Set up polling for new messages
-    pollIntervalRef.current = setInterval(() => {
+    // Allow guest mode - load data if user exists, otherwise use guest mode
+    if (user) {
       loadData();
-    }, 3000);
+      // Set up polling for new messages
+      pollIntervalRef.current = setInterval(() => {
+        loadData();
+      }, 3000);
+    } else {
+      // Guest mode: load from localStorage
+      loadGuestData();
+    }
 
     return () => {
       if (pollIntervalRef.current) {
@@ -66,6 +68,20 @@ const Chat = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const loadGuestData = () => {
+    // Load guest chat from localStorage
+    const guestChat = localStorage.getItem('guestChat');
+    if (guestChat) {
+      try {
+        const parsed = JSON.parse(guestChat);
+        setMessages(parsed.messages || []);
+        setSelectedChat({ _id: 'guest', messages: parsed.messages || [] });
+      } catch (error) {
+        console.error('Error loading guest chat:', error);
+      }
+    }
   };
 
   const loadData = useCallback(async () => {
@@ -116,12 +132,52 @@ const Chat = () => {
     setLoading(true);
 
     try {
-      await chatAPI.sendMessage({
-        chatId: selectedChat?._id,
-        message: messageText,
-        patientId: user?.role === 'patient' ? undefined : selectedChat?.patientId?._id || selectedChat?.patientId,
-      });
-      await loadData();
+      if (!user) {
+        // Guest mode: save to localStorage
+        const guestChat = localStorage.getItem('guestChat');
+        const chatData = guestChat ? JSON.parse(guestChat) : { messages: [] };
+        
+        const newMessage = {
+          senderId: 'guest',
+          senderName: 'Guest',
+          senderRole: 'guest',
+          message: messageText,
+          isBot: false,
+          timestamp: new Date().toISOString(),
+        };
+        
+        chatData.messages.push(newMessage);
+        
+        // Add bot response
+        const botResponses = [
+          "Thank you for your message! To continue chatting and get personalized assistance, please log in or create an account.",
+          "I'm here to help! For detailed support, please sign in to chat with our pharmacists.",
+          "Great question! Sign in to connect with our expert pharmacists who can provide detailed assistance.",
+        ];
+        const botResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
+        
+        const botMessage = {
+          senderId: null,
+          senderName: 'Jayathura Bot',
+          senderRole: 'bot',
+          message: botResponse,
+          isBot: true,
+          timestamp: new Date().toISOString(),
+        };
+        
+        chatData.messages.push(botMessage);
+        localStorage.setItem('guestChat', JSON.stringify(chatData));
+        
+        setMessages(chatData.messages);
+        setSelectedChat({ _id: 'guest', messages: chatData.messages });
+      } else {
+        await chatAPI.sendMessage({
+          chatId: selectedChat?._id,
+          message: messageText,
+          patientId: user?.role === 'patient' ? undefined : selectedChat?.patientId?._id || selectedChat?.patientId,
+        });
+        await loadData();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -136,47 +192,8 @@ const Chat = () => {
     }
   };
 
-  // If unauthenticated, render a friendly prompt instead of redirecting
   const isPharmacist = user?.role === 'pharmacist' || user?.role === 'admin';
-
-  if (!user) {
-    return (
-      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, mt: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
-        <Navbar />
-        <PageHeader title="Chat Support" subtitle="Please log in to start chatting" />
-        <Grid container spacing={{ xs: 1, sm: 2, md: 3 }} sx={{ minHeight: { xs: 400, md: 500 } }}>
-          <Grid item xs={12}>
-            <Paper sx={{ p: { xs: 2, md: 3 }, textAlign: 'center' }}>
-              <ChatIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                Live Chat Support
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Log in to chat with our pharmacists or get assistance from the Jayathura Bot.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <IconButton
-                  color="primary"
-                  onClick={() => navigate('/login')}
-                  sx={{ px: 3, py: 1.5, borderRadius: 2, bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' } }}
-                >
-                  <Typography sx={{ fontWeight: 600 }}>Login</Typography>
-                </IconButton>
-                <IconButton
-                  onClick={() => navigate('/register')}
-                  sx={{ px: 3, py: 1.5, borderRadius: 2, bgcolor: 'secondary.main', color: 'white', '&:hover': { bgcolor: 'secondary.dark' } }}
-                >
-                  <Typography sx={{ fontWeight: 600 }}>Register</Typography>
-                </IconButton>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Container>
-    );
-  }
-
-  const isPharmacistAuthenticated = user.role === 'pharmacist' || user.role === 'admin';
+  const isPharmacistAuthenticated = user?.role === 'pharmacist' || user?.role === 'admin';
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, mt: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
@@ -284,6 +301,8 @@ const Chat = () => {
                 >
                   {isPharmacistAuthenticated
                     ? selectedChat?.patientId?.name || 'Select a conversation'
+                    : !user
+                    ? 'Chat Support (Guest Mode)'
                     : 'Chat Support'}
                 </Typography>
                 <Typography 
@@ -293,6 +312,8 @@ const Chat = () => {
                 >
                   {isPharmacistAuthenticated
                     ? selectedChat?.patientId?.email || ''
+                    : !user
+                    ? 'Guest Mode - Sign in for full support'
                     : 'Our team is here to help you'}
                 </Typography>
               </Box>
@@ -423,33 +444,51 @@ const Chat = () => {
                 bgcolor: 'background.paper',
                 display: 'flex',
                 gap: { xs: 0.75, md: 1 },
+                flexDirection: 'column',
               }}
             >
-              <TextField
-                fullWidth
-                placeholder="Type your message..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={loading || (!selectedChat && isPharmacistAuthenticated)}
-                multiline
-                maxRows={isMobile ? 3 : 4}
-                size={isMobile ? 'small' : 'medium'}
-                sx={{
-                  '& .MuiInputBase-root': {
-                    fontSize: { xs: '0.9rem', md: '1rem' },
-                  },
-                }}
-              />
-              <IconButton
-                color="primary"
-                onClick={handleSendMessage}
-                disabled={loading || !inputMessage.trim() || (!selectedChat && isPharmacistAuthenticated)}
-                sx={{ alignSelf: 'flex-end' }}
-                size={isMobile ? 'small' : 'medium'}
-              >
-                {loading ? <CircularProgress size={isMobile ? 20 : 24} /> : <Send sx={{ fontSize: { xs: 20, md: 24 } }} />}
-              </IconButton>
+              {!user && (
+                <Box sx={{ mb: 1, p: 1.5, bgcolor: 'info.light', borderRadius: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ flex: 1, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
+                    💡 <strong>Guest Mode:</strong> Sign in to chat with our pharmacists and get personalized support.
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={() => navigate('/login')}
+                    sx={{ minWidth: 'auto', px: 2 }}
+                  >
+                    Login
+                  </Button>
+                </Box>
+              )}
+              <Box sx={{ display: 'flex', gap: { xs: 0.75, md: 1 } }}>
+                <TextField
+                  fullWidth
+                  placeholder={!user ? "Type your message (Guest Mode)..." : "Type your message..."}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={loading || (!selectedChat && isPharmacistAuthenticated)}
+                  multiline
+                  maxRows={isMobile ? 3 : 4}
+                  size={isMobile ? 'small' : 'medium'}
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      fontSize: { xs: '0.9rem', md: '1rem' },
+                    },
+                  }}
+                />
+                <IconButton
+                  color="primary"
+                  onClick={handleSendMessage}
+                  disabled={loading || !inputMessage.trim() || (!selectedChat && isPharmacistAuthenticated)}
+                  sx={{ alignSelf: 'flex-end' }}
+                  size={isMobile ? 'small' : 'medium'}
+                >
+                  {loading ? <CircularProgress size={isMobile ? 20 : 24} /> : <Send sx={{ fontSize: { xs: 20, md: 24 } }} />}
+                </IconButton>
+              </Box>
             </Box>
           </Paper>
         </Grid>

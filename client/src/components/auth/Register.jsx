@@ -8,8 +8,12 @@ import {
   Alert,
   Paper,
   Container,
-  MenuItem
+  MenuItem,
+  Divider,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
+import { Google as GoogleIcon, Visibility, VisibilityOff } from '@mui/icons-material';
 import Brand from '../../shared/components/Brand';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -22,12 +26,15 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'patient',
     phone: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -42,8 +49,23 @@ const Register = () => {
     setError('');
     setSuccess('');
 
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    // Validate password strength
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const result = await register(formData);
+      const { confirmPassword, ...registerData } = formData;
+      const result = await register(registerData);
       // Show appropriate message based on role
       if (result.isApproved) {
         setSuccess('Registration successful! You can now sign in.');
@@ -58,6 +80,12 @@ const Register = () => {
       setError(err.message || 'Registration failed. Please try again.');
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignup = () => {
+    // TODO: Implement Google OAuth
+    // For now, show a message
+    setError('Google signup is coming soon! Please use email and password for now.');
   };
 
   return (
@@ -97,15 +125,44 @@ const Register = () => {
             </Typography>
 
             {error && (
-              <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+              <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#FFEBEE', borderRadius: 2 }}>
                 {error}
               </Alert>
             )}
             {success && (
-              <Alert severity="success" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
+              <Alert severity="success" sx={{ width: '100%', mb: 2, backgroundColor: '#E8F5E9', borderRadius: 2 }}>
                 {success}
               </Alert>
             )}
+
+            {/* Google Signup Button */}
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleGoogleSignup}
+              startIcon={<GoogleIcon />}
+              sx={{
+                mb: 3,
+                py: 1.5,
+                borderRadius: 2,
+                borderColor: '#DB4437',
+                color: '#DB4437',
+                fontWeight: 600,
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: '#C23321',
+                  backgroundColor: 'rgba(219, 68, 55, 0.04)',
+                },
+              }}
+            >
+              Sign up with Google
+            </Button>
+
+            <Divider sx={{ width: '100%', mb: 3 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', px: 2 }}>
+                OR
+              </Typography>
+            </Divider>
 
             <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
             <TextField
@@ -159,11 +216,65 @@ const Register = () => {
               fullWidth
               name="password"
               label="Password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#ABE7B2',
+                  },
+                },
+              }}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="confirmPassword"
+              label="Confirm Password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              id="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              error={formData.confirmPassword !== '' && formData.password !== formData.confirmPassword}
+              helperText={
+                formData.confirmPassword !== '' && formData.password !== formData.confirmPassword
+                  ? 'Passwords do not match'
+                  : ''
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
               sx={{
                 mb: 2,
                 '& .MuiOutlinedInput-root': {
@@ -231,18 +342,25 @@ const Register = () => {
               variant="contained"
               disabled={loading}
               sx={{
-                mt: 3,
+                mt: 2,
                 mb: 2,
-                py: 1.5,
+                py: 1.75,
                 backgroundColor: '#ABE7B2',
                 color: '#2C3E50',
+                fontWeight: 600,
+                fontSize: '1rem',
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(171, 231, 178, 0.4)',
                 '&:hover': {
                   backgroundColor: '#CBF3BB',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 16px rgba(171, 231, 178, 0.5)',
                 },
                 '&:disabled': {
                   backgroundColor: '#ECF4E8',
                   color: '#93BFC7',
                 },
+                transition: 'all 0.3s',
               }}
             >
               {loading ? 'Creating Account...' : 'Create Account'}

@@ -239,3 +239,20 @@
 .shadow-strong {
   box-shadow: 0 8px 24px rgba(171, 231, 178, 0.3);
 }
+
+/* ===== ABOUT PAGE ANIMATIONS ===== */
+
+@keyframes floatAbout {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes pulseAbout {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes spinAbout {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

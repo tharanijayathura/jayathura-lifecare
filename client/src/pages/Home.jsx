@@ -41,6 +41,7 @@ import symbolImage from '../assets/medical-symbol.png';
 // Import images
 import deliveryPerson from '../assets/deliver1-removebg-preview.png';
 import pharImage from '../assets/phar.png';
+import homeBgImage from '../assets/c315609e636d82456e8d2ac8a244ddff.jpg';
 
 function HideOnScroll(props) {
   const { children } = props;
@@ -368,6 +369,63 @@ const Home = () => {
         </Container>
       </Box>
 
+      {/* Image Section */}
+      <Box
+        sx={{
+          position: 'relative',
+          py: { xs: 8, md: 12 },
+          overflow: 'hidden',
+          backgroundImage: `url(${homeBgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(236, 244, 232, 0.85) 0%, rgba(203, 243, 187, 0.85) 100%)',
+            zIndex: 1,
+          },
+        }}
+      >
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
+          <Box
+            sx={{
+              textAlign: 'center',
+              py: { xs: 4, md: 6 },
+            }}
+          >
+            <Typography
+              variant="h3"
+              component="h2"
+              sx={{
+                fontWeight: 700,
+                mb: 3,
+                color: '#2C3E50',
+                fontSize: { xs: '2rem', md: '3rem' },
+              }}
+            >
+              Your Trusted Healthcare Partner
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#546E7A',
+                maxWidth: 800,
+                mx: 'auto',
+                lineHeight: 1.8,
+                fontSize: { xs: '1rem', md: '1.25rem' },
+              }}
+            >
+              Experience the future of healthcare with our innovative platform designed to make pharmaceutical services accessible, convenient, and reliable for everyone in Sri Lanka.
+            </Typography>
+          </Box>
+        </Container>
+      </Box>
       
       <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Typography
