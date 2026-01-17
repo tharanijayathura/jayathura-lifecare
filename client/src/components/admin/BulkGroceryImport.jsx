@@ -1,35 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
-  Upload,
-  Delete,
-  Info,
-  Download,
-} from '@mui/icons-material';
+import { Box } from '@mui/material';
 import { groceryAPI } from '../../services/api';
 import { fullGroceryList } from '../../data/groceriesData';
+import GroceryImportForm from './bulk/grocery/GroceryImportForm';
+import GroceryPreviewTable from './bulk/grocery/GroceryPreviewTable';
+import ImportResultsDialog from './bulk/ImportResultsDialog';
+import { parseGroceries } from './bulk/grocery/parser';
+import { groceryExampleFormat, groceryFormatHelp } from './bulk/grocery/formatHelp';
 
 const BulkGroceryImport = ({ onImportComplete }) => {
   const [inputText, setInputText] = useState('');
@@ -39,68 +16,11 @@ const BulkGroceryImport = ({ onImportComplete }) => {
   const [importResults, setImportResults] = useState(null);
   const [showResults, setShowResults] = useState(false);
 
-  // Example format for user reference
-  const exampleFormat = `Milk Powder 500g | Kothmale - Full cream milk powder for cooking & drinks. | 1200.00 | g | 50 | 10
-Chocolate Bar 50g | Cadbury - Popular milk chocolate bar. | 250.00 | g | 60 | 10`;
-
-  const formatHelp = `Format: Name | Description | Price | Unit | Stock | MinStock
-
-Fields:
-- Name: Grocery item name (required)
-- Description: Item description with brand info (optional)
-- Price: Price in LKR (required, number)
-- Unit: Unit of measurement - g, ml, piece, kg, liter, etc. (required)
-- Stock: Current stock quantity (optional, default: 0)
-- MinStock: Minimum stock for alert (optional, default: 10)
-
-Separate each grocery item with a new line.`;
-
   const parseInput = () => {
-    const lines = inputText.trim().split('\n').filter(line => line.trim());
-    const groceries = [];
-    const newErrors = [];
-
-    lines.forEach((line, index) => {
-      const parts = line.split('|').map(p => p.trim());
-      
-      if (parts.length < 4) {
-        newErrors.push(`Line ${index + 1}: Insufficient fields. Need at least 4 fields (Name, Description, Price, Unit).`);
-        return;
-      }
-
-      const [name, description = '', price, unit = 'item', stock = '0', minStock = '10'] = parts;
-
-      if (!name) {
-        newErrors.push(`Line ${index + 1}: Name is required`);
-        return;
-      }
-
-      const priceNum = parseFloat(price);
-      const stockNum = parseInt(stock) || 0;
-      const minStockNum = parseInt(minStock) || 10;
-
-      if (isNaN(priceNum) || priceNum < 0) {
-        newErrors.push(`Line ${index + 1}: Invalid price. Must be a positive number.`);
-        return;
-      }
-
-      groceries.push({
-        name,
-        description: description || '',
-        price: priceNum,
-        unit: unit || 'item',
-        stock: stockNum,
-        minStock: minStockNum,
-      });
-    });
-
+    const { groceries, errors: newErrors } = parseGroceries(inputText);
     setParsedGroceries(groceries);
     setErrors(newErrors);
-
-    if (newErrors.length === 0 && groceries.length > 0) {
-      return true;
-    }
-    return false;
+    return newErrors.length === 0 && groceries.length > 0;
   };
 
   const handleImport = async () => {
@@ -162,7 +82,7 @@ Separate each grocery item with a new line.`;
   };
 
   const handleLoadExample = () => {
-    setInputText(exampleFormat);
+    setInputText(groceryExampleFormat);
   };
 
   const handleLoadFullList = () => {
@@ -178,166 +98,27 @@ Separate each grocery item with a new line.`;
 
   return (
     <Box>
-      <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5, md: 3 }, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Bulk Import Groceries
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
-            <Tooltip title="Load example format">
-              <Button size="small" startIcon={<Info />} onClick={handleLoadExample}>
-                Example
-              </Button>
-            </Tooltip>
-            <Tooltip title="Load full grocery list (45 items)">
-              <Button size="small" startIcon={<Download />} onClick={handleLoadFullList} color="primary">
-                Load Groceries
-              </Button>
-            </Tooltip>
-            <Button size="small" onClick={handleClear}>
-              Clear
-            </Button>
-          </Stack>
-        </Box>
+      <GroceryImportForm
+        inputText={inputText}
+        setInputText={setInputText}
+        formatHelp={groceryFormatHelp}
+        onParse={parseInput}
+        loading={loading}
+        canImport={parsedGroceries.length > 0 && errors.length === 0}
+        onImport={handleImport}
+        onLoadExample={handleLoadExample}
+        onLoadFullList={handleLoadFullList}
+        onClear={handleClear}
+        errors={errors}
+      />
 
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2" component="div">
-            <strong>Quick Format:</strong> Paste your grocery data below, one item per line.
-            <br />
-            <strong>Format:</strong> Name | Description | Price | Unit | Stock | MinStock
-          </Typography>
-        </Alert>
+      <GroceryPreviewTable groceries={parsedGroceries} onRemove={handleRemoveGrocery} />
 
-        <TextField
-          fullWidth
-          multiline
-          rows={10}
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder={formatHelp}
-          sx={{ mb: 2 }}
-        />
-
-        <Stack direction="row" spacing={2}>
-          <Button
-            variant="outlined"
-            onClick={parseInput}
-            disabled={!inputText.trim()}
-          >
-            Parse & Preview
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={loading ? <CircularProgress size={20} /> : <Upload />}
-            onClick={handleImport}
-            disabled={parsedGroceries.length === 0 || errors.length > 0 || loading}
-          >
-            Import {parsedGroceries.length > 0 ? `(${parsedGroceries.length})` : ''}
-          </Button>
-        </Stack>
-
-        {errors.length > 0 && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Errors found ({errors.length}):
-            </Typography>
-            {errors.map((error, index) => (
-              <Typography key={index} variant="body2" component="div">
-                • {error}
-              </Typography>
-            ))}
-          </Alert>
-        )}
-      </Paper>
-
-      {parsedGroceries.length > 0 && (
-        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-            Preview ({parsedGroceries.length} items)
-          </Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>Price</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Unit</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>Stock</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {parsedGroceries.map((grocery, index) => (
-                  <TableRow key={index} hover>
-                    <TableCell>{grocery.name}</TableCell>
-                    <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {grocery.description || '-'}
-                    </TableCell>
-                    <TableCell align="right">Rs. {grocery.price.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Chip label={grocery.unit} size="small" color="primary" />
-                    </TableCell>
-                    <TableCell align="right">{grocery.stock}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveGrocery(index)}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      )}
-
-      {/* Import Results Dialog */}
-      <Dialog open={showResults} onClose={() => setShowResults(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Import Results</DialogTitle>
-        <DialogContent>
-          {importResults && (
-            <Box>
-              {importResults.success.length > 0 && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Successfully imported ({importResults.success.length}):
-                  </Typography>
-                  {importResults.success.map((name, index) => (
-                    <Typography key={index} variant="body2" component="div">
-                      ✓ {name}
-                    </Typography>
-                  ))}
-                </Alert>
-              )}
-              {importResults.failed.length > 0 && (
-                <Alert severity="error">
-                  <Typography variant="subtitle2" gutterBottom>
-                    Failed to import ({importResults.failed.length}):
-                  </Typography>
-                  {importResults.failed.map((item, index) => (
-                    <Typography key={index} variant="body2" component="div">
-                      ✗ {item.name}: {item.error}
-                    </Typography>
-                  ))}
-                </Alert>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => {
-            setShowResults(false);
-            handleClear();
-          }}>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ImportResultsDialog
+        open={showResults}
+        results={importResults}
+        onClose={() => { setShowResults(false); handleClear(); }}
+      />
     </Box>
   );
 };

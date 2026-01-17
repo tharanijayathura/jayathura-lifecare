@@ -28,6 +28,7 @@ import { useAuth } from '../contexts/useAuth';
 import { chatAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
+import Navbar from '../components/common/Navbar';
 
 const Chat = () => {
   const { user } = useAuth();
@@ -155,6 +156,7 @@ const Chat = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, mt: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
+      <Navbar />
       <PageHeader title="Chat Support" subtitle={isPharmacist ? "Manage patient conversations" : "Get help from our pharmacists"} />
 
       <Grid container spacing={{ xs: 1, sm: 2, md: 3 }} sx={{ height: { xs: 'calc(100vh - 150px)', md: 'calc(100vh - 200px)' }, minHeight: { xs: 500, md: 600 } }}>

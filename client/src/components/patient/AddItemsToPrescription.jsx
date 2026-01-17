@@ -1,35 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  Grid,
-  Tabs,
-  Tab,
-  Card,
-  CardContent,
-  Alert,
-  CircularProgress,
-  Stack,
-  Chip,
-  Stepper,
-  Step,
-  StepLabel,
-  Divider
-} from '@mui/material';
-import { 
-  LocalPharmacy, 
-  ShoppingCart, 
-  Send,
-  CheckCircle,
-  AddShoppingCart
-} from '@mui/icons-material';
-import MedicineCatalog from './MedicineCatalog';
-import GroceryCatalog from './GroceryCatalog';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Grid, Alert, Stack, Stepper, Step, StepLabel, Divider } from '@mui/material';
+import { LocalPharmacy, ShoppingCart, Send } from '@mui/icons-material';
+import CatalogTabs from './prescription/CatalogTabs.jsx';
+import CartSummary from './prescription/CartSummary.jsx';
+import ReviewSummary from './prescription/ReviewSummary.jsx';
 import { patientAPI } from '../../services/api';
 
 const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
@@ -162,152 +136,29 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
         {activeStep === 0 && (
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}>
-              <Card>
-                <CardContent>
-                  <Tabs
-                    value={catalogTab}
-                    onChange={(e, newValue) => setCatalogTab(newValue)}
-                    sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
-                  >
-                    <Tab label="Non Prescription Items" icon={<LocalPharmacy />} />
-                    <Tab label="Groceries" icon={<ShoppingCart />} />
-                  </Tabs>
-
-                  {catalogTab === 0 ? (
-                    <MedicineCatalog onAddToCart={handleAddToCart} />
-                  ) : (
-                    <GroceryCatalog onAddToCart={handleAddToCart} />
-                  )}
-                </CardContent>
-              </Card>
+              <CatalogTabs catalogTab={catalogTab} setCatalogTab={setCatalogTab} onAddToCart={handleAddToCart} />
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    <ShoppingCart sx={{ mr: 1, verticalAlign: 'middle' }} />
-                    Current Items
-                  </Typography>
-
-                  {cartItems.length === 0 ? (
-                    <Alert severity="info">
-                      No items added yet. You can add non prescription items or groceries, or skip and send directly.
-                    </Alert>
-                  ) : (
-                    <Stack spacing={1} sx={{ mt: 2 }}>
-                      {prescriptionItems.length > 0 && (
-                        <Box>
-                          <Typography variant="subtitle2" color="primary" fontWeight={600}>
-                            Prescription Medicines: {prescriptionItems.length}
-                          </Typography>
-                          {prescriptionItems.map((item, idx) => (
-                            <Typography key={idx} variant="body2" sx={{ pl: 2 }}>
-                              • {item.name} x {item.quantity}
-                            </Typography>
-                          ))}
-                        </Box>
-                      )}
-                      {otcItems.length > 0 && (
-                        <Box>
-                          <Typography variant="subtitle2" color="secondary" fontWeight={600}>
-                            Non Prescription Items: {otcItems.length}
-                          </Typography>
-                          {otcItems.map((item, idx) => (
-                            <Typography key={idx} variant="body2" sx={{ pl: 2 }}>
-                              • {item.name} x {item.quantity}
-                            </Typography>
-                          ))}
-                        </Box>
-                      )}
-                      {groceryItems.length > 0 && (
-                        <Box>
-                          <Typography variant="subtitle2" color="success.main" fontWeight={600}>
-                            Groceries: {groceryItems.length}
-                          </Typography>
-                          {groceryItems.map((item, idx) => (
-                            <Typography key={idx} variant="body2" sx={{ pl: 2 }}>
-                              • {item.name} x {item.quantity}
-                            </Typography>
-                          ))}
-                        </Box>
-                      )}
-                      <Divider />
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="h6">Total:</Typography>
-                        <Typography variant="h6" color="primary">
-                          Rs. {totalAmount.toFixed(2)}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  )}
-                </CardContent>
-              </Card>
+              <CartSummary
+                cartItems={cartItems}
+                prescriptionItems={prescriptionItems}
+                otcItems={otcItems}
+                groceryItems={groceryItems}
+                totalAmount={totalAmount}
+              />
             </Grid>
           </Grid>
         )}
 
         {activeStep === 1 && (
           <Box>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Review Your Order
-                </Typography>
-                
-                <Stack spacing={2} sx={{ mt: 2 }}>
-                  {prescriptionItems.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle1" color="primary" gutterBottom>
-                        Prescription Medicines ({prescriptionItems.length})
-                      </Typography>
-                      {prescriptionItems.map((item, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                          <Typography>{item.name} x {item.quantity}</Typography>
-                          <Typography>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-
-                  {otcItems.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle1" color="secondary" gutterBottom>
-                        Non Prescription Items ({otcItems.length})
-                      </Typography>
-                      {otcItems.map((item, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                          <Typography>{item.name} x {item.quantity}</Typography>
-                          <Typography>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-
-                  {groceryItems.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle1" color="success.main" gutterBottom>
-                        Groceries ({groceryItems.length})
-                      </Typography>
-                      {groceryItems.map((item, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                          <Typography>{item.name} x {item.quantity}</Typography>
-                          <Typography>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-
-                  <Divider />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="h6">Total:</Typography>
-                    <Typography variant="h6" color="primary">
-                      Rs. {totalAmount.toFixed(2)}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
+            <ReviewSummary
+              prescriptionItems={prescriptionItems}
+              otcItems={otcItems}
+              groceryItems={groceryItems}
+              totalAmount={totalAmount}
+            />
           </Box>
         )}
       </DialogContent>

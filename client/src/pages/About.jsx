@@ -14,7 +14,6 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import {
-  LocalPharmacy,
   VerifiedUser,
   AccessTime,
   Security,
@@ -33,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/common/PageHeader';
+import Navbar from '../components/common/Navbar';
 
 const About = () => {
   const theme = useTheme();
@@ -81,13 +81,14 @@ const About = () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
+    <>
+      <Navbar />
+      <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <PageHeader title="About Jayathura LifeCare" showBack={false} />
         
         {/* Hero Section */}
         <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
-          <LocalPharmacy sx={{ fontSize: { xs: 48, sm: 56, md: 64 }, color: 'primary.main', mb: 2 }} />
           <Typography
             variant="h6"
             sx={{
@@ -505,6 +506,7 @@ const About = () => {
         </Box>
       </Container>
     </Box>
+    </>
   );
 };
 

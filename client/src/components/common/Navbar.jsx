@@ -22,6 +22,7 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import symbolImage from '../../assets/medical-symbol.png';
 
 function HideOnScroll(props) {
   const { children } = props;
@@ -55,7 +56,7 @@ const Navbar = () => {
     <Box sx={{ width: 280, backgroundColor: '#ECF4E8', height: '100%' }}>
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 700, color: '#2C3E50', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LocalPharmacy sx={{ color: '#ABE7B2' }} /> Jayathura
+          <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: 28 }} /> Jayathura
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
           <CloseIcon sx={{ color: '#2C3E50' }} />
@@ -116,7 +117,7 @@ const Navbar = () => {
                 gap: 1,
               }}
             >
-              <LocalPharmacy sx={{ color: '#ABE7B2' }} />
+              <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: 30 }} />
               Jayathura LifeCare
             </Typography>
 

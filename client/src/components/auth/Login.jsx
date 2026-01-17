@@ -9,7 +9,7 @@ import {
   Paper,
   Container
 } from '@mui/material';
-import { LocalPharmacy } from '@mui/icons-material';
+import Brand from '../../shared/components/Brand';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../common/PageHeader';
@@ -80,9 +80,9 @@ const Login = () => {
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
-              <Typography variant="h5" sx={{ color: '#2C3E50', fontWeight: 700 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+              <Brand size={32} textVariant="h5" />
+              <Typography variant="h6" sx={{ color: '#2C3E50', fontWeight: 700, mt: 1 }}>
                 Sign In
               </Typography>
             </Box>

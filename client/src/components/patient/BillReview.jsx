@@ -1,33 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
-  TextField,
-  Grid,
-  Stack,
-  Divider,
-  Alert,
-  CircularProgress,
-  Card,
-  CardContent
-} from '@mui/material';
-import { Delete, ShoppingCart, RecordVoiceOver } from '@mui/icons-material';
-import { FormControlLabel, Checkbox } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Grid, Stack, Divider, Alert, CircularProgress } from '@mui/material';
+import { ShoppingCart } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
+import PrescriptionItemsTable from './bill/PrescriptionItemsTable.jsx';
+import OtcItemsTable from './bill/OtcItemsTable.jsx';
+import BillSummary from './bill/BillSummary.jsx';
+import DeliveryAddressForm from './bill/DeliveryAddressForm.jsx';
+import PaymentMethodSection from './bill/PaymentMethodSection.jsx';
 
 const BillReview = ({ orderId, open, onClose, onConfirm }) => {
   const [order, setOrder] = useState(null);
@@ -228,224 +207,22 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
             </Alert>
           )}
 
-          {/* Prescription Items */}
-          {prescriptionItems.length > 0 && (
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Prescription Medicines
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Medicine</TableCell>
-                        <TableCell>Quantity</TableCell>
-                        <TableCell>Dosage</TableCell>
-                        <TableCell>Frequency</TableCell>
-                        <TableCell align="right">Price</TableCell>
-                        <TableCell align="right">Total</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {prescriptionItems.map((item) => (
-                        <TableRow key={item._id}>
-                          <TableCell>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                              <Typography>{item.medicineName || item.medicineId?.name}</Typography>
-                              <Chip label="Rx" size="small" color="primary" />
-                            </Stack>
-                          </TableCell>
-                          <TableCell>{item.quantity}</TableCell>
-                          <TableCell>{item.dosage || '-'}</TableCell>
-                          <TableCell>{item.frequency || '-'}</TableCell>
-                          <TableCell align="right">Rs. {(item.price || 0).toFixed(2)}</TableCell>
-                          <TableCell align="right">
-                            Rs. {((item.price || 0) * item.quantity).toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          )}
+          <PrescriptionItemsTable items={prescriptionItems} />
 
-          {/* OTC Items */}
-          {otcItems.length > 0 && (
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Additional Items (Non Prescription)
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Medicine</TableCell>
-                        <TableCell>Quantity</TableCell>
-                        <TableCell align="right">Price</TableCell>
-                        <TableCell align="right">Total</TableCell>
-                        <TableCell align="right">Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {otcItems.map((item) => (
-                        <TableRow key={item._id}>
-                          <TableCell>{item.medicineName || item.medicineId?.name}</TableCell>
-                          <TableCell>{item.quantity}</TableCell>
-                          <TableCell align="right">Rs. {(item.price || 0).toFixed(2)}</TableCell>
-                          <TableCell align="right">
-                            Rs. {((item.price || 0) * item.quantity).toFixed(2)}
-                          </TableCell>
-                          <TableCell align="right">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleRemoveItem(item._id)}
-                              disabled={removing === item._id}
-                            >
-                              <Delete />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          )}
+          <OtcItemsTable items={otcItems} onRemoveItem={handleRemoveItem} removingId={removing} />
 
-          {/* Bill Summary */}
           {order.finalAmount && (
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Bill Summary</Typography>
-                <Stack spacing={1}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography>Subtotal:</Typography>
-                    <Typography>Rs. {(order.totalAmount || 0).toFixed(2)}</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography>Delivery Fee:</Typography>
-                    <Typography>
-                      Rs. {(order.deliveryFee || 0).toFixed(2)}
-                      {order.totalAmount > 1000 && (
-                        <Chip label="Free" size="small" color="success" sx={{ ml: 1 }} />
-                      )}
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="h6">Total Amount:</Typography>
-                    <Typography variant="h6" color="primary">
-                      Rs. {(order.finalAmount || 0).toFixed(2)}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
+            <BillSummary totalAmount={order.totalAmount} deliveryFee={order.deliveryFee} finalAmount={order.finalAmount} />
           )}
 
-          {/* Delivery Address */}
-          <Card sx={{ border: '2px solid', borderColor: 'primary.main' }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom color="primary">
-                Delivery Address *
-              </Typography>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                Please enter your delivery address. You can edit or change it anytime before confirming the order.
-              </Alert>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Street Address"
-                    placeholder="Enter your street address, building name, apartment number"
-                    value={deliveryAddress.street}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, street: e.target.value })}
-                    required
-                    multiline
-                    rows={2}
-                    error={!deliveryAddress.street && order.status !== 'draft'}
-                    helperText={!deliveryAddress.street ? 'Street address is required' : ''}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="City"
-                    placeholder="Enter your city"
-                    value={deliveryAddress.city}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })}
-                    required
-                    error={!deliveryAddress.city && order.status !== 'draft'}
-                    helperText={!deliveryAddress.city ? 'City is required' : ''}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Postal Code"
-                    placeholder="Enter postal code (optional)"
-                    value={deliveryAddress.postalCode}
-                    onChange={(e) => setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value })}
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
+          <DeliveryAddressForm address={deliveryAddress} setAddress={setDeliveryAddress} orderStatus={order.status} />
 
-          {/* Payment Method */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Payment Method</Typography>
-              <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                <Button
-                  variant={paymentMethod === 'online' ? 'contained' : 'outlined'}
-                  onClick={() => setPaymentMethod('online')}
-                  fullWidth
-                >
-                  Online Payment
-                </Button>
-                <Button
-                  variant={paymentMethod === 'cod' ? 'contained' : 'outlined'}
-                  onClick={() => setPaymentMethod('cod')}
-                  fullWidth
-                >
-                  Cash on Delivery
-                </Button>
-              </Stack>
-              
-              {/* Audio Instructions Request */}
-              <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
-                <CardContent>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={requestAudioInstructions}
-                        onChange={(e) => setRequestAudioInstructions(e.target.checked)}
-                        icon={<RecordVoiceOver />}
-                        checkedIcon={<RecordVoiceOver color="primary" />}
-                      />
-                    }
-                    label={
-                      <Box>
-                        <Typography variant="body1" fontWeight={600}>
-                          Request Audio Instructions
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Get personalized audio instructions from pharmacist on how to take your medicines
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
+          <PaymentMethodSection
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            requestAudioInstructions={requestAudioInstructions}
+            setRequestAudioInstructions={setRequestAudioInstructions}
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

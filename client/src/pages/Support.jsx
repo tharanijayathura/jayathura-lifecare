@@ -33,6 +33,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import PageHeader from '../components/common/PageHeader';
+import Navbar from '../components/common/Navbar';
 
 const Support = () => {
   const navigate = useNavigate();
@@ -183,7 +184,9 @@ const Support = () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
+    <>
+      <Navbar />
+      <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <PageHeader title="Support Center" showBack={false} />
         
@@ -422,7 +425,8 @@ const Support = () => {
           </CardContent>
         </Card>
       </Container>
-    </Box>
+      </Box>
+    </>
   );
 };
 

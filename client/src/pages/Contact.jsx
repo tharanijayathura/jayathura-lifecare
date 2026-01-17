@@ -16,7 +16,6 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  LocalPharmacy,
   LocationOn,
   Phone,
   Email,
@@ -25,6 +24,7 @@ import {
   CheckCircle,
 } from '@mui/icons-material';
 import PageHeader from '../components/common/PageHeader';
+import Navbar from '../components/common/Navbar';
 
 const Contact = () => {
   const theme = useTheme();
@@ -121,13 +121,14 @@ const Contact = () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
+    <>
+      <Navbar />
+      <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pt: { xs: 2, md: 4 }, pb: { xs: 4, md: 8 } }}>
       <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
         <PageHeader title="Contact Us" showBack={false} />
         
         {/* Hero Section */}
         <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
-          <LocalPharmacy sx={{ fontSize: { xs: 48, sm: 56, md: 64 }, color: 'primary.main', mb: 2 }} />
           <Typography
             variant="h6"
             sx={{
@@ -468,7 +469,8 @@ const Contact = () => {
           </Alert>
         </Snackbar>
       </Container>
-    </Box>
+      </Box>
+    </>
   );
 };
 

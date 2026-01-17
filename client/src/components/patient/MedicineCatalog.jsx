@@ -1,24 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import {
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  TextField,
-  Box,
-  Chip,
-  CardMedia,
-  Stack,
-  MenuItem,
-  InputAdornment,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { AddShoppingCart, Search } from '@mui/icons-material';
+import { Typography, Box, Alert, CircularProgress } from '@mui/material';
 import { patientAPI } from '../../services/api';
-import medPlaceholder from '../../assets/med.png';
+import CatalogFilters from './catalog/CatalogFilters';
+import MedicineGrid from './catalog/MedicineGrid';
 
 const CATEGORY_OPTIONS = [
   { value: 'all', label: 'All categories' },
@@ -42,11 +26,6 @@ const CATEGORY_OPTIONS = [
   { value: 'pet-health', label: 'Pet Health' },
 ];
 
-const formatCategory = (value = '') =>
-  value
-    .split('-')
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ');
 
 const MedicineCatalog = ({ onAddToCart }) => {
   const [medicines, setMedicines] = useState([]);
@@ -190,14 +169,6 @@ const MedicineCatalog = ({ onAddToCart }) => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  const handleFilterChange = (event) => {
-    const { name, value } = event.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleAddToCart = (medicine) => {
     
     const medicineId = medicine._id?.toString() || medicine.id?.toString();
@@ -208,7 +179,7 @@ const MedicineCatalog = ({ onAddToCart }) => {
       price: medicine.price,
       unit: medicine.unit || medicine.doseUnit || 'dose',
       itemType: 'medicine',
-      image: medicine.image || medPlaceholder,
+      image: medicine.image,
     });
   };
 
@@ -234,155 +205,18 @@ const MedicineCatalog = ({ onAddToCart }) => {
         Use filters to sort by category, price, or brand, and add items directly to your cart without a prescription.
       </Alert>
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search medicines..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: 'text.secondary' }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
-          <TextField
-            select
-            fullWidth
-            label="Category"
-            name="category"
-            value={filters.category}
-            onChange={handleFilterChange}
-          >
-            {CATEGORY_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2}>
-          <TextField
-            select
-            fullWidth
-            label="Brand"
-            name="brand"
-            value={filters.brand}
-            onChange={handleFilterChange}
-          >
-            {brandOptions.map((brand) => (
-              <MenuItem key={brand} value={brand}>
-                {brand === 'all' ? 'All brands' : brand}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid item xs={6} sm={3} md={2}>
-          <TextField
-            label="Min Price"
-            type="number"
-            name="priceMin"
-            value={filters.priceMin}
-            onChange={handleFilterChange}
-            fullWidth
-            inputProps={{ min: 0 }}
-          />
-        </Grid>
-        <Grid item xs={6} sm={3} md={2}>
-          <TextField
-            label="Max Price"
-            type="number"
-            name="priceMax"
-            value={filters.priceMax}
-            onChange={handleFilterChange}
-            fullWidth
-            inputProps={{ min: 0 }}
-          />
-        </Grid>
-      </Grid>
+      <CatalogFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filters={filters}
+        setFilters={setFilters}
+        CATEGORY_OPTIONS={CATEGORY_OPTIONS}
+        brandOptions={brandOptions}
+      />
 
-      <Grid container spacing={3}>
-        {filteredMedicines.map((medicine) => {
-          // Use _id or id for the key
-          const medicineId = medicine._id?.toString() || medicine.id?.toString() || Math.random().toString();
-          return (
-          <Grid item xs={12} sm={6} md={4} key={medicineId}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <CardMedia
-                component="img"
-                height="180"
-                image={medicine.image || medPlaceholder}
-                alt={medicine.name}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                  <Typography variant="h6">{medicine.name}</Typography>
-                  <Chip label={formatCategory(medicine.category)} size="small" color="info" />
-                </Stack>
-                {medicine.brand && (
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {medicine.brand}
-                  </Typography>
-                )}
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                  {medicine.description}
-                </Typography>
+      <MedicineGrid filteredMedicines={filteredMedicines} onAddToCart={handleAddToCart} searchTerm={searchTerm} loading={loading} />
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6" color="primary">
-                    Rs. {medicine.price} / {medicine.unit || 'dose'}
-                  </Typography>
-                  <Chip
-                    label={medicine.stock > 10 ? 'In Stock' : 'Low Stock'}
-                    color={medicine.stock > 10 ? 'success' : 'warning'}
-                    size="small"
-                  />
-                </Box>
-              </CardContent>
-
-              <CardActions sx={{ p: 2, pt: 0 }}>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="medium"
-                  startIcon={<AddShoppingCart />}
-                  onClick={() => handleAddToCart(medicine)}
-                  disabled={medicine.stock === 0}
-                  sx={{
-                    bgcolor: medicine.stock === 0 ? 'grey.400' : 'primary.main',
-                    '&:hover': {
-                      bgcolor: medicine.stock === 0 ? 'grey.400' : 'primary.dark',
-                    }
-                  }}
-                >
-                  {medicine.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          );
-        })}
-      </Grid>
-
-      {!loading && filteredMedicines.length === 0 && (
-        <Card sx={{ mt: 4, p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            {searchTerm ? 'No medicines found' : 'No medicines available'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {searchTerm 
-              ? `Try searching with different keywords or browse all categories.`
-              : `Please check back later or contact support.`
-            }
-          </Typography>
-        </Card>
-      )}
+      {/* Empty state handled in MedicineGrid */}
 
       {loading && filteredMedicines.length === 0 && (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">

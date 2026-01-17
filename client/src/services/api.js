@@ -40,8 +40,9 @@ export const authAPI = {
 };
 
 export const userAPI = {
-  getProfile: () => API.get('/users/profile'),
-  updateProfile: (data) => API.put('/users/profile', data),
+  // Align with backend: patient profile endpoints
+  getProfile: () => API.get('/patients/profile'),
+  updateProfile: (data) => API.put('/patients/profile', data),
 };
 
 export const medicineAPI = {
@@ -69,8 +70,9 @@ export const prescriptionAPI = {
   upload: (formData) => API.post('/patients/prescription/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  getAll: () => API.get('/prescriptions'),
-  verify: (id, status) => API.put(`/prescriptions/${id}/verify`, { status }),
+  // Pharmacist endpoints for prescription management
+  getAll: () => API.get('/pharmacists/prescriptions/pending'),
+  verify: (id) => API.put(`/pharmacists/prescription/${id}/verify`),
 };
 
 export const adminAPI = {
@@ -125,7 +127,8 @@ export const patientAPI = {
   
   // Cart
   addToCart: (data) => API.post('/patients/cart/add', data),
-  removeFromCart: (orderItemId, orderId) => API.delete(`/patients/cart/item/${orderItemId}?orderId=${orderId}`),
+  // Align with backend: remove item via order path
+  removeFromCart: (orderItemId, orderId) => API.delete(`/patients/order/${orderId}/item/${orderItemId}`),
   removeOrderItem: (orderId, itemId) => API.delete(`/patients/order/${orderId}/item/${itemId}`),
   
   // Billing

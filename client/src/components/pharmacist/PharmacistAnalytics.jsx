@@ -1,35 +1,11 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Paper,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Stack,
-  Chip,
-  Divider,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  LinearProgress,
-} from '@mui/material';
-import {
-  TrendingUp,
-  TrendingDown,
-  LocalPharmacy,
-  AttachMoney,
-  ShoppingCart,
-  Inventory,
-  Assessment,
-} from '@mui/icons-material';
+import { Box, Grid, Card, CardContent, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { LocalPharmacy, AttachMoney, ShoppingCart, Assessment } from '@mui/icons-material';
+import StatCard from '../common/analytics/StatCard.jsx';
+import SimpleBarChart from '../common/analytics/SimpleBarChart.jsx';
+import HeaderControls from './analytics/HeaderControls.jsx';
+import CategoryBreakdown from './analytics/CategoryBreakdown.jsx';
+import TopSellingTable from './analytics/TopSellingTable.jsx';
 
 const PharmacistAnalytics = () => {
   const [timePeriod, setTimePeriod] = useState('month');
@@ -121,92 +97,10 @@ const PharmacistAnalytics = () => {
     }).format(amount);
   };
 
-  const StatCard = ({ icon, title, value, subtitle, trend, color = 'primary' }) => (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: `${color}.light`,
-              color: `${color}.main`,
-            }}
-          >
-            {icon}
-          </Box>
-          {trend && (
-            <Chip
-              icon={trend > 0 ? <TrendingUp /> : <TrendingDown />}
-              label={`${trend > 0 ? '+' : ''}${trend}%`}
-              size="small"
-              color={trend > 0 ? 'success' : 'error'}
-              sx={{ fontSize: '0.75rem' }}
-            />
-          )}
-        </Box>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
-          {value}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
-          {title}
-        </Typography>
-        {subtitle && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            {subtitle}
-          </Typography>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const SimpleBarChart = ({ data, height = 200 }) => {
-    const maxValue = Math.max(...data.map((d) => d.sales || d.revenue));
-    return (
-      <Box sx={{ height, display: 'flex', alignItems: 'flex-end', gap: 1, px: 1 }}>
-        {data.map((item, index) => {
-          const heightPercent = ((item.sales || item.revenue) / maxValue) * 100;
-          return (
-            <Box key={index} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: '100%',
-                  height: `${heightPercent}%`,
-                  minHeight: 20,
-                  bgcolor: 'primary.main',
-                  borderRadius: '4px 4px 0 0',
-                  transition: 'all 0.3s',
-                  '&:hover': {
-                    bgcolor: 'primary.dark',
-                    transform: 'scaleY(1.05)',
-                  },
-                }}
-              />
-              <Typography variant="caption" sx={{ mt: 0.5, fontSize: '0.7rem', textAlign: 'center' }}>
-                {item.day || item.category}
-              </Typography>
-            </Box>
-          );
-        })}
-      </Box>
-    );
-  };
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
-          Sales Analytics
-        </Typography>
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>Time Period</InputLabel>
-          <Select value={timePeriod} label="Time Period" onChange={(e) => setTimePeriod(e.target.value)}>
-            <MenuItem value="week">Last Week</MenuItem>
-            <MenuItem value="month">Last Month</MenuItem>
-            <MenuItem value="threeMonths">Last 3 Months</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+      <HeaderControls timePeriod={timePeriod} setTimePeriod={setTimePeriod} title="Sales Analytics" />
 
       {/* Key Metrics */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -263,96 +157,17 @@ const PharmacistAnalytics = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Daily sales over the selected period
               </Typography>
-              <SimpleBarChart data={currentData.dailySales.slice(0, 14)} height={250} />
+              <SimpleBarChart data={currentData.dailySales.slice(0, 14)} height={250} dataKey="sales" />
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Category Breakdown
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                {currentData.categoryBreakdown.map((cat, index) => {
-                  const total = currentData.categoryBreakdown.reduce((sum, c) => sum + c.sales, 0);
-                  const percentage = (cat.sales / total) * 100;
-                  return (
-                    <Box key={index} sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {cat.category}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {cat.sales} ({percentage.toFixed(1)}%)
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={percentage}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          bgcolor: 'grey.200',
-                          '& .MuiLinearProgress-bar': {
-                            bgcolor: index === 0 ? 'primary.main' : index === 1 ? 'success.main' : 'info.main',
-                          },
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        {formatCurrency(cat.revenue)}
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              </Box>
-            </CardContent>
-          </Card>
+          <CategoryBreakdown breakdown={currentData.categoryBreakdown} formatCurrency={formatCurrency} />
         </Grid>
       </Grid>
 
       {/* Top Selling Medicines */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-            Top Selling Medicines
-          </Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>Rank</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Medicine Name</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>
-                    Quantity Sold
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>
-                    Revenue
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {currentData.topSelling.map((item, index) => (
-                  <TableRow key={index} hover>
-                    <TableCell>
-                      <Chip
-                        label={`#${index + 1}`}
-                        size="small"
-                        color={index === 0 ? 'primary' : index === 1 ? 'success' : 'default'}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>{item.name}</TableCell>
-                    <TableCell align="right">{item.quantity.toLocaleString()}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, color: 'success.main' }}>
-                      {formatCurrency(item.revenue)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+      <TopSellingTable items={currentData.topSelling} formatCurrency={formatCurrency} />
     </Box>
   );
 };

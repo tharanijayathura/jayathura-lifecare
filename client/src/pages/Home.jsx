@@ -36,6 +36,7 @@ import {
   LocationOn,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import symbolImage from '../assets/medical-symbol.png';
 
 // Import images
 import deliveryPerson from '../assets/deliver1-removebg-preview.png';
@@ -97,7 +98,7 @@ const Home = () => {
     <Box sx={{ width: 280, backgroundColor: '#ECF4E8', height: '100%' }}>
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 700, color: '#2C3E50', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LocalPharmacy sx={{ color: '#ABE7B2' }} /> Jayathura
+          <Box component="img" src={symbolImage} alt="Jayathura" sx={{ height: 26 }} /> Jayathura
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
           <CloseIcon sx={{ color: '#2C3E50' }} />
@@ -159,7 +160,7 @@ const Home = () => {
                 gap: 1,
               }}
             >
-              <LocalPharmacy sx={{ color: '#ABE7B2' }} />
+              <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: 28 }} />
               Jayathura LifeCare
             </Typography>
 
@@ -434,7 +435,7 @@ const Home = () => {
                   color: '#2C3E50',
                 }}
               >
-                <LocalPharmacy sx={{ color: '#2C3E50' }} /> Jayathura LifeCare
+                <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: 26 }} /> Jayathura LifeCare
               </Typography>
               <Typography variant="body2" sx={{ color: '#546E7A', lineHeight: 1.7 }}>
                 Your trusted partner in healthcare. We bring the pharmacy to your doorstep with modern solutions and expert care.
