@@ -19,7 +19,6 @@ import {
   LocalShipping,
   Chat,
   Refresh,
-  CheckCircle,
   Error as ErrorIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/useAuth';
@@ -51,6 +50,7 @@ const mockData = {
 
 const DashboardOverview = () => {
   const { user } = useAuth();
+
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -58,112 +58,178 @@ const DashboardOverview = () => {
     day: 'numeric',
   });
 
-  const StatCard = ({ title, value, icon: Icon, color = 'primary' }) => (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
+  // ✅ SAME palette (green + blue) used across your app
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#2C3E50',
+    subtext: '#546E7A',
+    border: 'rgba(147, 191, 199, 0.35)',
+    paper: 'rgba(255,255,255,0.9)',
+  };
+
+  const basePaperSx = {
+    p: 2.25,
+    borderRadius: 3,
+    border: `1px solid ${COLORS.border}`,
+    backgroundColor: COLORS.paper,
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 12px 28px rgba(44,62,80,0.10)',
+  };
+
+  const primaryBtnSx = {
+    backgroundColor: COLORS.green3,
+    color: COLORS.text,
+    textTransform: 'none',
+    borderRadius: 2,
+    '&:hover': { backgroundColor: COLORS.green2 },
+  };
+
+  const outlineBtnSx = {
+    borderColor: COLORS.blue1,
+    color: COLORS.text,
+    textTransform: 'none',
+    borderRadius: 2,
+    '&:hover': { borderColor: COLORS.blue2, backgroundColor: 'rgba(236,244,232,0.7)' },
+  };
+
+  const StatCard = ({ title, value, icon: Icon, gradient }) => (
+    <Card
+      sx={{
+        height: '100%',
+        borderRadius: 3,
+        border: `1px solid ${COLORS.border}`,
+        background: gradient,
+        boxShadow: '0 14px 30px rgba(44,62,80,0.10)',
+        transition: 'transform .25s ease, box-shadow .25s ease',
+        '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 18px 42px rgba(44,62,80,0.14)' },
+      }}
+    >
+      <CardContent sx={{ p: 2.25 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant="body2" sx={{ color: COLORS.subtext }}>
               {title}
             </Typography>
-            <Typography variant="h4" color={color} fontWeight="bold">
+            <Typography sx={{ fontSize: '1.9rem', color: COLORS.text, mt: 0.5 }}>
               {value}
             </Typography>
           </Box>
-          <Icon sx={{ fontSize: 48, color: `${color}.main`, opacity: 0.3 }} />
+          <Icon sx={{ fontSize: 44, color: COLORS.blue2, opacity: 0.55 }} />
         </Box>
       </CardContent>
     </Card>
   );
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'High':
-        return 'error';
-      case 'Medium':
-        return 'warning';
-      default:
-        return 'default';
+  const getPriorityChipSx = (priority) => {
+    if (priority === 'High') {
+      return { bgcolor: 'rgba(122,168,176,0.20)', color: COLORS.text, border: `1px solid ${COLORS.blue1}` };
     }
+    if (priority === 'Medium') {
+      return { bgcolor: 'rgba(203,243,187,0.45)', color: COLORS.text, border: `1px solid ${COLORS.green3}` };
+    }
+    return { bgcolor: 'rgba(236,244,232,0.9)', color: COLORS.subtext, border: `1px solid ${COLORS.border}` };
   };
 
   return (
-    <Box>
+    <Box sx={{ p: { xs: 1, md: 2 } }}>
       {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-        <Box>
-          <Typography variant="h5" gutterBottom>
-            Welcome, {user?.name || 'Dr. Perera'}!
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Shift: 8:00 AM - 4:00 PM | Today: {currentDate}
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" size="small" startIcon={<Refresh />}>
+      <Paper
+        sx={{
+          ...basePaperSx,
+          mb: 3,
+          background: `linear-gradient(135deg, ${COLORS.green1} 0%, ${COLORS.green2} 55%, rgba(147,191,199,0.18) 100%)`,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography sx={{ fontSize: '1.35rem', color: COLORS.text }}>
+              Welcome, {user?.name || 'Dr. Perera'} 👋
+            </Typography>
+            <Typography variant="body2" sx={{ color: COLORS.subtext }}>
+              Shift: 8:00 AM - 4:00 PM • Today: {currentDate}
+            </Typography>
+          </Box>
+
+          <Button variant="outlined" size="small" startIcon={<Refresh />} sx={outlineBtnSx}>
             Refresh
           </Button>
-        </Stack>
-      </Box>
+        </Box>
+      </Paper>
 
       {/* Stats Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={3}>
           <StatCard
-            title="PENDING PRESCRIPTIONS"
+            title="Pending Prescriptions"
             value={mockData.pendingPrescriptions}
             icon={Assignment}
-            color="error"
+            gradient={`linear-gradient(135deg, ${COLORS.green1} 0%, ${COLORS.green2} 60%, rgba(147,191,199,0.18) 100%)`}
           />
         </Grid>
+
         <Grid item xs={6} sm={3}>
           <StatCard
-            title="ACTIVE ORDERS"
+            title="Active Orders"
             value={mockData.activeOrders}
             icon={ShoppingCart}
-            color="primary"
+            gradient={`linear-gradient(135deg, ${COLORS.green1} 0%, rgba(147,191,199,0.22) 100%)`}
           />
         </Grid>
+
         <Grid item xs={6} sm={3}>
           <StatCard
-            title="LOW STOCK ALERTS"
+            title="Low Stock Alerts"
             value={mockData.lowStockAlerts}
             icon={Warning}
-            color="warning"
+            gradient={`linear-gradient(135deg, ${COLORS.green2} 0%, rgba(147,191,199,0.18) 100%)`}
           />
         </Grid>
+
         <Grid item xs={6} sm={3}>
           <StatCard
-            title="TODAY'S DELIVERIES"
+            title="Today's Deliveries"
             value={mockData.todaysDeliveries}
             icon={LocalShipping}
-            color="success"
+            gradient={`linear-gradient(135deg, rgba(147,191,199,0.28) 0%, ${COLORS.green1} 100%)`}
           />
         </Grid>
       </Grid>
 
       {/* Quick Actions */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          QUICK ACTIONS
+      <Paper sx={{ ...basePaperSx, mb: 3 }}>
+        <Typography sx={{ color: COLORS.text, mb: 1.5 }}>
+          Quick Actions
         </Typography>
+
         <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-          <Button variant="contained" size="small">
+          <Button variant="contained" size="small" sx={primaryBtnSx}>
             Process Prescriptions
           </Button>
-          <Button variant="outlined" size="small">
+          <Button variant="outlined" size="small" sx={outlineBtnSx}>
             Check Inventory
           </Button>
-          <Button variant="outlined" size="small">
+          <Button variant="outlined" size="small" sx={outlineBtnSx}>
             Assign Deliveries
           </Button>
-          <Button variant="outlined" size="small" startIcon={<Chat />}>
+          <Button variant="outlined" size="small" startIcon={<Chat />} sx={outlineBtnSx}>
             View Chat Queue
           </Button>
-          <Button variant="outlined" size="small">
+          <Button variant="outlined" size="small" sx={outlineBtnSx}>
             Check Refills
           </Button>
-          <Button variant="outlined" size="small">
+          <Button variant="outlined" size="small" sx={outlineBtnSx}>
             Generate Report
           </Button>
         </Stack>
@@ -172,45 +238,61 @@ const DashboardOverview = () => {
       <Grid container spacing={3}>
         {/* Pending Prescriptions Queue */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              PENDING PRESCRIPTIONS QUEUE (Urgent First)
+          <Paper sx={basePaperSx}>
+            <Typography sx={{ color: COLORS.text }}>
+              Pending Prescriptions Queue
             </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Stack spacing={1}>
-              {mockData.pendingPrescriptionsList.map((prescription) => (
+            <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 1 }}>
+              Urgent first
+            </Typography>
+            <Divider sx={{ my: 2, borderColor: COLORS.border }} />
+
+            <Stack spacing={1.25}>
+              {mockData.pendingPrescriptionsList.map((p) => (
                 <Box
-                  key={prescription.id}
+                  key={p.id}
                   sx={{
                     p: 1.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    '&:hover': { bgcolor: 'action.hover' },
+                    borderRadius: 2,
+                    border: `1px solid ${COLORS.border}`,
+                    background: 'rgba(255,255,255,0.75)',
+                    transition: 'transform .2s ease, box-shadow .2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 10px 20px rgba(44,62,80,0.10)',
+                      background: 'rgba(236,244,232,0.9)',
+                    },
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      #{prescription.id} - {prescription.patient}
+                    <Typography sx={{ color: COLORS.text, fontSize: '0.95rem' }}>
+                      #{p.id} • {p.patient}
                     </Typography>
+
                     <Chip
-                      label={prescription.priority}
+                      label={p.priority}
                       size="small"
-                      color={getPriorityColor(prescription.priority)}
+                      sx={{
+                        ...getPriorityChipSx(p.priority),
+                        borderRadius: 2,
+                      }}
                     />
                   </Box>
+
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {prescription.items} meds • {prescription.time}
+                    <Typography variant="body2" sx={{ color: COLORS.subtext }}>
+                      {p.items} meds • {p.time}
                     </Typography>
-                    <Button size="small" variant="contained">
+
+                    <Button size="small" variant="contained" sx={primaryBtnSx}>
                       Process
                     </Button>
                   </Box>
                 </Box>
               ))}
             </Stack>
-            <Button fullWidth sx={{ mt: 2 }} variant="outlined">
+
+            <Button fullWidth sx={{ mt: 2 }} variant="outlined" size="small" style={{ borderRadius: 10 }} color="inherit">
               View All {mockData.pendingPrescriptions} Prescriptions →
             </Button>
           </Paper>
@@ -218,34 +300,37 @@ const DashboardOverview = () => {
 
         {/* Today's Performance */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              TODAY'S PERFORMANCE
+          <Paper sx={basePaperSx}>
+            <Typography sx={{ color: COLORS.text }}>
+              Today’s Performance
             </Typography>
-            <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2, borderColor: COLORS.border }} />
+
             <Stack spacing={2}>
               <Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: COLORS.subtext }}>
                   Prescriptions Processed
                 </Typography>
-                <Typography variant="h6">
-                  {mockData.prescriptionsProcessed} | Avg Time: {mockData.avgProcessingTime} min
+                <Typography sx={{ color: COLORS.text }}>
+                  {mockData.prescriptionsProcessed} • Avg: {mockData.avgProcessingTime} min
                 </Typography>
               </Box>
+
               <Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: COLORS.subtext }}>
                   Orders Completed
                 </Typography>
-                <Typography variant="h6">
-                  {mockData.ordersCompleted} | Customer Rating: {mockData.customerRating}/5
+                <Typography sx={{ color: COLORS.text }}>
+                  {mockData.ordersCompleted} • Rating: {mockData.customerRating}/5
                 </Typography>
               </Box>
+
               <Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: COLORS.subtext }}>
                   Issues Resolved
                 </Typography>
-                <Typography variant="h6">
-                  {mockData.issuesResolved} | Chat Response Time: {mockData.chatResponseTime} min
+                <Typography sx={{ color: COLORS.text }}>
+                  {mockData.issuesResolved} • Chat response: {mockData.chatResponseTime} min
                 </Typography>
               </Box>
             </Stack>
@@ -254,19 +339,30 @@ const DashboardOverview = () => {
 
         {/* Critical Alerts */}
         <Grid item xs={12}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              CRITICAL ALERTS
+          <Paper sx={basePaperSx}>
+            <Typography sx={{ color: COLORS.text, mb: 1 }}>
+              Critical Alerts
             </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Stack spacing={1}>
-              {mockData.criticalAlerts.map((alert, index) => (
+            <Divider sx={{ my: 2, borderColor: COLORS.border }} />
+
+            <Stack spacing={1.25}>
+              {mockData.criticalAlerts.map((a, i) => (
                 <Alert
-                  key={index}
-                  severity={alert.severity}
-                  icon={alert.severity === 'error' ? <ErrorIcon /> : <Warning />}
+                  key={i}
+                  severity={a.severity}
+                  icon={a.severity === 'error' ? <ErrorIcon /> : <Warning />}
+                  sx={{
+                    borderRadius: 2,
+                    border: `1px solid ${COLORS.border}`,
+                    backgroundColor:
+                      a.severity === 'error'
+                        ? 'rgba(147,191,199,0.20)'
+                        : 'rgba(203,243,187,0.45)',
+                    color: COLORS.text,
+                    '& .MuiAlert-icon': { color: COLORS.blue2 },
+                  }}
                 >
-                  {alert.message}
+                  {a.message}
                 </Alert>
               ))}
             </Stack>
@@ -278,4 +374,3 @@ const DashboardOverview = () => {
 };
 
 export default DashboardOverview;
-
