@@ -20,6 +20,7 @@ app.use('/api/groceries', require('./routes/groceries'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/patients', require('./routes/patients'));
 app.use('/api/pharmacists', require('./routes/pharmacists'));
+app.use('/api/contact', require('./routes/contact'));
 
 // Serve uploaded images
 app.use('/uploads', express.static('uploads'));

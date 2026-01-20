@@ -59,20 +59,39 @@ const Contact = () => {
       return;
     }
 
-    console.log('Contact form submitted:', formData);
-
-    setSnackbarMessage('Thank you! Your message has been sent. We will get back to you soon.');
-    setSnackbarSeverity('success');
-    setOpenSnackbar(true);
-
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    // Send to backend
+    fetch('http://localhost:5000/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          let errorMsg = 'Failed to send message';
+          try {
+            const data = await res.json();
+            errorMsg = data.error || errorMsg;
+          } catch (e) {
+            // Not JSON, keep default errorMsg
+          }
+          throw new Error(errorMsg);
+        }
+        setSnackbarMessage('Thank you! Your message has been sent. We will get back to you soon.');
+        setSnackbarSeverity('success');
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      })
+      .catch((err) => {
+        setSnackbarMessage(err.message || 'Failed to send message');
+        setSnackbarSeverity('error');
+      })
+      .finally(() => setOpenSnackbar(true));
   };
 
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
   const contactInfo = [
     { icon: <Phone />, title: 'Phone', content: '+94 71 259 9785', subtitle: 'Call us anytime', color: 'primary' },
-    { icon: <Email />, title: 'Email', content: 'support@jayathuralifecare.com', subtitle: 'Send us an email', color: 'info' },
+    { icon: <Email />, title: 'Email', content: 'jayathuralifecare@gmail.com', subtitle: 'Send us an email', color: 'info' },
     { icon: <LocationOn />, title: 'Address', content: 'Kamburupitiya, Matara, Sri Lanka', subtitle: 'Visit our location', color: 'primary' },
     { icon: <AccessTime />, title: 'Business Hours', content: 'Monday - Sunday: 8:00 AM - 8:00 PM', subtitle: '24/7 Online Support', color: 'info' },
   ];
