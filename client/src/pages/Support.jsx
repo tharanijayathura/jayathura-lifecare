@@ -829,7 +829,7 @@ const Support = () => {
                 <Button
                   variant="outlined"
                   startIcon={<Email />}
-                  href="mailto:support@jayathuralifecare.com"
+                  onClick={() => navigate('/contact')}
                   fullWidth
                   sx={{
                     py: { xs: 1.5, md: 1.75 },
@@ -882,7 +882,7 @@ const Support = () => {
                   fontWeight: 600,
                 }}
               >
-                ✉️ Email: <strong>support@jayathuralifecare.com</strong>
+                ✉️ Email: <strong>jayathuralifecare@gmail.com</strong>
               </Typography>
             </Box>
           </CardContent>
