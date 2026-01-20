@@ -5,6 +5,7 @@ import CatalogFilters from './catalog/CatalogFilters';
 import MedicineGrid from './catalog/MedicineGrid';
 
 const CATEGORY_OPTIONS = [
+  { value: 'frequent', label: 'Frequently Used Items' },
   { value: 'all', label: 'All categories' },
   { value: 'otc', label: 'Non Prescription Items' },
   { value: 'herbal', label: 'Herbal & Ayurvedic' },
@@ -27,12 +28,65 @@ const CATEGORY_OPTIONS = [
 ];
 
 
-const MedicineCatalog = ({ onAddToCart }) => {
+const FREQUENTLY_USED_KEYWORDS = [
+  'panadol', // pain/fever
+  'siddhalepa', // balm
+  'eno', // antacid
+  'vicks', // vaporub/inhaler
+  'cough syrup',
+  'cough lozenge',
+  'multivitamin',
+  'vitamin c',
+  'vitamin a',
+  'vitamin d',
+  'vitamin b',
+  'vitamin e',
+  'oral rehydration',
+  'ors',
+  'glucose powder',
+  'hand sanitizer',
+  'face mask',
+  'mask',
+  'thermometer',
+  'saline nasal',
+  'antiseptic cream',
+  'betadine',
+  'savlon',
+  'dettol',
+  'antiseptic liquid',
+  'mosquito repellent',
+  'pain relief',
+  'moov',
+  'iodex',
+  'first aid kit',
+  'bandage',
+  'crepe bandage',
+  'gauze',
+  'adhesive bandage',
+  'plaster',
+  'band-aid',
+  'cotton wool',
+  'baby diaper',
+  'diaper',
+  'baby wipe',
+  'baby lotion',
+  'baby soap',
+  'baby shampoo',
+  'eye drop',
+  'ear drop',
+  'toothpaste',
+  'toothbrush',
+  'sunscreen',
+  'lip balm',
+  'hot water bag',
+];
+
+const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    category: 'all',
+    category: 'frequent',
     brand: 'all',
     priceMin: '',
     priceMax: '',
@@ -93,39 +147,56 @@ const MedicineCatalog = ({ onAddToCart }) => {
   }, [medicines]);
 
   const filteredMedicines = useMemo(() => {
-    
     const seenIds = new Map();
     const seenNames = new Map();
-    const uniqueMedicines = medicines.filter(medicine => {
+    let uniqueMedicines = medicines.filter(medicine => {
       const medicineId = medicine._id?.toString() || medicine.id?.toString();
       const nameKey = `${medicine.name || ''}_${medicine.brand || ''}`.toLowerCase();
-      
-      
-      if (medicineId && seenIds.has(medicineId)) {
-        return false;
-      }
-      
-      
-      if (nameKey && seenNames.has(nameKey)) {
-        return false;
-      }
-      
+      if (medicineId && seenIds.has(medicineId)) return false;
+      if (nameKey && seenNames.has(nameKey)) return false;
       if (medicineId) seenIds.set(medicineId, true);
       if (nameKey) seenNames.set(nameKey, true);
       return true;
     });
-    
-    
+    // If 'Frequently Used Items' category is selected, filter by keywords
+    if (filters.category === 'frequent' || filterFrequentlyUsed) {
+      uniqueMedicines = uniqueMedicines.filter((medicine) => {
+        const name = (medicine.name || '').toLowerCase();
+        const brand = (medicine.brand || '').toLowerCase();
+        const description = (medicine.description || '').toLowerCase();
+        return FREQUENTLY_USED_KEYWORDS.some(keyword =>
+          name.includes(keyword) || brand.includes(keyword) || description.includes(keyword)
+        );
+      });
+      // Sort by FREQUENTLY_USED_KEYWORDS order
+      uniqueMedicines = uniqueMedicines.sort((a, b) => {
+        const aIndex = FREQUENTLY_USED_KEYWORDS.findIndex(keyword =>
+          (a.name || '').toLowerCase().includes(keyword) ||
+          (a.brand || '').toLowerCase().includes(keyword) ||
+          (a.description || '').toLowerCase().includes(keyword)
+        );
+        const bIndex = FREQUENTLY_USED_KEYWORDS.findIndex(keyword =>
+          (b.name || '').toLowerCase().includes(keyword) ||
+          (b.brand || '').toLowerCase().includes(keyword) ||
+          (b.description || '').toLowerCase().includes(keyword)
+        );
+        // Items not found in the list go to the end
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+    }
     return uniqueMedicines
       .filter(
         (medicine) =>
           medicine.stock > 0 &&
-          (filters.category === 'all' || medicine.category === filters.category) &&
+          (filters.category === 'all' || filters.category === 'frequent' || medicine.category === filters.category) &&
           (filters.brand === 'all' || medicine.brand === filters.brand) &&
           (filters.priceMin === '' || medicine.price >= Number(filters.priceMin)) &&
           (filters.priceMax === '' || medicine.price <= Number(filters.priceMax)),
       );
-  }, [medicines, filters]);
+  }, [medicines, filters, filterFrequentlyUsed]);
 
   
   useEffect(() => {
@@ -200,9 +271,9 @@ const MedicineCatalog = ({ onAddToCart }) => {
         severity="info"
         sx={{ mb: 3, bgcolor: 'success.50', color: 'success.dark' }}
       >
-        Browse all non-prescription items such as Panadol, Siddhalepa, ENO, Vicks, vitamins, baby products,
-        and medical supplies like cotton wool, masks, and bandages. Prescription medicines are not shown here.
-        Use filters to sort by category, price, or brand, and add items directly to your cart without a prescription.
+        {filterFrequentlyUsed
+          ? 'Frequently used items for daily life: Panadol, Siddhalepa, ENO, Vicks, vitamins, baby products, and medical supplies like cotton wool, masks, and bandages. Add these items directly to your cart.'
+          : 'Browse all non-prescription items. Use filters to sort by category, price, or brand, and add items directly to your cart without a prescription.'}
       </Alert>
 
       <CatalogFilters
