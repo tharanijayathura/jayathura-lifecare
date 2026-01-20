@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Card, CardContent, Stack, Divider, TextField, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Stack, Divider, TextField, Button, CircularProgress, Avatar, IconButton } from '@mui/material';
+import { PhotoCamera } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/useAuth';
 import { patientAPI } from '../../../services/api';
 
@@ -8,7 +9,8 @@ const PatientProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: '', phone: '', address: {} });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', phone: '', address: {}, image: '' });
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -16,9 +18,43 @@ const PatientProfile = () => {
         const response = await patientAPI.getDetailedProfile();
         setProfile(response.data);
         if (response.data && response.data.user) {
-          setFormData({ name: response.data.user.name || '', phone: response.data.user.phone || '', address: response.data.user.address || {} });
+          const user = response.data.user;
+          let firstName = '', lastName = '';
+          if (user.firstName && user.lastName) {
+            firstName = user.firstName;
+            lastName = user.lastName;
+          } else if (user.name) {
+            const parts = user.name.split(' ');
+            firstName = parts[0] || '';
+            lastName = parts.slice(1).join(' ') || '';
+          }
+          setFormData({
+            firstName,
+            lastName,
+            phone: user.phone || '',
+            address: user.address || {},
+            image: user.image || ''
+          });
+          setImagePreview(user.image || '');
         } else if (response.data && response.data.profile) {
-          setFormData({ name: response.data.profile.name || '', phone: response.data.profile.phone || '', address: response.data.profile.address || {} });
+          const profile = response.data.profile;
+          let firstName = '', lastName = '';
+          if (profile.firstName && profile.lastName) {
+            firstName = profile.firstName;
+            lastName = profile.lastName;
+          } else if (profile.name) {
+            const parts = profile.name.split(' ');
+            firstName = parts[0] || '';
+            lastName = parts.slice(1).join(' ') || '';
+          }
+          setFormData({
+            firstName,
+            lastName,
+            phone: profile.phone || '',
+            address: profile.address || {},
+            image: profile.image || ''
+          });
+          setImagePreview(profile.image || '');
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -29,9 +65,31 @@ const PatientProfile = () => {
     fetchProfile();
   }, []);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, image: file });
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleUpdate = async () => {
     try {
-      await patientAPI.updateProfile(formData);
+      const dataToSend = { ...formData };
+      if (formData.image && typeof formData.image !== 'string') {
+        // If image is a File, send as FormData
+        const form = new FormData();
+        Object.entries(dataToSend).forEach(([key, value]) => {
+          if (key === 'address') {
+            form.append('address', JSON.stringify(value));
+          } else {
+            form.append(key, value);
+          }
+        });
+        await patientAPI.updateProfile(form);
+      } else {
+        await patientAPI.updateProfile(dataToSend);
+      }
       setEditing(false);
       const response = await patientAPI.getDetailedProfile();
       setProfile(response.data);
@@ -67,7 +125,10 @@ const PatientProfile = () => {
                 <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>Personal Information</Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <TextField fullWidth label="Full Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} disabled={!editing} variant="outlined" />
+                    <TextField fullWidth label="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} disabled={!editing} variant="outlined" />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField fullWidth label="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} disabled={!editing} variant="outlined" />
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField fullWidth label="Email Address" value={profile.user.email || ''} disabled variant="outlined" helperText="Email cannot be changed" />
@@ -89,8 +150,21 @@ const PatientProfile = () => {
             </Card>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
+            <Card sx={{ bgcolor: 'primary.main', color: 'white', mb: 2 }}>
               <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>Profile Image</Typography>
+                <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+                  <Avatar src={imagePreview} sx={{ width: 100, height: 100, mb: 2 }} />
+                  <input id="profile-image-upload" hidden accept="image/*" type="file" onChange={handleImageChange} />
+                  <label htmlFor="profile-image-upload" style={{ position: 'absolute', top: 70, left: '50%', transform: 'translateX(-50%)' }}>
+                    <IconButton color="primary" component="span" sx={{ bgcolor: 'white', p: 0.5, boxShadow: 2 }}>
+                      <PhotoCamera />
+                    </IconButton>
+                  </label>
+                  <Typography variant="caption" sx={{ mt: 1, color: 'white' }}>
+                    Click the camera icon on your photo to add/change your image
+                  </Typography>
+                </Box>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>Account Statistics</Typography>
                 <Stack spacing={2}>
                   <Box>
