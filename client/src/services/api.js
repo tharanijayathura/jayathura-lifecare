@@ -80,6 +80,7 @@ export const adminAPI = {
   approveUser: (userId) => API.post(`/admin/approve/${userId}`),
   rejectUser: (userId) => API.post(`/admin/reject/${userId}`),
   getAllUsers: () => API.get('/admin/users'),
+  removeUser: (userId) => API.delete(`/admin/users/${userId}`),
 };
 
 export const groceryAPI = {

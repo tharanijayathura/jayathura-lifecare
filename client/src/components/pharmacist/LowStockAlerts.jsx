@@ -11,7 +11,6 @@ const LowStockAlerts = () => {
     <Box>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between' }}>
         <Typography variant="h5">LOW STOCK ALERTS | 17 Items Need Attention</Typography>
-        <Button variant="contained">Generate PO</Button>
       </Box>
 
       <TableContainer component={Paper}>

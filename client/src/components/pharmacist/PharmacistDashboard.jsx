@@ -35,12 +35,11 @@ const PharmacistDashboard = () => {
     { label: 'Prescriptions', value: 1 },
     { label: 'Orders', value: 2 },
     { label: 'Inventory', value: 3 },
-    { label: 'Low Stock', value: 4 },
-    { label: 'Patients', value: 5 },
-    { label: 'Delivery', value: 6 },
-    { label: 'Chat', value: 7 },
-    { label: 'Audio Instructions', value: 8 },
-    { label: 'Reports', value: 9 },
+    { label: 'Patients', value: 4 },
+    { label: 'Delivery', value: 5 },
+    { label: 'Chat', value: 6 },
+    { label: 'Audio Instructions', value: 7 },
+    { label: 'Reports', value: 8 },
   ];
 
   const handleTabChange = (event, newValue) => {
@@ -100,22 +99,20 @@ const PharmacistDashboard = () => {
           />
         );
       case 3:
-        return <InventoryManagement />;
+        return <InventoryManagement showLowStockSection={true} />;
       case 4:
-        return <LowStockAlerts />;
-      case 5:
         return (
           <PatientDirectory
             onSelectPatient={setSelectedPatient}
           />
         );
-      case 6:
+      case 5:
         return <DeliveryAssignment />;
-      case 7:
+      case 6:
         return <ChatDashboard />;
-      case 8:
+      case 7:
         return <AudioInstructions />;
-      case 9:
+      case 8:
         return <DailyReport />;
       default:
         return <DashboardOverview />;

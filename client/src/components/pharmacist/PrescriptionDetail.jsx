@@ -24,6 +24,10 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
     }
   }, [open, prescription]);
 
+  useEffect(() => {
+    fetchMedicines();
+  }, [searchTerm]);
+
   const fetchPrescriptionDetails = async () => {
     try {
       setLoading(true);
@@ -174,6 +178,8 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
               setInstructions={setInstructions}
               loading={loading}
               onAdd={handleAddMedicine}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           </Grid>
 

@@ -19,6 +19,7 @@ import {
   InputLabel,
 } from '@mui/material';
 import { Search, Refresh } from '@mui/icons-material';
+import LowStockAlerts from './LowStockAlerts';
 
 const mockInventory = [
   { name: 'Metformin 500mg', category: 'Rx', stock: 12, min: 50, max: 200, lastSold: 'Today 10:15' },
@@ -26,13 +27,13 @@ const mockInventory = [
   { name: 'Losartan 50mg', category: 'Rx', stock: 8, min: 30, max: 150, lastSold: 'Yesterday' },
 ];
 
-const InventoryManagement = () => {
+const InventoryManagement = ({ showLowStockSection }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [stockFilter, setStockFilter] = useState('all');
 
   return (
-    <Box>
+    <Box sx={{ mt: { xs: 6, md: 8 }, px: { xs: 1, md: 3 }, width: '100%' }}>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h5">INVENTORY MANAGEMENT | Total Items: 1,245</Typography>
         <Button variant="outlined" size="small" startIcon={<Refresh />}>Refresh Stock</Button>
@@ -103,6 +104,11 @@ const InventoryManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      {showLowStockSection && (
+        <Box sx={{ mt: 5 }}>
+          <LowStockAlerts />
+        </Box>
+      )}
     </Box>
   );
 };

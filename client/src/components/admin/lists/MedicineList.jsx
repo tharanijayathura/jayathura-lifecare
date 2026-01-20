@@ -3,6 +3,10 @@ import { Box, Paper, Grid, TextField, InputAdornment, IconButton, Chip, Tabs, Ta
 import { Search, Clear, Edit, Delete } from '@mui/icons-material';
 import ErrorIcon from '@mui/icons-material/Error';
 
+const FREQUENTLY_USED_KEYWORDS = [
+  'Paracetamol', 'Metformin', 'Amoxicillin', 'Atorvastatin', 'Omeprazole', 'Amlodipine', 'Losartan', 'Azithromycin', 'Cetirizine', 'Ibuprofen', 'Pantoprazole', 'Levothyroxine', 'Simvastatin', 'Ciprofloxacin', 'Doxycycline', 'Clopidogrel', 'Gliclazide', 'Enalapril', 'Hydrochlorothiazide', 'Salbutamol', 'Ranitidine'
+];
+
 const MedicineList = ({
   medicines,
   filteredMedicines,
@@ -28,6 +32,15 @@ const MedicineList = ({
 
   const totalMedicines = medicines.length;
   const totalAlerts = medicines.filter(m => m.stockAlert?.isAlerted || isOutOfStock(m)).length;
+
+  const getFilteredMedicines = () => {
+    if (medicineCategoryTab === 0) return filteredMedicines;
+    if (medicineCategoryTab === MEDICINE_CATEGORIES.length + 1) {
+      return medicines.filter((med) => FREQUENTLY_USED_KEYWORDS.some((kw) => med.name && med.name.toLowerCase().includes(kw.toLowerCase())));
+    }
+    const selectedCategory = MEDICINE_CATEGORIES[medicineCategoryTab - 1]?.value;
+    return medicines.filter((med) => med.category === selectedCategory && (!medicineSearchTerm || (med.name && med.name.toLowerCase().includes(medicineSearchTerm.toLowerCase()))));
+  };
 
   return (
     <Box>
@@ -86,13 +99,14 @@ const MedicineList = ({
               <Tab key={cat.value} label={<Badge badgeContent={alertCount > 0 ? alertCount : null} color="error">{cat.label}</Badge>} />
             );
           })}
+          <Tab label={<Badge color="success">Frequently Used</Badge>} />
         </Tabs>
       </Box>
 
       {filteredMedicines.length > 0 && (
         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <Typography variant="body2" color="text.secondary">
-            Showing <strong>{filteredMedicines.length}</strong> of <strong>{totalMedicines}</strong> medicines
+            Showing <strong>{getFilteredMedicines().length}</strong> of <strong>{totalMedicines}</strong> medicines
           </Typography>
           {medicineSearchTerm && (
             <Button size="small" onClick={() => setMedicineSearchTerm('')} startIcon={<Clear />}>Clear Search</Button>
@@ -101,7 +115,7 @@ const MedicineList = ({
       )}
 
       <Grid container spacing={{ xs: 1.5, sm: 2 }}>
-        {filteredMedicines.length === 0 ? (
+        {getFilteredMedicines().length === 0 ? (
           <Grid item xs={12}>
             <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
               <Search sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
@@ -117,7 +131,7 @@ const MedicineList = ({
             </Paper>
           </Grid>
         ) : (
-          filteredMedicines.map((medicine) => {
+          getFilteredMedicines().map((medicine) => {
             const hasAlert = medicine.stockAlert?.isAlerted || isOutOfStock(medicine);
             const isLow = isLowStock(medicine);
             return (
