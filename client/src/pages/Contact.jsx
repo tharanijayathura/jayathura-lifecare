@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ChatWidget from '../components/chat/ChatWidget';
 import {
   Container,
   Typography,
@@ -517,4 +518,5 @@ const Contact = () => {
   );
 };
 
+  <ChatWidget />
 export default Contact;

@@ -1,4 +1,5 @@
 import React from 'react';
+import ChatWidget from '../components/chat/ChatWidget';
 import {
   AppBar,
   Toolbar,
@@ -605,6 +606,7 @@ const Home = () => {
       >
         Up
       </Fab>
+      <ChatWidget />
 
       {/* Animations */}
       <style jsx>{`

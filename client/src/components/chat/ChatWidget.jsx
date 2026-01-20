@@ -1,5 +1,6 @@
 // client/src/components/chat/ChatWidget.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { chatBotFAQs } from './ChatBotFAQ';
 import {
   Box,
   Paper,
@@ -27,6 +28,7 @@ const ChatWidget = ({ onOpenFullScreen }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [chatId, setChatId] = useState(null);
+  const [showFAQ, setShowFAQ] = useState(true);
   const messagesEndRef = useRef(null);
   const pollIntervalRef = useRef(null);
 
@@ -70,13 +72,12 @@ const ChatWidget = ({ onOpenFullScreen }) => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || loading) return;
-
-    const messageText = inputMessage.trim();
+  const handleSendMessage = async (faqText) => {
+    let messageText = faqText || inputMessage.trim();
+    if (!messageText || loading) return;
     setInputMessage('');
     setLoading(true);
-
+    setShowFAQ(false);
     try {
       await chatAPI.sendMessage({
         chatId,
@@ -175,6 +176,25 @@ const ChatWidget = ({ onOpenFullScreen }) => {
             </Box>
           </Box>
 
+          {/* FAQ Suggestions */}
+          {showFAQ && (
+            <Box sx={{ p: 2, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                Frequently Asked Questions
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {chatBotFAQs.map((faq, idx) => (
+                  <Chip
+                    key={idx}
+                    label={faq.question}
+                    color="info"
+                    onClick={() => handleSendMessage(faq.question)}
+                    sx={{ cursor: 'pointer', fontSize: '0.85rem' }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
           {/* Messages */}
           <Box
             sx={{

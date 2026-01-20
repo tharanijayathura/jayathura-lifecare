@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ChatWidget from '../components/chat/ChatWidget';
 import {
   Container,
   Typography,
@@ -893,5 +894,6 @@ const Support = () => {
   );
 };
 
+  <ChatWidget />
 export default Support;
 
