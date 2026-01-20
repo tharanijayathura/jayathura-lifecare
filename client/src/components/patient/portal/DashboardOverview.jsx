@@ -282,15 +282,16 @@ const DashboardOverview = ({ onNavigate }) => {
     }),
 
     cta: {
-      background: 'linear-gradient(135deg, #93BFC7, #7AA8B0)',
-      color: 'white',
-      fontWeight: 600, // ✅ not bold
+      backgroundColor: '#F3F9F4',
+      color: '#2C3E50',
+      border: '1px solid #CBF3BB',
+      fontWeight: 600,
       px: 3.5,
       py: 1.25,
       borderRadius: 2,
       '&:hover': {
-        background: 'linear-gradient(135deg, #7AA8B0, #93BFC7)',
-        boxShadow: '0 10px 22px rgba(147,191,199,0.28)',
+        backgroundColor: '#EAF7EA',
+        boxShadow: '0 8px 18px rgba(44,62,80,0.08)',
       },
     },
 

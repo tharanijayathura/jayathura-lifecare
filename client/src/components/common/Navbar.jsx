@@ -21,7 +21,7 @@ import {
   Menu as MenuIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import symbolImage from '../../assets/medical-symbol.png';
 
 function HideOnScroll(props) {
@@ -37,6 +37,8 @@ function HideOnScroll(props) {
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -65,7 +67,13 @@ const Navbar = () => {
       <Divider />
       <List>
         {navItems.map((item) => (
-          <ListItem button key={item.label} onClick={() => { navigate(item.path); handleDrawerToggle(); }}>
+          <ListItem
+            button
+            key={item.label}
+            selected={pathname === item.path}
+            onClick={() => { navigate(item.path); handleDrawerToggle(); }}
+            sx={{ backgroundColor: pathname === item.path ? '#CBF3BB' : 'transparent' }}
+          >
             <ListItemText primary={item.label} sx={{ color: '#2C3E50', fontWeight: 500 }} />
           </ListItem>
         ))}
@@ -88,9 +96,10 @@ const Navbar = () => {
           fullWidth
           variant="contained"
           sx={{
-            backgroundColor: '#93BFC7',
+            backgroundColor: '#F3F9F4',
             color: '#2C3E50',
-            '&:hover': { backgroundColor: '#7AA8B0' },
+            border: '1px solid #CBF3BB',
+            '&:hover': { backgroundColor: '#EAF7EA' },
           }}
           onClick={() => { navigate('/register'); handleDrawerToggle(); }}
         >
@@ -127,20 +136,23 @@ const Navbar = () => {
               </IconButton>
             ) : (
               <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                {navItems.map((item) => (
-                  <Button
-                    key={item.label}
-                    onClick={() => navigate(item.path)}
-                    sx={{
-                      color: '#2C3E50',
-                      fontWeight: 500,
-                      textTransform: 'none',
-                      '&:hover': { color: '#93BFC7' },
-                    }}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
+                        {navItems.map((item) => (
+                          <Button
+                            key={item.label}
+                            onClick={() => navigate(item.path)}
+                            sx={{
+                              color: pathname === item.path ? '#2C3E50' : '#2C3E50',
+                              backgroundColor: pathname === item.path ? '#ABE7B2' : 'transparent',
+                              borderRadius: 2,
+                              fontWeight: pathname === item.path ? 700 : 500,
+                              textTransform: 'none',
+                              '&:hover': { color: '#93BFC7' },
+                              px: 2,
+                            }}
+                          >
+                            {item.label}
+                          </Button>
+                        ))}
                 <Button
                   onClick={() => navigate('/login')}
                   sx={{
@@ -154,10 +166,11 @@ const Navbar = () => {
                 <Button
                   variant="contained"
                   sx={{
-                    backgroundColor: '#ABE7B2',
+                    backgroundColor: '#F3F9F4',
                     color: '#2C3E50',
+                    border: '1px solid #CBF3BB',
                     fontWeight: 600,
-                    '&:hover': { backgroundColor: '#CBF3BB' },
+                    '&:hover': { backgroundColor: '#EAF7EA' },
                     px: 3,
                   }}
                   onClick={() => navigate('/register')}

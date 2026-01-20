@@ -35,7 +35,7 @@ import {
   Email,
   LocationOn,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import symbolImage from '../assets/medical-symbol.png';
 
 // ✅ Images
@@ -71,6 +71,8 @@ const Home = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
+  const pathname = location.pathname;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const scrollY = useScrollTrigger({ threshold: 100 });
 
@@ -127,10 +129,12 @@ const Home = () => {
           <ListItem
             button
             key={item.label}
+            selected={pathname === item.path}
             onClick={() => {
               navigate(item.path);
               handleDrawerToggle();
             }}
+            sx={{ backgroundColor: pathname === item.path ? '#CBF3BB' : 'transparent' }}
           >
             <ListItemText primary={item.label} sx={{ color: '#2C3E50', fontWeight: 500 }} />
           </ListItem>
@@ -153,21 +157,22 @@ const Home = () => {
         >
           Login
         </Button>
-        <Button
-          fullWidth
-          variant="contained"
-          sx={{
-            backgroundColor: '#93BFC7',
-            color: '#2C3E50',
-            '&:hover': { backgroundColor: '#7AA8B0' },
-          }}
-          onClick={() => {
-            navigate('/register');
-            handleDrawerToggle();
-          }}
-        >
-          Get Started
-        </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  sx={{
+                    backgroundColor: '#F3F9F4',
+                    color: '#2C3E50',
+                    border: '1px solid #CBF3BB',
+                    '&:hover': { backgroundColor: '#EAF7EA' },
+                  }}
+                  onClick={() => {
+                    navigate('/register');
+                    handleDrawerToggle();
+                  }}
+                >
+                  Get Started
+                </Button>
       </Box>
     </Box>
   );
@@ -205,8 +210,10 @@ const Home = () => {
                     key={item.label}
                     onClick={() => navigate(item.path)}
                     sx={{
-                      color: '#2C3E50',
-                      fontWeight: 500,
+                      color: pathname === item.path ? '#2C3E50' : '#2C3E50',
+                      backgroundColor: pathname === item.path ? '#ABE7B2' : 'transparent',
+                      borderRadius: 2,
+                      fontWeight: pathname === item.path ? 700 : 500,
                       textTransform: 'none',
                       '&:hover': { color: '#93BFC7' },
                     }}
@@ -227,10 +234,11 @@ const Home = () => {
                 <Button
                   variant="contained"
                   sx={{
-                    backgroundColor: '#ABE7B2',
+                    backgroundColor: '#F3F9F4',
                     color: '#2C3E50',
+                    border: '1px solid #CBF3BB',
                     fontWeight: 600,
-                    '&:hover': { backgroundColor: '#CBF3BB' },
+                    '&:hover': { backgroundColor: '#EAF7EA' },
                     px: 3,
                   }}
                   onClick={() => navigate('/register')}
@@ -544,13 +552,13 @@ const Home = () => {
                 Contact Us
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#546E7A' }}>
-                <Phone fontSize="small" /> +94 71 234 5678
+                <Phone fontSize="small" /> +94 71 259 9785
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#546E7A' }}>
                 <Email fontSize="small" /> jayathuralifecare@gmail.com
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#546E7A' }}>
-                <LocationOn fontSize="small" /> Colombo, Sri Lanka
+                <LocationOn fontSize="small" /> Matara, Sri Lanka
               </Box>
             </Grid>
 
