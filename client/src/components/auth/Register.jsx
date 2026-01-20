@@ -27,7 +27,8 @@ const Register = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -57,14 +58,29 @@ const Register = () => {
       setLoading(false);
       return;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      setLoading(false);
-      return;
+
+    // Password validation: at least 8 chars, one uppercase, one lowercase, one special char
+    const password = formData.password;
+    const passwordRequirements = [
+      { test: /.{8,}/, message: 'Password must be at least 8 characters.' },
+      { test: /[A-Z]/, message: 'Password must contain at least one uppercase letter.' },
+      { test: /[a-z]/, message: 'Password must contain at least one lowercase letter.' },
+      { test: /[@$!%*?&#^()_+=\-]/, message: 'Password must contain at least one special character (e.g. @, #, $).' },
+    ];
+    for (const req of passwordRequirements) {
+      if (!req.test.test(password)) {
+        setError(req.message);
+        setLoading(false);
+        return;
+      }
     }
 
     try {
-      const { confirmPassword, ...registerData } = formData;
+      const { confirmPassword, firstName, lastName, ...rest } = formData;
+      const registerData = {
+        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+        ...rest
+      };
       const result = await register(registerData);
 
       setSuccess(
@@ -98,32 +114,22 @@ const Register = () => {
       }}
     >
       <Container maxWidth="md">
-        {/* Top bar */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            mb: 2.5,
-          }}
-        >
+        {/* Top bar - aligned with Login */}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 2 }}>
           <IconButton
             onClick={() => navigate(-1)}
-            sx={{ bgcolor: 'rgba(255,255,255,0.85)', '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' } }}
+            sx={{ bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' } }}
           >
             <ArrowBack />
           </IconButton>
-
           <IconButton
             onClick={() => navigate('/')}
-            sx={{ bgcolor: 'rgba(255,255,255,0.85)', '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' } }}
+            sx={{ bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' } }}
           >
             <Home />
           </IconButton>
-
-          {/* Center title */}
-          <Box sx={{ flex: 1, textAlign: 'center', mr: { xs: 5, sm: 7 } }}>
-            <Typography sx={{ fontSize: { xs: '1.35rem', md: '1.75rem' }, fontWeight: 600, color: '#2C3E50' }}>
+          <Box sx={{ ml: 'auto', textAlign: 'right' }}>
+            <Typography sx={{ fontSize: { xs: '1.25rem', md: '1.6rem' }, fontWeight: 600, color: '#2C3E50' }}>
               Register
             </Typography>
             <Typography variant="body2" sx={{ color: '#546E7A' }}>
@@ -151,15 +157,12 @@ const Register = () => {
               md={5}
               sx={{
                 position: 'relative',
-                minHeight: { xs: 260, md: 560 },
-                background:
-                  'radial-gradient(600px 380px at 50% 35%, rgba(147,191,199,0.25) 0%, rgba(171,231,178,0.16) 55%, rgba(255,255,255,0) 100%)',
+                minHeight: { xs: 220, md: 520 },
+                background: 'linear-gradient(180deg, rgba(147,191,199,0.18) 0%, rgba(171,231,178,0.18) 100%)',
                 display: 'flex',
                 alignItems: 'flex-end',
                 justifyContent: 'center',
-                px: 3,
-                pt: 3,
-                pb: 0,
+                p: { xs: 2, md: 3 },
               }}
             >
               <Box
@@ -167,11 +170,12 @@ const Register = () => {
                 src={pimage}
                 alt="Doctor"
                 sx={{
-                  width: { xs: 280, sm: 320, md: 360 }, // ✅ bigger
-                  maxWidth: '95%',
+                  width: { xs: 260, md: 320 },
+                  maxWidth: '90%',
                   height: 'auto',
-                  transform: { xs: 'translateY(10px)', md: 'translateY(18px)' }, // ✅ sits nicer
                   filter: 'drop-shadow(0 18px 30px rgba(44,62,80,0.18))',
+                  position: 'relative',
+                  bottom: { xs: -10, md: -28 },
                 }}
               />
             </Grid>
@@ -200,13 +204,24 @@ const Register = () => {
 
               <Box component="form" onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
                       required
-                      label="Full Name"
-                      name="name"
-                      value={formData.name}
+                      label="First Name"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      sx={FIELD_SX}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="Last Name"
+                      name="lastName"
+                      value={formData.lastName}
                       onChange={handleChange}
                       sx={FIELD_SX}
                     />
@@ -315,11 +330,11 @@ const Register = () => {
                       sx={{
                         py: 1.5,
                         borderRadius: 2,
-                        backgroundColor: '#ABE7B2',
-                        color: '#2C3E50',
+                        backgroundColor: '#93BFC7',
+                        color: '#fff',
                         fontWeight: 600,
-                        boxShadow: '0 10px 22px rgba(171, 231, 178, 0.35)',
-                        '&:hover': { backgroundColor: '#CBF3BB' },
+                        boxShadow: '0 10px 22px rgba(147, 191, 199, 0.28)',
+                        '&:hover': { backgroundColor: '#7AA8B0' },
                         '&:disabled': { backgroundColor: '#ECF4E8', color: '#93BFC7' },
                       }}
                     >
