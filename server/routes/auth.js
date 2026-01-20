@@ -173,20 +173,33 @@ router.post('/forgot-password', async (req, res) => {
     await user.save();
 
     // Send email with verification code
-    try {
-      await sendPasswordResetEmail(user.email, resetCode);
+    const emailSent = await sendPasswordResetEmail(user.email, resetCode);
+    
+    if (emailSent) {
       console.log(`✅ Password reset code sent to ${user.email}`);
-    } catch (emailError) {
-      console.error('Error sending email:', emailError);
-      // Still return success to user, but log the error
-      // The code is still saved in the database, so user can use it
+    } else {
+      console.log(`⚠️  Email not sent to ${user.email}, but reset code saved in database`);
     }
 
+    // In development, include the code in the response for testing
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     // Always return success (for security - don't reveal if email exists)
     // The verification code is saved in the database regardless of email status
-    // For security we don't return the reset code in the API response.
+    // For security we don't return the reset code in the API response (except in dev mode).
     // The code is saved in the database and emailed to the user.
-    res.json({ message: 'If an account with that email exists, a verification code has been sent.' });
+    const response = { 
+      message: 'If an account with that email exists, a verification code has been sent.',
+      emailSent
+    };
+    
+    // In development mode, include the code for testing when email is not configured
+    if (isDevelopment && !emailSent) {
+      response.code = resetCode;
+      response.devMessage = 'Email service not configured. Use this code to test: ' + resetCode;
+    }
+    
+    res.json(response);
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ message: 'Server error. Please try again later.' });

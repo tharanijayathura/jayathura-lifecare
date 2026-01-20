@@ -78,14 +78,15 @@ const sendPasswordResetEmail = async (email, resetCode) => {
     if (transporter) {
       await transporter.sendMail(mailOptions);
       console.log(`✅ Password reset email sent to ${email}`);
+      return true;
     } else {
       // Log to console for development
       console.log('📧 Password Reset Email (Development Mode):');
       console.log('   To:', email);
       console.log('   Code:', resetCode);
       console.log('   ⚠️  Configure EMAIL_USER and EMAIL_PASS in .env to send real emails');
+      return false;
     }
-    return true;
   } catch (error) {
     console.error('❌ Error sending email:', error);
     // Don't throw - let the route handle it gracefully
