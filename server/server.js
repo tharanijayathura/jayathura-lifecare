@@ -316,10 +316,21 @@ if (MONGO_URI) {
 }
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 API Health: http://localhost:${PORT}/api/health`);
   console.log(`🔑 Auth API: http://localhost:${PORT}/api/auth`);
   console.log(`💊 Medicines API: http://localhost:${PORT}/api/medicines`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use.`);
+    console.error('   Stop the existing server process or change PORT in server/.env.');
+    process.exit(0);
+  } else {
+    console.error('❌ Server startup error:', err.message);
+    process.exit(1);
+  }
 });
