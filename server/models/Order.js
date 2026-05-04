@@ -75,7 +75,13 @@ const orderSchema = new mongoose.Schema({
     rating: Number,
     comments: String,
     submittedAt: Date
-  }
+  },
+  trackingHistory: [{
+    status: String,
+    message: String,
+    location: String,
+    timestamp: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 // Generate order ID before saving

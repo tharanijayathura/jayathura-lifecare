@@ -31,6 +31,7 @@ const medicineSchema = new mongoose.Schema({
   description: String,
   requiresPrescription: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
+  isCommon: { type: Boolean, default: false },
   
   // Base Unit System - Core stock tracking
   baseUnit: {

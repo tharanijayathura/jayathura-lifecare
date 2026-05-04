@@ -147,66 +147,93 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
   if (!prescription) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth scroll="body">
+      <DialogTitle sx={{ bgcolor: COLORS.green1, pb: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">Prescription Verification</Typography>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>
+              Prescription Order Placement
+            </Typography>
+            <Typography variant="body2" sx={{ color: COLORS.subtext }}>
+              Patient: {prescription.patientId?.name} | {new Date(prescription.createdAt).toLocaleDateString()}
+            </Typography>
+          </Box>
           <Chip 
             label={prescription.status.toUpperCase()} 
             color={prescription.status === 'verified' ? 'success' : 'warning'}
+            sx={{ fontWeight: 700, borderRadius: 2 }}
           />
         </Stack>
       </DialogTitle>
-      <DialogContent>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <PrescriptionImage prescription={prescription} />
+      <DialogContent sx={{ p: 3 }}>
+        <Grid container spacing={4}>
+          {/* Sticky Prescription View */}
+          <Grid item xs={12} md={5}>
+            <Box sx={{ position: 'sticky', top: 20 }}>
+              <PrescriptionImage prescription={prescription} />
+            </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
-            <MedicineAddForm
-              medicines={medicines}
-              selectedMedicine={selectedMedicine}
-              setSelectedMedicine={setSelectedMedicine}
-              quantity={quantity}
-              setQuantity={setQuantity}
-              dosage={dosage}
-              setDosage={setDosage}
-              frequency={frequency}
-              setFrequency={setFrequency}
-              instructions={instructions}
-              setInstructions={setInstructions}
-              loading={loading}
-              onAdd={handleAddMedicine}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
-          </Grid>
-
-          {order && (
-            <Grid item xs={12}>
-              <OrderItems order={order} loading={loading} handleRemoveItem={handleRemoveItem} />
-            </Grid>
-          )}
-
-          {loading && (
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="center" p={2}>
-                <CircularProgress />
+          {/* Action and Items Panel */}
+          <Grid item xs={12} md={7}>
+            <Stack spacing={3}>
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
+                  1. Identify & Add Medicines
+                </Typography>
+                <MedicineAddForm
+                  medicines={medicines}
+                  selectedMedicine={selectedMedicine}
+                  setSelectedMedicine={setSelectedMedicine}
+                  quantity={quantity}
+                  setQuantity={setQuantity}
+                  dosage={dosage}
+                  setDosage={setDosage}
+                  frequency={frequency}
+                  setFrequency={setFrequency}
+                  instructions={instructions}
+                  setInstructions={setInstructions}
+                  loading={loading}
+                  onAdd={handleAddMedicine}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                />
               </Box>
-            </Grid>
-          )}
+
+              <Box>
+                <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
+                  2. Review Order Summary
+                </Typography>
+                {order ? (
+                  <OrderItems order={order} loading={loading} handleRemoveItem={handleRemoveItem} />
+                ) : (
+                  <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 4, border: `2px dashed ${COLORS.border}` }}>
+                    <Typography sx={{ color: COLORS.subtext }}>No items added to this order yet.</Typography>
+                  </Paper>
+                )}
+              </Box>
+              
+              {loading && (
+                <Box display="flex" justifyContent="center" p={2}>
+                  <CircularProgress size={32} sx={{ color: COLORS.blue2 }} />
+                </Box>
+              )}
+            </Stack>
+          </Grid>
         </Grid>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+      <Divider />
+      <DialogActions sx={{ p: 3, bgcolor: '#fcfdfc' }}>
+        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2 }}>Close</Button>
+        <Box sx={{ flex: 1 }} />
         {order && order.items.length > 0 && !order.finalAmount && (
           <Button
             variant="contained"
             onClick={handleGenerateBill}
             disabled={loading}
+            sx={{ bgcolor: COLORS.blue2, borderRadius: 2, px: 4, '&:hover': { bgcolor: COLORS.blue1 } }}
           >
-            Generate Bill ({order.items.length} items)
+            Calculate & Generate Bill
           </Button>
         )}
         {order && order.finalAmount && (
@@ -216,14 +243,10 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
             startIcon={<CheckCircle />}
             onClick={handleVerify}
             disabled={loading}
+            sx={{ bgcolor: COLORS.green3, color: COLORS.text, fontWeight: 700, borderRadius: 2, px: 4, '&:hover': { bgcolor: COLORS.green2 } }}
           >
-            Send Bill to Patient (Rs. {order.finalAmount?.toFixed(2)})
+            Approve & Send to Patient (Rs. {order.finalAmount?.toFixed(2)})
           </Button>
-        )}
-        {(!order || order.items.length === 0) && (
-          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Add prescription medicines from the preview above. Patient can also add OTC items to this order.
-          </Typography>
         )}
       </DialogActions>
     </Dialog>

@@ -21,6 +21,21 @@ import DeliveryAssignment from './DeliveryAssignment';
 import ChatDashboard from './ChatDashboard';
 import DailyReport from './DailyReport';
 import AudioInstructions from './AudioInstructions';
+import PharmacistProfile from './PharmacistProfile';
+import ManualOrderPlacement from './ManualOrderPlacement';
+
+import {
+  Assessment,
+  Assignment,
+  ShoppingCart,
+  Description,
+  Person,
+  LocalShipping,
+  Chat,
+  AudioFile,
+  BarChart as DailyReportIcon,
+  PointOfSale
+} from '@mui/icons-material';
 
 const PharmacistDashboard = () => {
   const theme = useTheme();
@@ -31,15 +46,17 @@ const PharmacistDashboard = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
 
   const tabs = [
-    { label: 'Dashboard', value: 0 },
-    { label: 'Prescriptions', value: 1 },
-    { label: 'Orders', value: 2 },
-    { label: 'Inventory', value: 3 },
-    { label: 'Patients', value: 4 },
-    { label: 'Delivery', value: 5 },
-    { label: 'Chat', value: 6 },
-    { label: 'Audio Instructions', value: 7 },
-    { label: 'Reports', value: 8 },
+    { label: 'Dashboard', value: 0, icon: <Assessment fontSize="small" /> },
+    { label: 'Prescriptions', value: 1, icon: <Assignment fontSize="small" /> },
+    { label: 'Orders', value: 2, icon: <ShoppingCart fontSize="small" /> },
+    { label: 'Inventory', value: 3, icon: <Description fontSize="small" /> },
+    { label: 'Patients', value: 4, icon: <Person fontSize="small" /> },
+    { label: 'Delivery', value: 5, icon: <LocalShipping fontSize="small" /> },
+    { label: 'Chat', value: 6, icon: <Chat fontSize="small" /> },
+    { label: 'Instructions', value: 7, icon: <AudioFile fontSize="small" /> },
+    { label: 'Reports', value: 8, icon: <DailyReportIcon fontSize="small" /> },
+    { label: 'Profile', value: 9, icon: <Person fontSize="small" /> },
+    { label: 'New Order', value: 10, icon: <PointOfSale fontSize="small" /> },
   ];
 
   const handleTabChange = (event, newValue) => {
@@ -114,6 +131,10 @@ const PharmacistDashboard = () => {
         return <AudioInstructions />;
       case 8:
         return <DailyReport />;
+      case 9:
+        return <PharmacistProfile />;
+      case 10:
+        return <ManualOrderPlacement />;
       default:
         return <DashboardOverview />;
     }
@@ -125,21 +146,31 @@ const PharmacistDashboard = () => {
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
-          variant={isMobile ? 'scrollable' : 'standard'}
+          variant={isMobile ? 'scrollable' : 'fullWidth'}
           scrollButtons={isMobile ? 'auto' : false}
           sx={{
             borderBottom: 1,
             borderColor: 'divider',
-            mb: 3,
+            mb: 4,
             '& .MuiTab-root': {
-              fontSize: { xs: '0.7rem', sm: '0.875rem', md: '0.9rem' },
-              minWidth: { xs: 80, sm: 100 },
-              px: { xs: 1, sm: 2 },
+              minHeight: 72,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              color: 'text.secondary',
+              '&.Mui-selected': {
+                color: '#7AA8B0',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#7AA8B0',
+              height: 3,
+              borderRadius: '3px 3px 0 0',
             },
           }}
         >
           {tabs.map((tab) => (
-            <Tab key={tab.value} label={tab.label} value={tab.value} />
+            <Tab key={tab.value} label={tab.label} icon={tab.icon} iconPosition="top" value={tab.value} />
           ))}
         </Tabs>
 

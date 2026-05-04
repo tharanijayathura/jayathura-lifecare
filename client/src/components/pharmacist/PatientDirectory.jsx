@@ -1,59 +1,130 @@
-import React, { useState } from 'react';
-import { Box, Paper, Typography, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Stack } from '@mui/material';
-import { Search, Visibility } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  Chip,
+  IconButton,
+  TextField,
+  InputAdornment,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { Search, History } from '@mui/icons-material';
+import { pharmacistAPI } from '../../services/api';
 
-const mockPatients = [
-  { id: 'P4567', name: 'Kumar P.', age: 52, lastOrder: 'Today', conditions: 'Diabetes, Hypertension' },
-  { id: 'P2345', name: 'N. Silva', age: 68, lastOrder: 'Oct 5', conditions: 'Arthritis' },
-];
-
-const PatientDirectory = ({ onSelectPatient }) => {
+const PatientDirectory = () => {
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const response = await pharmacistAPI.getPatients();
+      setPatients(response.data || []);
+    } catch (err) {
+      console.error('Error fetching patients:', err);
+      setError('Failed to load patients');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPatients = patients.filter(patient => 
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return (
+    <Box display="flex" justifyContent="center" p={4}>
+      <CircularProgress />
+    </Box>
+  );
 
   return (
     <Box>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h5">PATIENT DIRECTORY | 2,456 Patients</Typography>
-        <Button variant="outlined">Export List</Button>
-      </Box>
-
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h5">PATIENT DIRECTORY</Typography>
         <TextField
-          fullWidth
-          placeholder="Search by name, ID, or phone..."
+          size="small"
+          placeholder="Search patients..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
         />
-      </Paper>
+      </Box>
 
-      <TableContainer component={Paper}>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      <TableContainer component={Paper} variant="outlined">
         <Table>
-          <TableHead>
+          <TableHead sx={{ bgcolor: 'action.hover' }}>
             <TableRow>
-              <TableCell>#</TableCell>
               <TableCell>Patient</TableCell>
-              <TableCell>Age</TableCell>
-              <TableCell>Last Order</TableCell>
-              <TableCell>Chronic Conditions</TableCell>
+              <TableCell>Contact Info</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Member Since</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {mockPatients.map((patient) => (
-              <TableRow key={patient.id} hover>
-                <TableCell>{patient.id}</TableCell>
-                <TableCell>{patient.name}</TableCell>
-                <TableCell>{patient.age}</TableCell>
-                <TableCell>{patient.lastOrder}</TableCell>
-                <TableCell>{patient.conditions}</TableCell>
-                <TableCell>
-                  <Button size="small" onClick={() => onSelectPatient(patient)} startIcon={<Visibility />}>
-                    Profile
-                  </Button>
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((patient) => (
+                <TableRow key={patient._id} hover>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar sx={{ bgcolor: patient.flaggedAsChronic ? 'error.main' : 'primary.main' }}>
+                        {patient.name.charAt(0)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{patient.name}</Typography>
+                        {patient.flaggedAsChronic && (
+                          <Chip label="Chronic Condition" size="small" color="error" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
+                        )}
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">{patient.email}</Typography>
+                    <Typography variant="caption" color="text.secondary">{patient.phone}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip label="ACTIVE" size="small" color="success" />
+                  </TableCell>
+                  <TableCell>{new Date(patient.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <IconButton size="small" title="Order History">
+                      <History fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">No patients found</Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

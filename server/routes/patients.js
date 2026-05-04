@@ -163,6 +163,48 @@ router.get('/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// 3a. updateProfile() - Update personal information
+router.put('/profile', authMiddleware, upload.single('image'), async (req, res) => {
+  try {
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { firstName, lastName, phone, address } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (firstName && lastName) {
+      user.name = `${firstName} ${lastName}`;
+    } else if (firstName) {
+      user.name = firstName;
+    }
+    
+    if (phone) user.phone = phone;
+    
+    if (address) {
+      try {
+        user.address = typeof address === 'string' ? JSON.parse(address) : address;
+      } catch (e) {
+        console.error('Error parsing address:', e);
+      }
+    }
+
+    if (req.file) {
+      user.image = `/uploads/prescriptions/${req.file.filename}`;
+    }
+
+    await user.save();
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // 4. uploadPrescription(patientId, imageFile) - Submit prescription
 router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), async (req, res) => {
   try {
@@ -263,51 +305,78 @@ router.get('/order/:orderId/status', authMiddleware, async (req, res) => {
   }
 });
 
-// 6. browseOTCCatalog() - View OTC medicines (all non-prescription medicines)
+// 6. browseOTC() - Get all non-prescription medicines
 router.get('/medicines/otc', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Exclude prescription category and medicines that require prescription
     const medicines = await Medicine.find({ 
-      category: { $ne: 'prescription' }, // Exclude prescription category
-      requiresPrescription: { $ne: true }, // Also exclude if requiresPrescription is true
+      category: { $ne: 'prescription' },
+      requiresPrescription: { $ne: true },
       isActive: true,
       'stock.units': { $gt: 0 }
     })
-      .select('name brand category price packaging stock image description')
+      .select('name brand category price packaging stock image description isCommon requiresPrescription')
       .sort({ name: 1 });
 
-    // Format response for frontend and deduplicate by _id
-    const seenIds = new Map();
-    const formattedMedicines = medicines
-      .filter(med => {
-        const medId = med._id.toString();
-        if (seenIds.has(medId)) {
-          return false; // Duplicate, skip it
-        }
-        seenIds.set(medId, true);
-        return true;
-      })
-      .map(med => ({
-        id: med._id.toString(),
-        _id: med._id.toString(), // Include both for compatibility
-        name: med.name,
-        brand: med.brand,
-        category: med.category,
-        description: med.description,
-        price: med.price.perPack,
-        stock: med.stock.packs,
-        image: med.image,
-        packaging: med.packaging,
-        requiresPrescription: false
-      }));
+    const formattedMedicines = medicines.map(med => ({
+      id: med._id.toString(),
+      _id: med._id.toString(),
+      name: med.name,
+      brand: med.brand,
+      category: med.category,
+      description: med.description,
+      price: med.price.perPack,
+      stock: med.stock.packs,
+      image: med.image,
+      packaging: med.packaging,
+      requiresPrescription: med.requiresPrescription || false,
+      isCommon: med.isCommon || false
+    }));
 
     res.json(formattedMedicines);
   } catch (error) {
-    console.error('Browse OTC catalog error:', error);
+    console.error('Browse OTC error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 6a. getCommonMedicines() - Get commonly used medicines for dashboard
+router.get('/medicines/common', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const medicines = await Medicine.find({ 
+      isCommon: true,
+      category: { $ne: 'prescription' },
+      requiresPrescription: { $ne: true },
+      isActive: true,
+      'stock.units': { $gt: 0 }
+    })
+      .limit(10)
+      .select('name brand category price packaging stock image description isCommon requiresPrescription');
+
+    const formattedMedicines = medicines.map(med => ({
+      id: med._id.toString(),
+      _id: med._id.toString(),
+      name: med.name,
+      brand: med.brand,
+      category: med.category,
+      price: med.price.perPack,
+      image: med.image,
+      stock: med.stock.packs,
+      packaging: med.packaging,
+      isCommon: true,
+      requiresPrescription: false
+    }));
+
+    res.json(formattedMedicines);
+  } catch (error) {
+    console.error('Get common medicines error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

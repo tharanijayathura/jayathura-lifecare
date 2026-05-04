@@ -892,5 +892,255 @@ router.put('/order/:orderId/assign-delivery', authMiddleware, pharmacistMiddlewa
   }
 });
 
+// 42. getActiveOrders() - Fetch orders needing processing
+router.get('/orders/active', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const orders = await Order.find({
+      status: { $in: ['confirmed', 'processing', 'ready', 'out_for_delivery'] }
+    })
+      .populate('patientId', 'name email phone')
+      .populate('assignedTo', 'name')
+      .sort({ updatedAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Get active orders error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 43. getInventory() - Full inventory list
+router.get('/inventory', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const medicines = await Medicine.find({})
+      .sort({ name: 1 });
+    res.json(medicines);
+  } catch (error) {
+    console.error('Get inventory error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 44. getPatients() - Patient directory
+router.get('/patients', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const patients = await User.find({ role: 'patient' })
+      .select('name email phone address flaggedAsChronic chronicConditions createdAt')
+      .sort({ name: 1 });
+    res.json(patients);
+  } catch (error) {
+    console.error('Get patients error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 45. getDashboardStats() - Real metrics
+router.get('/dashboard-stats', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const pendingPrescriptions = await Prescription.countDocuments({ status: 'pending' });
+    const activeOrders = await Order.countDocuments({ 
+      status: { $in: ['confirmed', 'processing', 'ready'] } 
+    });
+    
+    // Medicines with stock below minimum
+    const lowStockAlerts = await Medicine.countDocuments({
+      $expr: { $lte: ['$stock.units', '$minStockUnits'] }
+    });
+
+    const todaysDeliveries = await Order.countDocuments({
+      status: 'out_for_delivery',
+      updatedAt: { $gte: new Date(new Date().setHours(0,0,0,0)) }
+    });
+
+    // Recent prescriptions for the dashboard list
+    const recentPrescriptionsList = await Prescription.find({ status: 'pending' })
+      .populate('patientId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      pendingPrescriptions,
+      activeOrders,
+      lowStockAlerts,
+      todaysDeliveries,
+      recentPrescriptionsList: recentPrescriptionsList.map(p => ({
+        id: p._id,
+        patient: p.patientId?.name || 'Unknown',
+        time: p.createdAt,
+        status: p.status
+      }))
+    });
+  } catch (error) {
+    console.error('Get dashboard stats error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 41. getProfile() - Get pharmacist profile
+router.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'pharmacist' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const user = await User.findById(req.user._id).select('-password');
+    res.json(user);
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 42. updateProfile() - Update pharmacist profile
+router.put('/profile', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'pharmacist' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    const { name, phone } = req.body;
+    const user = await User.findById(req.user._id);
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    await user.save();
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 43. getDeliveryPersons() - Get all delivery persons
+router.get('/delivery-persons', authMiddleware, async (req, res) => {
+  try {
+    const deliveryPersons = await User.find({ role: 'delivery', isActive: true }).select('name email phone');
+    res.json(deliveryPersons);
+  } catch (error) {
+    console.error('Get delivery persons error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 44. assignToDelivery() - Assign order to delivery person
+router.put('/order/:orderId/assign-delivery', authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { deliveryPersonId } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const deliveryPerson = await User.findById(deliveryPersonId);
+    if (!deliveryPerson || deliveryPerson.role !== 'delivery') {
+      return res.status(404).json({ message: 'Delivery person not found or invalid role' });
+    }
+
+    order.assignedTo = deliveryPersonId;
+    order.status = 'processing'; // Change status to processing or ready
+    order.trackingHistory.push({
+      status: 'assigned',
+      message: `Order assigned to delivery person: ${deliveryPerson.name}`,
+      timestamp: new Date()
+    });
+
+    await order.save();
+    res.json({ message: 'Order assigned successfully', order });
+  } catch (error) {
+    console.error('Assign delivery error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 45. updateOrderStatus() - Update order status (e.g., mark as ready)
+router.put('/order/:orderId/status', authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status, message } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    order.status = status;
+    order.trackingHistory.push({
+      status: status,
+      message: message || `Order status updated to ${status}`,
+      timestamp: new Date()
+    });
+
+    await order.save();
+    res.json({ message: 'Order status updated successfully', order });
+  } catch (error) {
+    console.error('Update order status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 46. createManualOrder() - Pharmacist creating a direct order for a patient
+router.post('/order/manual', authMiddleware, async (req, res) => {
+  try {
+    const { patientId, items, paymentMethod } = req.body;
+
+    // Check medicine availability and calculate total
+    let totalAmount = 0;
+    for (let item of items) {
+      const medicine = await Medicine.findById(item.medicineId);
+      if (!medicine) return res.status(404).json({ message: `Medicine ${item.medicineName} not found` });
+      
+      if (medicine.stock.units < item.quantity) {
+        return res.status(400).json({ message: `Insufficient stock for ${medicine.name}` });
+      }
+
+      totalAmount += item.price * item.quantity;
+      
+      // Update stock
+      medicine.stock.units -= item.quantity;
+      if (medicine.packaging && medicine.packaging.qtyPerPack > 0) {
+        medicine.stock.packs = Math.floor(medicine.stock.units / medicine.packaging.qtyPerPack);
+      }
+      await medicine.save();
+    }
+
+    const order = new Order({
+      patientId,
+      items,
+      type: 'otc', // Manual orders are usually treated as OTC or mixed
+      status: 'confirmed',
+      paymentMethod: paymentMethod || 'cod',
+      paymentStatus: 'pending',
+      totalAmount,
+      deliveryFee: 0,
+      finalAmount: totalAmount,
+      trackingHistory: [{
+        status: 'confirmed',
+        message: 'Order placed manually by pharmacist',
+        location: 'Pharmacy Counter',
+        timestamp: new Date()
+      }]
+    });
+
+    await order.save();
+    res.status(201).json({ message: 'Manual order created successfully', order });
+  } catch (error) {
+    console.error('Create manual order error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 47. resetDatabase() - Admin/Dev feature to clear all orders for testing
+router.post('/admin/reset-data', authMiddleware, async (req, res) => {
+  try {
+    const Order = require('../models/Order');
+    const Prescription = require('../models/Prescription');
+    await Order.deleteMany({});
+    await Prescription.deleteMany({});
+    res.json({ message: 'All orders and prescriptions have been cleared.' });
+  } catch (error) {
+    console.error('Reset database error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
 

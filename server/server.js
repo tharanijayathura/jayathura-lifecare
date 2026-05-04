@@ -36,6 +36,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/patients', require('./routes/patients'));
 app.use('/api/pharmacists', require('./routes/pharmacists'));
 app.use('/api/contact', require('./routes/contact'));
+app.use('/api/delivery', require('./routes/delivery'));
 
 // Serve uploaded images
 app.use('/uploads', express.static('uploads'));

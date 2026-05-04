@@ -151,6 +151,7 @@ export const patientAPI = {
   
   // Medicines
   browseOTC: () => API.get('/patients/medicines/otc'),
+  getCommonMedicines: () => API.get('/patients/medicines/common'),
   searchMedicines: (keyword) => API.get('/patients/medicines/search', { params: { keyword } }),
   
   // Refill
@@ -194,6 +195,22 @@ export const pharmacistAPI = {
   // Refill Plans
   createRefillPlan: (patientId, medicineId, quantity, intervalDays) => API.post('/pharmacists/refill-plan/create', { patientId, medicineId, quantity, intervalDays }),
   reviewRefillDraft: (refillPlanId) => API.get(`/pharmacists/refill-plan/${refillPlanId}`),
+  
+  // Dashboard & Active Orders
+  getActiveOrders: () => API.get('/pharmacists/orders/active'),
+  getInventory: () => API.get('/pharmacists/inventory'),
+  getPatients: () => API.get('/pharmacists/patients'),
+  getDashboardStats: () => API.get('/pharmacists/dashboard-stats'),
+  getProfile: () => API.get('/pharmacists/profile'),
+  updateProfile: (data) => API.put('/pharmacists/profile', data),
+  getDeliveryPersons: () => API.get('/pharmacists/delivery-persons'),
+  updateOrderStatus: (orderId, data) => API.put(`/pharmacists/order/${orderId}/status`, data),
+  createManualOrder: (data) => API.post('/pharmacists/order/manual', data),
+};
+
+export const deliveryAPI = {
+  getAssignedOrders: () => API.get('/delivery/orders'),
+  updateOrderStatus: (orderId, data) => API.put(`/delivery/order/${orderId}/status`, data),
 };
 
 export default API;

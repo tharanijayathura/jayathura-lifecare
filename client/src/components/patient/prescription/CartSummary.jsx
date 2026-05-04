@@ -1,48 +1,78 @@
 import React from 'react';
-import { Card, CardContent, Typography, Alert, Stack, Box, Divider } from '@mui/material';
+import { Paper, Typography, Alert, Stack, Box, Divider, List, ListItem, ListItemText } from '@mui/material';
+
+const COLORS = {
+  green1: '#ECF4E8',
+  blue2: '#7AA8B0',
+  text: '#2C3E50',
+  subtext: '#546E7A',
+  border: 'rgba(147, 191, 199, 0.35)',
+};
 
 const CartSummary = ({ cartItems, prescriptionItems, otcItems, groceryItems, totalAmount }) => {
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>Current Items</Typography>
-        {cartItems.length === 0 ? (
-          <Alert severity="info">No items added yet. You can add non prescription items or groceries, or skip and send directly.</Alert>
-        ) : (
-          <Stack spacing={1} sx={{ mt: 2 }}>
+    <Paper variant="outlined" sx={{ p: 3, borderRadius: 4, bgcolor: 'rgba(236, 244, 232, 0.2)', borderColor: COLORS.border }}>
+      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, color: COLORS.text }}>Current Order Items</Typography>
+      
+      {cartItems.length === 0 ? (
+        <Typography variant="body2" sx={{ color: COLORS.subtext, fontStyle: 'italic' }}>
+          No additional items selected yet.
+        </Typography>
+      ) : (
+        <Stack spacing={2}>
+          <List dense disablePadding>
             {prescriptionItems.length > 0 && (
-              <Box>
-                <Typography variant="subtitle2" color="primary" fontWeight={600}>Prescription Medicines: {prescriptionItems.length}</Typography>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Prescription</Typography>
                 {prescriptionItems.map((item, idx) => (
-                  <Typography key={idx} variant="body2" sx={{ pl: 2 }}>• {item.name} x {item.quantity}</Typography>
+                  <ListItem key={idx} sx={{ py: 0.5, px: 1 }}>
+                    <ListItemText 
+                      primary={<Typography variant="body2" sx={{ fontWeight: 600 }}>{item.name}</Typography>}
+                      secondary={`Qty: ${item.quantity}`}
+                    />
+                  </ListItem>
                 ))}
               </Box>
             )}
+            
             {otcItems.length > 0 && (
-              <Box>
-                <Typography variant="subtitle2" color="secondary" fontWeight={600}>Non Prescription Items: {otcItems.length}</Typography>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Essentials</Typography>
                 {otcItems.map((item, idx) => (
-                  <Typography key={idx} variant="body2" sx={{ pl: 2 }}>• {item.name} x {item.quantity}</Typography>
+                  <ListItem key={idx} sx={{ py: 0.5, px: 1 }}>
+                    <ListItemText 
+                      primary={<Typography variant="body2" sx={{ fontWeight: 600 }}>{item.name}</Typography>}
+                      secondary={`Qty: ${item.quantity} • Rs. ${(item.price * item.quantity).toFixed(2)}`}
+                    />
+                  </ListItem>
                 ))}
               </Box>
             )}
+
             {groceryItems.length > 0 && (
               <Box>
-                <Typography variant="subtitle2" color="success.main" fontWeight={600}>Groceries: {groceryItems.length}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Groceries</Typography>
                 {groceryItems.map((item, idx) => (
-                  <Typography key={idx} variant="body2" sx={{ pl: 2 }}>• {item.name} x {item.quantity}</Typography>
+                  <ListItem key={idx} sx={{ py: 0.5, px: 1 }}>
+                    <ListItemText 
+                      primary={<Typography variant="body2" sx={{ fontWeight: 600 }}>{item.name}</Typography>}
+                      secondary={`Qty: ${item.quantity} • Rs. ${(item.price * item.quantity).toFixed(2)}`}
+                    />
+                  </ListItem>
                 ))}
               </Box>
             )}
-            <Divider />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography variant="h6">Total:</Typography>
-              <Typography variant="h6" color="primary">Rs. {totalAmount.toFixed(2)}</Typography>
-            </Box>
-          </Stack>
-        )}
-      </CardContent>
-    </Card>
+          </List>
+
+          <Divider sx={{ borderStyle: 'dashed' }} />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>Estimated Total:</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.blue2 }}>Rs. {totalAmount.toFixed(2)}</Typography>
+          </Box>
+        </Stack>
+      )}
+    </Paper>
   );
 };
 

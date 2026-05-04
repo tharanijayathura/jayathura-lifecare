@@ -143,26 +143,19 @@ export const usePatientPortal = () => {
 
   const handlePrescriptionUploaded = async (prescriptionMeta) => {
     setLatestPrescription(prescriptionMeta);
-    if (prescriptionMeta.orderId) {
-      setCurrentOrderId(prescriptionMeta.orderId);
-      setSnackbar({ open: true, message: 'Prescription uploaded! Add optional items or send directly to pharmacist.', severity: 'success' });
+    const orderId = prescriptionMeta.orderId || prescriptionMeta.id;
+    if (orderId) {
+      setCurrentOrderId(orderId);
+      setSnackbar({ 
+        open: true, 
+        message: 'Prescription uploaded! We are directing you to the shop to add optional items.', 
+        severity: 'success' 
+      });
       fetchPrescriptionOrders();
-      setSelectedPrescriptionOrderId(prescriptionMeta.orderId);
-      setAddItemsDialogOpen(true);
-    } else {
-      try {
-        const response = await patientAPI.getPrescriptionOrders();
-        const orders = response.data || [];
-        const latestOrder = orders.find(order => order.prescriptionId && order.status === 'draft') || orders[0];
-        if (latestOrder) {
-          setCurrentOrderId(latestOrder._id);
-          setPrescriptionOrders(orders);
-          setSnackbar({ open: true, message: 'Prescription uploaded! You can now add non prescription items to this order.', severity: 'success' });
-          setTimeout(() => { setActiveTab(2); }, 1500);
-        }
-      } catch (error) {
-        console.error('Error fetching prescription order:', error);
-      }
+      // Redirect to Shop Pharmacy tab (index 2)
+      setTimeout(() => {
+        setActiveTab(2);
+      }, 1500);
     }
   };
 

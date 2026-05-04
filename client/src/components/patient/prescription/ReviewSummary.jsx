@@ -1,53 +1,78 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Divider, Stack } from '@mui/material';
+import { Typography, Box, Divider, Stack, Paper, List, ListItem, ListItemText } from '@mui/material';
+
+const COLORS = {
+  blue2: '#7AA8B0',
+  text: '#2C3E50',
+  subtext: '#546E7A',
+  border: 'rgba(147, 191, 199, 0.35)',
+};
 
 const ReviewSummary = ({ prescriptionItems, otcItems, groceryItems, totalAmount }) => {
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>Review Your Order</Typography>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          {prescriptionItems.length > 0 && (
-            <Box>
-              <Typography variant="subtitle1" color="primary" gutterBottom>Prescription Medicines ({prescriptionItems.length})</Typography>
+    <Paper variant="outlined" sx={{ p: 4, borderRadius: 5, border: `1px solid ${COLORS.border}` }}>
+      <Typography variant="h6" sx={{ fontWeight: 800, mb: 4, color: COLORS.text, textAlign: 'center' }}>Order Review</Typography>
+      
+      <Stack spacing={4}>
+        {prescriptionItems.length > 0 && (
+          <Box>
+            <Typography variant="overline" sx={{ fontWeight: 800, color: COLORS.blue2 }}>Prescription Items</Typography>
+            <List disablePadding>
               {prescriptionItems.map((item, idx) => (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                  <Typography>{item.name} x {item.quantity}</Typography>
-                  <Typography>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
-                </Box>
+                <ListItem key={idx} sx={{ px: 0, py: 1 }}>
+                  <ListItemText 
+                    primary={<Typography variant="body1" sx={{ fontWeight: 700 }}>{item.name}</Typography>}
+                    secondary={<Typography variant="body2" color="text.secondary">Quantity: {item.quantity}</Typography>}
+                  />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
+                </ListItem>
               ))}
-            </Box>
-          )}
-          {otcItems.length > 0 && (
-            <Box>
-              <Typography variant="subtitle1" color="secondary" gutterBottom>Non Prescription Items ({otcItems.length})</Typography>
-              {otcItems.map((item, idx) => (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                  <Typography>{item.name} x {item.quantity}</Typography>
-                  <Typography>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
-          {groceryItems.length > 0 && (
-            <Box>
-              <Typography variant="subtitle1" color="success.main" gutterBottom>Groceries ({groceryItems.length})</Typography>
-              {groceryItems.map((item, idx) => (
-                <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
-                  <Typography>{item.name} x {item.quantity}</Typography>
-                  <Typography>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
-          <Divider />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="h6">Total:</Typography>
-            <Typography variant="h6" color="primary">Rs. {totalAmount.toFixed(2)}</Typography>
+            </List>
           </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+        )}
+
+        {otcItems.length > 0 && (
+          <Box>
+            <Typography variant="overline" sx={{ fontWeight: 800, color: COLORS.blue2 }}>Essential Items</Typography>
+            <List disablePadding>
+              {otcItems.map((item, idx) => (
+                <ListItem key={idx} sx={{ px: 0, py: 1 }}>
+                  <ListItemText 
+                    primary={<Typography variant="body1" sx={{ fontWeight: 700 }}>{item.name}</Typography>}
+                    secondary={<Typography variant="body2" color="text.secondary">Quantity: {item.quantity}</Typography>}
+                  />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+
+        {groceryItems.length > 0 && (
+          <Box>
+            <Typography variant="overline" sx={{ fontWeight: 800, color: COLORS.blue2 }}>Groceries & Wellness</Typography>
+            <List disablePadding>
+              {groceryItems.map((item, idx) => (
+                <ListItem key={idx} sx={{ px: 0, py: 1 }}>
+                  <ListItemText 
+                    primary={<Typography variant="body1" sx={{ fontWeight: 700 }}>{item.name}</Typography>}
+                    secondary={<Typography variant="body2" color="text.secondary">Quantity: {item.quantity}</Typography>}
+                  />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+
+        <Divider sx={{ borderStyle: 'dashed' }} />
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800 }}>Total Order Value:</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.blue2 }}>Rs. {totalAmount.toFixed(2)}</Typography>
+        </Box>
+      </Stack>
+    </Paper>
   );
 };
 

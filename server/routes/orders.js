@@ -71,20 +71,32 @@ router.post('/:id/generate-bill', authMiddleware, async (req, res) => {
 // Confirm order - Function 11: confirmOrder
 router.put('/:id/confirm', authMiddleware, async (req, res) => {
   try {
-    const { paymentMethod } = req.body;
+    const { items, deliveryAddress, paymentMethod, totalAmount, deliveryFee, finalAmount } = req.body;
     const order = await Order.findById(req.params.id);
     
-    order.paymentMethod = paymentMethod;
+    if (items) order.items = items;
+    if (deliveryAddress) order.deliveryAddress = deliveryAddress;
+    if (paymentMethod) order.paymentMethod = paymentMethod;
+    if (totalAmount !== undefined) order.totalAmount = totalAmount;
+    if (deliveryFee !== undefined) order.deliveryFee = deliveryFee;
+    if (finalAmount !== undefined) order.finalAmount = finalAmount;
+    
     order.status = 'confirmed';
     order.paymentStatus = paymentMethod === 'cod' ? 'pending' : 'paid';
     
-    // Update stock (decrease units, which will be recalculated on save)
+    // Add tracking history
+    order.trackingHistory.push({
+      status: 'confirmed',
+      message: 'Order confirmed and finalized by patient',
+      timestamp: new Date()
+    });
+
+    // Update stock
     for (let item of order.items) {
-      const medicine = await Medicine.findById(item.medicineId);
+      const medicineId = item.medicineId._id || item.medicineId;
+      const medicine = await Medicine.findById(medicineId);
       if (medicine) {
-        // Decrease units
         medicine.stock.units -= item.quantity;
-        // Recalculate packs
         if (medicine.packaging && medicine.packaging.qtyPerPack > 0) {
           medicine.stock.packs = Math.floor(medicine.stock.units / medicine.packaging.qtyPerPack);
         }
@@ -95,6 +107,7 @@ router.put('/:id/confirm', authMiddleware, async (req, res) => {
     await order.save();
     res.json(order);
   } catch (error) {
+    console.error('Order confirmation error:', error);
     res.status(500).json({ error: error.message });
   }
 });

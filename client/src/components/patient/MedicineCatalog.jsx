@@ -1,8 +1,21 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Typography, Box, Alert, CircularProgress } from '@mui/material';
+import { Typography, Box, Alert, CircularProgress, Paper, Divider } from '@mui/material';
+import { ShoppingBag, LocalPharmacy } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
 import CatalogFilters from './catalog/CatalogFilters';
 import MedicineGrid from './catalog/MedicineGrid';
+
+const COLORS = {
+  green1: '#ECF4E8',
+  green2: '#CBF3BB',
+  green3: '#ABE7B2',
+  blue1: '#93BFC7',
+  blue2: '#7AA8B0',
+  text: '#2C3E50',
+  subtext: '#546E7A',
+  border: 'rgba(147, 191, 199, 0.35)',
+  paper: 'rgba(255,255,255,0.9)',
+};
 
 const CATEGORY_OPTIONS = [
   { value: 'frequent', label: 'Frequently Used Items' },
@@ -27,58 +40,15 @@ const CATEGORY_OPTIONS = [
   { value: 'pet-health', label: 'Pet Health' },
 ];
 
-
 const FREQUENTLY_USED_KEYWORDS = [
-  'panadol', // pain/fever
-  'siddhalepa', // balm
-  'eno', // antacid
-  'vicks', // vaporub/inhaler
-  'cough syrup',
-  'cough lozenge',
-  'multivitamin',
-  'vitamin c',
-  'vitamin a',
-  'vitamin d',
-  'vitamin b',
-  'vitamin e',
-  'oral rehydration',
-  'ors',
-  'glucose powder',
-  'hand sanitizer',
-  'face mask',
-  'mask',
-  'thermometer',
-  'saline nasal',
-  'antiseptic cream',
-  'betadine',
-  'savlon',
-  'dettol',
-  'antiseptic liquid',
-  'mosquito repellent',
-  'pain relief',
-  'moov',
-  'iodex',
-  'first aid kit',
-  'bandage',
-  'crepe bandage',
-  'gauze',
-  'adhesive bandage',
-  'plaster',
-  'band-aid',
-  'cotton wool',
-  'baby diaper',
-  'diaper',
-  'baby wipe',
-  'baby lotion',
-  'baby soap',
-  'baby shampoo',
-  'eye drop',
-  'ear drop',
-  'toothpaste',
-  'toothbrush',
-  'sunscreen',
-  'lip balm',
-  'hot water bag',
+  'panadol', 'siddhalepa', 'eno', 'vicks', 'cough syrup', 'cough lozenge', 'multivitamin',
+  'vitamin c', 'vitamin a', 'vitamin d', 'vitamin b', 'vitamin e', 'oral rehydration',
+  'ors', 'glucose powder', 'hand sanitizer', 'face mask', 'mask', 'thermometer',
+  'saline nasal', 'antiseptic cream', 'betadine', 'savlon', 'dettol', 'antiseptic liquid',
+  'mosquito repellent', 'pain relief', 'moov', 'iodex', 'first aid kit', 'bandage',
+  'crepe bandage', 'gauze', 'adhesive bandage', 'plaster', 'band-aid', 'cotton wool',
+  'baby diaper', 'diaper', 'baby wipe', 'baby lotion', 'baby soap', 'baby shampoo',
+  'eye drop', 'ear drop', 'toothpaste', 'toothbrush', 'sunscreen', 'lip balm', 'hot water bag',
 ];
 
 const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
@@ -86,7 +56,7 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    category: 'frequent',
+    category: filterFrequentlyUsed ? 'frequent' : 'all',
     brand: 'all',
     priceMin: '',
     priceMax: '',
@@ -102,30 +72,19 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
       const response = await patientAPI.browseOTC();
       const medicinesData = response.data || [];
       
-      
       const seenIds = new Map();
-      const seenNames = new Map(); // Also check by name+brand as fallback
+      const seenNames = new Map();
       const uniqueMedicines = medicinesData.filter(medicine => {
         const medicineId = medicine._id?.toString() || medicine.id?.toString();
         const nameKey = `${medicine.name || ''}_${medicine.brand || ''}`.toLowerCase();
         
-        // Check by ID first
-        if (medicineId && seenIds.has(medicineId)) {
-          
-          return false;
-        }
-        
-        // Also check by name+brand combination (in case IDs are different but same medicine)
-        if (nameKey && seenNames.has(nameKey)) {
-          
-          return false;
-        }
+        if (medicineId && seenIds.has(medicineId)) return false;
+        if (nameKey && seenNames.has(nameKey)) return false;
         
         if (medicineId) seenIds.set(medicineId, true);
         if (nameKey) seenNames.set(nameKey, true);
         return true;
       });
-      
       
       setMedicines(uniqueMedicines);
     } catch (error) {
@@ -158,17 +117,17 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
       if (nameKey) seenNames.set(nameKey, true);
       return true;
     });
-    // If 'Frequently Used Items' category is selected, filter by keywords
-    if (filters.category === 'frequent' || filterFrequentlyUsed) {
+
+    if (filters.category === 'frequent') {
       uniqueMedicines = uniqueMedicines.filter((medicine) => {
         const name = (medicine.name || '').toLowerCase();
         const brand = (medicine.brand || '').toLowerCase();
         const description = (medicine.description || '').toLowerCase();
-        return FREQUENTLY_USED_KEYWORDS.some(keyword =>
+        const matchesKeyword = FREQUENTLY_USED_KEYWORDS.some(keyword =>
           name.includes(keyword) || brand.includes(keyword) || description.includes(keyword)
         );
+        return matchesKeyword || medicine.isCommon === true;
       });
-      // Sort by FREQUENTLY_USED_KEYWORDS order
       uniqueMedicines = uniqueMedicines.sort((a, b) => {
         const aIndex = FREQUENTLY_USED_KEYWORDS.findIndex(keyword =>
           (a.name || '').toLowerCase().includes(keyword) ||
@@ -180,13 +139,13 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
           (b.brand || '').toLowerCase().includes(keyword) ||
           (b.description || '').toLowerCase().includes(keyword)
         );
-        // Items not found in the list go to the end
         if (aIndex === -1 && bIndex === -1) return 0;
         if (aIndex === -1) return 1;
         if (bIndex === -1) return -1;
         return aIndex - bIndex;
       });
     }
+
     return uniqueMedicines
       .filter(
         (medicine) =>
@@ -196,12 +155,10 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
           (filters.priceMin === '' || medicine.price >= Number(filters.priceMin)) &&
           (filters.priceMax === '' || medicine.price <= Number(filters.priceMax)),
       );
-  }, [medicines, filters, filterFrequentlyUsed]);
+  }, [medicines, filters]);
 
-  
   useEffect(() => {
     if (!searchTerm) {
-      
       fetchMedicines();
       return;
     }
@@ -211,7 +168,6 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
         setLoading(true);
         const response = await patientAPI.searchMedicines(searchTerm);
         const medicinesData = response.data || [];
-        
         
         const seenIds = new Map();
         const seenNames = new Map();
@@ -227,7 +183,6 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
           return true;
         });
         
-        
         setMedicines(uniqueMedicines);
       } catch (error) {
         console.error('Error searching medicines:', error);
@@ -241,40 +196,33 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
   }, [searchTerm]);
 
   const handleAddToCart = (medicine) => {
-    
     const medicineId = medicine._id?.toString() || medicine.id?.toString();
     onAddToCart({
       itemId: medicineId,
       name: medicine.name,
       quantity: 1,
       price: medicine.price,
-      unit: medicine.unit || medicine.doseUnit || 'dose',
+      unit: medicine.unit || medicine.doseUnit || 'unit',
       itemType: 'medicine',
       image: medicine.image,
     });
   };
 
-  if (loading && medicines.length === 0) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        Medicine Catalog
-      </Typography>
-      <Alert
-        severity="info"
-        sx={{ mb: 3, bgcolor: 'success.50', color: 'success.dark' }}
-      >
-        {filterFrequentlyUsed
-          ? 'Frequently used items for daily life: Panadol, Siddhalepa, ENO, Vicks, vitamins, baby products, and medical supplies like cotton wool, masks, and bandages. Add these items directly to your cart.'
-          : 'Browse all non-prescription items. Use filters to sort by category, price, or brand, and add items directly to your cart without a prescription.'}
-      </Alert>
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Paper sx={{ p: 1.5, bgcolor: COLORS.green1, color: COLORS.text, borderRadius: 3 }}>
+          <ShoppingBag />
+        </Paper>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>
+            Pharmacy Shop
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Browse and order your healthcare essentials with ease.
+          </Typography>
+        </Box>
+      </Box>
 
       <CatalogFilters
         searchTerm={searchTerm}
@@ -285,14 +233,19 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
         brandOptions={brandOptions}
       />
 
-      <MedicineGrid filteredMedicines={filteredMedicines} onAddToCart={handleAddToCart} searchTerm={searchTerm} loading={loading} />
+      <Divider sx={{ mb: 4, borderColor: COLORS.border }} />
 
-      {/* Empty state handled in MedicineGrid */}
-
-      {loading && filteredMedicines.length === 0 && (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <CircularProgress />
+      {loading && medicines.length === 0 ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+          <CircularProgress sx={{ color: COLORS.blue2 }} />
         </Box>
+      ) : (
+        <MedicineGrid 
+          filteredMedicines={filteredMedicines} 
+          onAddToCart={handleAddToCart} 
+          searchTerm={searchTerm} 
+          loading={loading} 
+        />
       )}
     </Box>
   );

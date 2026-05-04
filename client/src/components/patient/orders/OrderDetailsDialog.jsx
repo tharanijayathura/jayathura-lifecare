@@ -17,6 +17,8 @@ import {
 } from '@mui/material';
 import { Download, Payment, VolumeUp, PlayArrow, Pause } from '@mui/icons-material';
 import OrderItemsTable from './OrderItemsTable.jsx';
+import OrderTrackingStepper from './OrderTrackingStepper.jsx';
+import OrderReviewConfirmation from './OrderReviewConfirmation.jsx';
 
 const getStatusColor = (status) => {
   const colors = {
@@ -68,6 +70,14 @@ const OrderDetailsDialog = ({ open, order, onClose, onDownloadInvoice }) => {
             <Chip label={order.paymentStatus || 'pending'} color={order.paymentStatus === 'paid' ? 'success' : 'warning'} size="small" />
           </Grid>
 
+          {/* Tracking Stepper */}
+          {order.status !== 'draft' && (
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <OrderTrackingStepper status={order.status} history={order.trackingHistory} />
+            </Grid>
+          )}
+
           {/* Audio Instructions */}
           {order.audioInstructions?.url && (
             <Grid item xs={12}>
@@ -117,32 +127,40 @@ const OrderDetailsDialog = ({ open, order, onClose, onDownloadInvoice }) => {
             </Grid>
           )}
 
-          {order.items && order.items.length > 0 && (
+          {order.status === 'pending' ? (
             <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>Order Items</Typography>
-              <OrderItemsTable items={order.items} />
+              <OrderReviewConfirmation order={order} onConfirmed={() => onClose()} />
             </Grid>
-          )}
+          ) : (
+            <>
+              {order.items && order.items.length > 0 && (
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>Order Items</Typography>
+                  <OrderItemsTable items={order.items} />
+                </Grid>
+              )}
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <Stack spacing={1}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body1">Subtotal:</Typography>
-                <Typography variant="body1">Rs. {(order.totalAmount || 0).toFixed(2)}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2" color="text.secondary">Delivery Fee:</Typography>
-                <Typography variant="body2" color="text.secondary">Rs. {(order.deliveryFee || 0).toFixed(2)}</Typography>
-              </Box>
-              <Divider />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="h6">Total Amount:</Typography>
-                <Typography variant="h6" color="primary.main">Rs. {(order.finalAmount || order.totalAmount || 0).toFixed(2)}</Typography>
-              </Box>
-            </Stack>
-          </Grid>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Stack spacing={1}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body1">Subtotal:</Typography>
+                    <Typography variant="body1">Rs. {(order.totalAmount || 0).toFixed(2)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Delivery Fee:</Typography>
+                    <Typography variant="body2" color="text.secondary">Rs. {(order.deliveryFee || 0).toFixed(2)}</Typography>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="h6">Total Amount:</Typography>
+                    <Typography variant="h6" color="primary.main">Rs. {(order.finalAmount || order.totalAmount || 0).toFixed(2)}</Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+            </>
+          )}
         </Grid>
       </DialogContent>
       <DialogActions>

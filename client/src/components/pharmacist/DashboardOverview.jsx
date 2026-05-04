@@ -1,55 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
+  Paper,
+  Typography,
+  Stack,
   Card,
   CardContent,
-  Typography,
-  Button,
-  Stack,
-  Chip,
-  Alert,
-  Paper,
   Divider,
+  Chip,
+  Button,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
-  Assignment,
+  Description,
   ShoppingCart,
   Warning,
   LocalShipping,
-  Chat,
+  Assessment,
+  NotificationsActive,
   Refresh,
+  Assignment,
+  Chat,
   Error as ErrorIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/useAuth';
+import { pharmacistAPI } from '../../services/api';
 
-// Mock data - replace with real API calls later
-const mockData = {
-  pendingPrescriptions: 12,
-  activeOrders: 8,
-  lowStockAlerts: 5,
-  todaysDeliveries: 15,
-  prescriptionsProcessed: 24,
-  avgProcessingTime: 8.5,
-  ordersCompleted: 18,
-  customerRating: 4.7,
-  issuesResolved: 3,
-  chatResponseTime: 2.3,
-  criticalAlerts: [
-    { type: 'stock', message: 'Metformin 500mg stock critical (12 units left)', severity: 'error' },
-    { type: 'delivery', message: 'Delivery person #3 running late (2 deliveries pending)', severity: 'warning' },
-    { type: 'patient', message: 'Patient ID 4567 has allergy alert - check prescriptions', severity: 'error' },
-  ],
-  pendingPrescriptionsList: [
-    { id: 'P2456', patient: 'Kumar', priority: 'High', time: '15 min ago', items: 3 },
-    { id: 'P2455', patient: 'Silva', priority: 'Medium', time: '25 min ago', items: 2 },
-    { id: 'P2454', patient: 'Fernando', priority: 'Normal', time: '30 min ago', items: 1 },
-    { id: 'P2453', patient: 'Rajapakse', priority: 'Normal', time: '45 min ago', items: 4 },
-  ],
-};
-
-const DashboardOverview = () => {
+const DashboardOverview = ({ onNavigate }) => {
   const { user } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -58,7 +41,6 @@ const DashboardOverview = () => {
     day: 'numeric',
   });
 
-  // ✅ SAME palette (green + blue) used across your app
   const COLORS = {
     green1: '#ECF4E8',
     green2: '#CBF3BB',
@@ -96,6 +78,25 @@ const DashboardOverview = () => {
     '&:hover': { borderColor: COLORS.blue2, backgroundColor: 'rgba(236,244,232,0.7)' },
   };
 
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const response = await pharmacistAPI.getDashboardStats();
+      setStats(response.data);
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setError('Failed to load dashboard metrics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const StatCard = ({ title, value, icon: Icon, gradient }) => (
     <Card
       sx={{
@@ -124,19 +125,12 @@ const DashboardOverview = () => {
     </Card>
   );
 
-  const getPriorityChipSx = (priority) => {
-    if (priority === 'High') {
-      return { bgcolor: 'rgba(122,168,176,0.20)', color: COLORS.text, border: `1px solid ${COLORS.blue1}` };
-    }
-    if (priority === 'Medium') {
-      return { bgcolor: 'rgba(203,243,187,0.45)', color: COLORS.text, border: `1px solid ${COLORS.green3}` };
-    }
-    return { bgcolor: 'rgba(236,244,232,0.9)', color: COLORS.subtext, border: `1px solid ${COLORS.border}` };
-  };
+  if (loading && !stats) return (
+    <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>
+  );
 
   return (
     <Box sx={{ p: { xs: 1, md: 2 } }}>
-      {/* Header */}
       <Paper
         sx={{
           ...basePaperSx,
@@ -144,227 +138,119 @@ const DashboardOverview = () => {
           background: `linear-gradient(135deg, ${COLORS.green1} 0%, ${COLORS.green2} 55%, rgba(147,191,199,0.18) 100%)`,
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 2,
-          }}
-        >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
           <Box>
             <Typography sx={{ fontSize: '1.35rem', color: COLORS.text }}>
-              Welcome, {user?.name || 'Dr. Perera'} 👋
+              Welcome back, {user?.name || 'Pharmacist'} 👋
             </Typography>
             <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-              Shift: 8:00 AM - 4:00 PM • Today: {currentDate}
+              Today: {currentDate}
             </Typography>
           </Box>
-
-          <Button variant="outlined" size="small" startIcon={<Refresh />} sx={outlineBtnSx}>
+          <Button variant="outlined" size="small" startIcon={<Refresh />} onClick={fetchStats} sx={outlineBtnSx}>
             Refresh
           </Button>
         </Box>
       </Paper>
 
-      {/* Stats Cards */}
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={3}>
           <StatCard
-            title="Pending Prescriptions"
-            value={mockData.pendingPrescriptions}
+            title="Pending Rx"
+            value={stats?.pendingPrescriptions || 0}
             icon={Assignment}
             gradient={`linear-gradient(135deg, ${COLORS.green1} 0%, ${COLORS.green2} 60%, rgba(147,191,199,0.18) 100%)`}
           />
         </Grid>
-
         <Grid item xs={6} sm={3}>
           <StatCard
             title="Active Orders"
-            value={mockData.activeOrders}
+            value={stats?.activeOrders || 0}
             icon={ShoppingCart}
             gradient={`linear-gradient(135deg, ${COLORS.green1} 0%, rgba(147,191,199,0.22) 100%)`}
           />
         </Grid>
-
         <Grid item xs={6} sm={3}>
           <StatCard
-            title="Low Stock Alerts"
-            value={mockData.lowStockAlerts}
+            title="Low Stock"
+            value={stats?.lowStockAlerts || 0}
             icon={Warning}
             gradient={`linear-gradient(135deg, ${COLORS.green2} 0%, rgba(147,191,199,0.18) 100%)`}
           />
         </Grid>
-
         <Grid item xs={6} sm={3}>
           <StatCard
             title="Today's Deliveries"
-            value={mockData.todaysDeliveries}
+            value={stats?.todaysDeliveries || 0}
             icon={LocalShipping}
             gradient={`linear-gradient(135deg, rgba(147,191,199,0.28) 0%, ${COLORS.green1} 100%)`}
           />
         </Grid>
       </Grid>
 
-      {/* Quick Actions */}
-      <Paper sx={{ ...basePaperSx, mb: 3 }}>
-        <Typography sx={{ color: COLORS.text, mb: 1.5 }}>
-          Quick Actions
-        </Typography>
-
-        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-          <Button variant="contained" size="small" sx={primaryBtnSx}>
-            Process Prescriptions
-          </Button>
-          <Button variant="outlined" size="small" sx={outlineBtnSx}>
-            Check Inventory
-          </Button>
-          <Button variant="outlined" size="small" sx={outlineBtnSx}>
-            Assign Deliveries
-          </Button>
-          <Button variant="outlined" size="small" startIcon={<Chat />} sx={outlineBtnSx}>
-            View Chat Queue
-          </Button>
-          <Button variant="outlined" size="small" sx={outlineBtnSx}>
-            Check Refills
-          </Button>
-          <Button variant="outlined" size="small" sx={outlineBtnSx}>
-            Generate Report
-          </Button>
-        </Stack>
-      </Paper>
-
       <Grid container spacing={3}>
-        {/* Pending Prescriptions Queue */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={7}>
           <Paper sx={basePaperSx}>
-            <Typography sx={{ color: COLORS.text }}>
-              Pending Prescriptions Queue
-            </Typography>
-            <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 1 }}>
-              Urgent first
-            </Typography>
-            <Divider sx={{ my: 2, borderColor: COLORS.border }} />
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+              <Typography sx={{ color: COLORS.text, fontWeight: 600 }}>
+                Recent Pending Prescriptions
+              </Typography>
+              <Button size="small" onClick={() => onNavigate?.(1)} sx={outlineBtnSx}>View All</Button>
+            </Stack>
+            <Divider sx={{ mb: 2, borderColor: COLORS.border }} />
 
             <Stack spacing={1.25}>
-              {mockData.pendingPrescriptionsList.map((p) => (
-                <Box
-                  key={p.id}
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    border: `1px solid ${COLORS.border}`,
-                    background: 'rgba(255,255,255,0.75)',
-                    transition: 'transform .2s ease, box-shadow .2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 10px 20px rgba(44,62,80,0.10)',
-                      background: 'rgba(236,244,232,0.9)',
-                    },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography sx={{ color: COLORS.text, fontSize: '0.95rem' }}>
-                      #{p.id} • {p.patient}
-                    </Typography>
-
-                    <Chip
-                      label={p.priority}
-                      size="small"
-                      sx={{
-                        ...getPriorityChipSx(p.priority),
-                        borderRadius: 2,
-                      }}
-                    />
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-                      {p.items} meds • {p.time}
-                    </Typography>
-
-                    <Button size="small" variant="contained" sx={primaryBtnSx}>
+              {stats?.recentPrescriptionsList?.length > 0 ? (
+                stats.recentPrescriptionsList.map((rx) => (
+                  <Box
+                    key={rx.id}
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      border: `1px solid ${COLORS.border}`,
+                      background: 'rgba(255,255,255,0.75)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Box>
+                      <Typography sx={{ color: COLORS.text, fontSize: '0.95rem', fontWeight: 600 }}>
+                        {rx.patient}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(rx.time).toLocaleTimeString()}
+                      </Typography>
+                    </Box>
+                    <Button size="small" variant="contained" sx={primaryBtnSx} onClick={() => onNavigate?.(1)}>
                       Process
                     </Button>
                   </Box>
-                </Box>
-              ))}
+                ))
+              ) : (
+                <Typography color="text.secondary" align="center" sx={{ py: 3 }}>No pending prescriptions</Typography>
+              )}
             </Stack>
-
-            <Button fullWidth sx={{ mt: 2 }} variant="outlined" size="small" style={{ borderRadius: 10 }} color="inherit">
-              View All {mockData.pendingPrescriptions} Prescriptions →
-            </Button>
           </Paper>
         </Grid>
 
-        {/* Today's Performance */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={basePaperSx}>
-            <Typography sx={{ color: COLORS.text }}>
-              Today’s Performance
-            </Typography>
-            <Divider sx={{ my: 2, borderColor: COLORS.border }} />
-
+        <Grid item xs={12} md={5}>
+          <Paper sx={{ ...basePaperSx, bgcolor: COLORS.blue1, color: 'white' }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <NotificationsActive />
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>System Status</Typography>
+            </Stack>
             <Stack spacing={2}>
-              <Box>
-                <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-                  Prescriptions Processed
-                </Typography>
-                <Typography sx={{ color: COLORS.text }}>
-                  {mockData.prescriptionsProcessed} • Avg: {mockData.avgProcessingTime} min
-                </Typography>
+              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
+                <Typography variant="subtitle2">Inventory Audit</Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>Last checked: 2 hours ago</Typography>
               </Box>
-
-              <Box>
-                <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-                  Orders Completed
-                </Typography>
-                <Typography sx={{ color: COLORS.text }}>
-                  {mockData.ordersCompleted} • Rating: {mockData.customerRating}/5
-                </Typography>
+              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
+                <Typography variant="subtitle2">Delivery Team</Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>All riders currently active.</Typography>
               </Box>
-
-              <Box>
-                <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-                  Issues Resolved
-                </Typography>
-                <Typography sx={{ color: COLORS.text }}>
-                  {mockData.issuesResolved} • Chat response: {mockData.chatResponseTime} min
-                </Typography>
-              </Box>
-            </Stack>
-          </Paper>
-        </Grid>
-
-        {/* Critical Alerts */}
-        <Grid item xs={12}>
-          <Paper sx={basePaperSx}>
-            <Typography sx={{ color: COLORS.text, mb: 1 }}>
-              Critical Alerts
-            </Typography>
-            <Divider sx={{ my: 2, borderColor: COLORS.border }} />
-
-            <Stack spacing={1.25}>
-              {mockData.criticalAlerts.map((a, i) => (
-                <Alert
-                  key={i}
-                  severity={a.severity}
-                  icon={a.severity === 'error' ? <ErrorIcon /> : <Warning />}
-                  sx={{
-                    borderRadius: 2,
-                    border: `1px solid ${COLORS.border}`,
-                    backgroundColor:
-                      a.severity === 'error'
-                        ? 'rgba(147,191,199,0.20)'
-                        : 'rgba(203,243,187,0.45)',
-                    color: COLORS.text,
-                    '& .MuiAlert-icon': { color: COLORS.blue2 },
-                  }}
-                >
-                  {a.message}
-                </Alert>
-              ))}
             </Stack>
           </Paper>
         </Grid>

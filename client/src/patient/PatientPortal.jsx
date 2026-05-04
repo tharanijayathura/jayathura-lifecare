@@ -24,6 +24,7 @@ const PatientPortal = () => {
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const {
     activeTab, setActiveTab,
     cartItems, setCartItems,
@@ -46,6 +47,10 @@ const PatientPortal = () => {
     handleViewBill,
     handleBillConfirmed,
   } = usePatientPortal();
+
+  useEffect(() => {
+    console.log('DEBUG: PatientPortal activeTab is:', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const checkAndClearInvalidOrder = async () => {
@@ -116,7 +121,7 @@ const PatientPortal = () => {
   }, [currentOrderId]);
 
   const tabs = [
-    { label: 'Dashboard', component: <DashboardOverview onNavigate={setActiveTab} /> },
+    { label: 'Dashboard', component: <DashboardOverview onNavigate={setActiveTab} handleAddToCart={handleAddToCart} /> },
     {
       label: 'Upload Prescription',
       component: (

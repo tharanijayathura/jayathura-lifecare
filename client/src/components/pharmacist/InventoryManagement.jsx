@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
   Typography,
-  TextField,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -11,107 +11,130 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Button,
+  TextField,
+  InputAdornment,
+  CircularProgress,
+  Alert,
   Stack,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
 } from '@mui/material';
-import { Search, Refresh } from '@mui/icons-material';
-import LowStockAlerts from './LowStockAlerts';
+import { Search, Warning } from '@mui/icons-material';
+import { pharmacistAPI } from '../../services/api';
 
-const mockInventory = [
-  { name: 'Metformin 500mg', category: 'Rx', stock: 12, min: 50, max: 200, lastSold: 'Today 10:15' },
-  { name: 'Panadol Extra', category: 'OTC', stock: 120, min: 100, max: 500, lastSold: 'Today 9:30' },
-  { name: 'Losartan 50mg', category: 'Rx', stock: 8, min: 30, max: 150, lastSold: 'Yesterday' },
-];
-
-const InventoryManagement = ({ showLowStockSection }) => {
+const InventoryManagement = ({ showLowStockSection = false }) => {
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [stockFilter, setStockFilter] = useState('all');
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const response = await pharmacistAPI.getInventory();
+      setInventory(response.data || []);
+    } catch (err) {
+      console.error('Error fetching inventory:', err);
+      setError('Failed to load inventory');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredInventory = inventory.filter(item => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.brand && item.brand.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  if (loading) return (
+    <Box display="flex" justifyContent="center" p={4}>
+      <CircularProgress />
+    </Box>
+  );
 
   return (
-    <Box sx={{ mt: { xs: 6, md: 8 }, px: { xs: 1, md: 3 }, width: '100%' }}>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5">INVENTORY MANAGEMENT | Total Items: 1,245</Typography>
-        <Button variant="outlined" size="small" startIcon={<Refresh />}>Refresh Stock</Button>
-      </Box>
-
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+    <Box>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+        <Typography variant="h5">INVENTORY MANAGEMENT</Typography>
+        <Stack direction="row" spacing={2}>
           <TextField
-            fullWidth
-            placeholder="Search medicines..."
+            size="small"
+            placeholder="Search inventory..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
-            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
           />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Category</InputLabel>
-            <Select value={categoryFilter} label="Category" onChange={(e) => setCategoryFilter(e.target.value)}>
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="Rx">Rx</MenuItem>
-              <MenuItem value="OTC">OTC</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Stock Level</InputLabel>
-            <Select value={stockFilter} label="Stock Level" onChange={(e) => setStockFilter(e.target.value)}>
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="critical">Critical</MenuItem>
-            </Select>
-          </FormControl>
         </Stack>
-      </Paper>
+      </Box>
 
-      <TableContainer component={Paper}>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      <TableContainer component={Paper} variant="outlined">
         <Table>
-          <TableHead>
+          <TableHead sx={{ bgcolor: 'action.hover' }}>
             <TableRow>
-              <TableCell>#</TableCell>
               <TableCell>Medicine</TableCell>
               <TableCell>Category</TableCell>
-              <TableCell>Stock</TableCell>
-              <TableCell>Min/Max</TableCell>
-              <TableCell>Last Sold</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Stock (Units)</TableCell>
+              <TableCell>Stock (Packs)</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {mockInventory.map((item, idx) => (
-              <TableRow key={idx}>
-                <TableCell>{idx + 1}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.category}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={item.stock}
-                    size="small"
-                    color={item.stock < item.min ? 'error' : item.stock < item.min * 1.5 ? 'warning' : 'success'}
-                  />
-                </TableCell>
-                <TableCell>{item.min}/{item.max}</TableCell>
-                <TableCell>{item.lastSold}</TableCell>
-                <TableCell>
-                  <Button size="small">Edit</Button>
+            {filteredInventory.length > 0 ? (
+              filteredInventory.map((item) => {
+                const isLow = item.stock?.units <= item.minStockUnits;
+                const isOut = item.stock?.units <= 0;
+                
+                return (
+                  <TableRow key={item._id} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">{item.brand || 'No Brand'}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={item.category?.toUpperCase()} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color={isLow ? 'error.main' : 'text.primary'} sx={{ fontWeight: isLow ? 700 : 400 }}>
+                        {item.stock?.units || 0} {item.baseUnit}s
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{item.stock?.packs || 0} packs</TableCell>
+                    <TableCell>Rs. {item.price?.perPack?.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {isOut ? (
+                        <Chip label="OUT OF STOCK" size="small" color="error" />
+                      ) : isLow ? (
+                        <Chip label="LOW STOCK" size="small" color="warning" icon={<Warning fontSize="small" />} />
+                      ) : (
+                        <Chip label="AVAILABLE" size="small" color="success" />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">No medicines found</Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-      {showLowStockSection && (
-        <Box sx={{ mt: 5 }}>
-          <LowStockAlerts />
-        </Box>
-      )}
     </Box>
   );
 };
 
 export default InventoryManagement;
-
