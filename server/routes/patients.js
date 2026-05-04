@@ -35,10 +35,11 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    const fileName = (file.originalname || '').toLowerCase();
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf' || fileName.endsWith('.pdf')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only image and PDF files are allowed'));
     }
   }
 });
@@ -177,7 +178,16 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
     const prescription = new Prescription({
       patientId: req.user._id,
       imageUrl: imageUrl,
+      originalName: req.file.originalname,
+      fileName: req.file.filename,
+      mimeType: req.file.mimetype,
       status: 'pending',
+      activities: [{
+        type: 'uploaded',
+        note: `Uploaded ${req.file.originalname}`,
+        actorId: req.user._id,
+        actorRole: req.user.role
+      }],
       items: [] // Start with empty items, pharmacist will add medicines
     });
 
@@ -216,7 +226,7 @@ router.get('/prescription-orders', authMiddleware, async (req, res) => {
       patientId: req.user._id,
       prescriptionId: { $exists: true, $ne: null }
     })
-      .populate('prescriptionId', 'status imageUrl verifiedAt')
+      .populate('prescriptionId', 'status imageUrl originalName mimeType verifiedAt activities')
       .populate('items.medicineId', 'name price stock')
       .sort({ createdAt: -1 });
 
@@ -240,7 +250,7 @@ router.get('/order/:orderId/status', authMiddleware, async (req, res) => {
     })
       .populate('items.medicineId', 'name price stock')
       .populate('assignedTo', 'name phone')
-      .populate('prescriptionId', 'status imageUrl verifiedAt verifiedBy');
+      .populate('prescriptionId', 'status imageUrl originalName mimeType verifiedAt verifiedBy activities');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -638,7 +648,7 @@ router.post('/order/:orderId/send-to-pharmacist', authMiddleware, async (req, re
       _id: req.params.orderId, 
       patientId: req.user._id 
     })
-      .populate('prescriptionId');
+      .populate('prescriptionId', 'status imageUrl originalName mimeType activities');
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });

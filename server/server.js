@@ -2,7 +2,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const dns = require('dns');
 require('dotenv').config();
+
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+if (MONGO_URI && MONGO_URI.startsWith('mongodb+srv://')) {
+  const dnsServers = (process.env.MONGO_DNS_SERVERS || '1.1.1.1,8.8.8.8')
+    .split(',')
+    .map((server) => server.trim())
+    .filter(Boolean);
+
+  if (dnsServers.length > 0) {
+    dns.setServers(dnsServers);
+    console.log('🌐 Using DNS servers for MongoDB SRV lookups:', dnsServers.join(', '));
+  }
+}
 
 const app = express();
 
@@ -73,7 +88,6 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Database connection
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 if (MONGO_URI) {
   // Clean the URI - remove port number if it's a mongodb+srv URI
   let cleanedUri = MONGO_URI.trim();

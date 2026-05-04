@@ -5,6 +5,17 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
 });
 
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+
+export const getPublicFileUrl = (filePath) => {
+  if (!filePath) return '';
+  if (/^(https?:)?\/\//i.test(filePath) || filePath.startsWith('data:')) {
+    return filePath;
+  }
+
+  return new URL(filePath, `${API_ORIGIN}/`).toString();
+};
+
 // Add token to requests
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');

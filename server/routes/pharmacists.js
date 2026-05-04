@@ -106,6 +106,17 @@ router.get('/prescription/:prescriptionId', authMiddleware, pharmacistMiddleware
       return res.status(404).json({ message: 'Prescription not found' });
     }
 
+    if (!prescription.activities?.some((activity) => activity.type === 'reviewed')) {
+      prescription.activities = prescription.activities || [];
+      prescription.activities.push({
+        type: 'reviewed',
+        note: `Opened by ${req.user.name || req.user.role}`,
+        actorId: req.user._id,
+        actorRole: req.user.role
+      });
+      await prescription.save();
+    }
+
     // Find the order associated with this prescription
     const order = await Order.findOne({ 
       prescriptionId: prescription._id,
@@ -173,6 +184,14 @@ router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacist
         frequency: frequency || ''
       });
     }
+
+    prescription.activities = prescription.activities || [];
+    prescription.activities.push({
+      type: 'item-added',
+      note: `${quantity} x ${medicine.name}${dosage ? `, dosage: ${dosage}` : ''}${frequency ? `, frequency: ${frequency}` : ''}`,
+      actorId: req.user._id,
+      actorRole: req.user.role
+    });
 
     await prescription.save();
 
@@ -247,6 +266,13 @@ router.put('/prescription/:prescriptionId/verify', authMiddleware, pharmacistMid
     prescription.status = 'verified';
     prescription.verifiedBy = req.user._id;
     prescription.verifiedAt = new Date();
+    prescription.activities = prescription.activities || [];
+    prescription.activities.push({
+      type: 'verified',
+      note: 'Prescription verified and bill generated',
+      actorId: req.user._id,
+      actorRole: req.user.role
+    });
 
     await prescription.save();
 
@@ -281,12 +307,20 @@ router.put('/prescription/:prescriptionId/verify', authMiddleware, pharmacistMid
       order.totalAmount = subtotal;
       order.deliveryFee = deliveryFee;
       order.finalAmount = finalAmount;
+
+      prescription.activities.push({
+        type: 'bill-generated',
+        note: `Bill generated for Rs. ${finalAmount.toFixed(2)}`,
+        actorId: req.user._id,
+        actorRole: req.user.role
+      });
     }
     
     // Always set status to 'pending' after verification so patient can confirm
     order.status = 'pending'; // Ready for patient review
 
     await order.save();
+    await prescription.save();
 
     res.json({ 
       message: 'Prescription verified and bill generated',
@@ -313,6 +347,13 @@ router.put('/prescription/:prescriptionId/reject', authMiddleware, pharmacistMid
     prescription.verifiedBy = req.user._id;
     prescription.verifiedAt = new Date();
     prescription.rejectionReason = reason || 'Prescription rejected by pharmacist';
+    prescription.activities = prescription.activities || [];
+    prescription.activities.push({
+      type: 'rejected',
+      note: prescription.rejectionReason,
+      actorId: req.user._id,
+      actorRole: req.user.role
+    });
 
     await prescription.save();
 
@@ -402,6 +443,13 @@ router.delete('/order/:orderId/prescription-item/:itemId', authMiddleware, pharm
       prescription.items = prescription.items.filter(
         item => item.medicineId && item.medicineId.toString() !== itemToRemove.medicineId.toString()
       );
+      prescription.activities = prescription.activities || [];
+      prescription.activities.push({
+        type: 'item-removed',
+        note: `Removed ${itemToRemove.medicineName || 'prescription item'} from order`,
+        actorId: req.user._id,
+        actorRole: req.user.role
+      });
       await prescription.save();
     }
 

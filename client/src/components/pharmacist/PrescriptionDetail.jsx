@@ -222,7 +222,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
         )}
         {(!order || order.items.length === 0) && (
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            Add prescription medicines from the image above. Patient can also add OTC items to this order.
+            Add prescription medicines from the preview above. Patient can also add OTC items to this order.
           </Typography>
         )}
       </DialogActions>

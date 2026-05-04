@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Grid, Card, CardContent, Stack, Chip, Button, Alert } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Stack, Chip, Button, Alert, Link } from '@mui/material';
+import { getPublicFileUrl } from '../../../services/api';
 
 const PrescriptionOrders = ({
   orders = [],
@@ -26,9 +27,27 @@ const PrescriptionOrders = ({
                       <Typography variant="body2" color="text.secondary">
                         Prescription Status: {order.prescriptionId?.status || 'N/A'}
                       </Typography>
+                      {order.prescriptionId?.originalName && (
+                        <Typography variant="body2" color="text.secondary">
+                          File: {order.prescriptionId.originalName}
+                        </Typography>
+                      )}
+                      {order.prescriptionId?.imageUrl && (
+                        <Typography variant="body2" color="text.secondary">
+                          View file:{' '}
+                          <Link href={getPublicFileUrl(order.prescriptionId.imageUrl)} target="_blank" rel="noreferrer">
+                            open prescription
+                          </Link>
+                        </Typography>
+                      )}
                       <Typography variant="body2" color="text.secondary">
                         Items: {order.items.length} | {order.items.filter(i => i.isPrescription).length} Prescription, {order.items.filter(i => !i.isPrescription).length} Non Prescription
                       </Typography>
+                      {order.prescriptionId?.activities?.length > 0 && (
+                        <Typography variant="body2" color="text.secondary">
+                          Latest activity: {order.prescriptionId.activities[order.prescriptionId.activities.length - 1].type.replace(/-/g, ' ')}
+                        </Typography>
+                      )}
                       {order.finalAmount && (
                         <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
                           Total: Rs. {order.finalAmount.toFixed(2)}

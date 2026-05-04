@@ -7,6 +7,9 @@ const prescriptionSchema = new mongoose.Schema({
     required: true 
   },
   imageUrl: { type: String, required: true },
+  originalName: { type: String },
+  fileName: { type: String },
+  mimeType: { type: String },
   status: { 
     type: String, 
     enum: ['pending', 'verified', 'rejected'], 
@@ -18,6 +21,23 @@ const prescriptionSchema = new mongoose.Schema({
   },
   verifiedAt: Date,
   rejectionReason: String,
+  activities: [{
+    type: {
+      type: String,
+      enum: ['uploaded', 'reviewed', 'item-added', 'item-removed', 'verified', 'rejected', 'bill-generated'],
+      required: true
+    },
+    note: String,
+    actorId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User' 
+    },
+    actorRole: String,
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   items: [{
     medicineId: { 
       type: mongoose.Schema.Types.ObjectId, 

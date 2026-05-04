@@ -16,8 +16,10 @@ const authMiddleware = async (req, res, next) => {
     // Check MongoDB connection before querying
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
-      console.warn('⚠️  MongoDB not connected, but attempting to proceed...');
-      // Still try to query, but handle errors gracefully
+      console.warn('⚠️  MongoDB not connected; rejecting request before query buffering starts.');
+      return res.status(503).json({
+        message: 'Database connection issue. Please try again in a moment.'
+      });
     }
 
     const user = await User.findById(decoded.id).select('-password');

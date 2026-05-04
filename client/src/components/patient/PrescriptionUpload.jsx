@@ -11,7 +11,7 @@ import {
   Chip,
   Paper
 } from '@mui/material';
-import { CloudUpload, CheckCircle, Image as ImageIcon } from '@mui/icons-material';
+import { CloudUpload, CheckCircle, Image as ImageIcon, PictureAsPdf } from '@mui/icons-material';
 import { prescriptionAPI } from '../../services/api';
 
 const PrescriptionUpload = ({ onUploaded }) => {
@@ -20,8 +20,10 @@ const PrescriptionUpload = ({ onUploaded }) => {
   const [message, setMessage] = useState('');
 
   const handleFileSelect = (event) => {
-    setSelectedFile(event.target.files[0]);
+    setSelectedFile(event.target.files?.[0] || null);
   };
+
+  const isPdf = selectedFile?.type === 'application/pdf' || selectedFile?.name?.toLowerCase().endsWith('.pdf');
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -42,6 +44,7 @@ const PrescriptionUpload = ({ onUploaded }) => {
       const meta = {
         id: payload._id || payload.id || `rx-${Date.now()}`,
         fileName: selectedFile.name,
+        mimeType: payload.mimeType || selectedFile.type,
         status: payload.status || 'pending',
         uploadedAt: new Date().toISOString(),
         orderId: orderData._id || orderData.id, // Include order ID
@@ -56,6 +59,7 @@ const PrescriptionUpload = ({ onUploaded }) => {
       const fallbackMeta = {
         id: `rx-local-${Date.now()}`,
         fileName: selectedFile.name,
+        mimeType: selectedFile.type,
         status: 'pending',
         uploadedAt: new Date().toISOString(),
         note: 'Stored locally until connection is available',
@@ -109,12 +113,12 @@ const PrescriptionUpload = ({ onUploaded }) => {
           >
             {selectedFile ? (
               <Stack spacing={2} alignItems="center">
-                <CheckCircle color="success" sx={{ fontSize: 48 }} />
+                {isPdf ? <PictureAsPdf color="error" sx={{ fontSize: 48 }} /> : <CheckCircle color="success" sx={{ fontSize: 48 }} />}
                 <Typography variant="h6">{selectedFile.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </Typography>
-                <Chip label="File Selected" color="success" />
+                <Chip label={isPdf ? 'PDF Selected' : 'Image Selected'} color={isPdf ? 'error' : 'success'} />
               </Stack>
             ) : (
               <Stack spacing={2} alignItems="center">
