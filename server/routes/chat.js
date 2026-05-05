@@ -130,8 +130,8 @@ router.post('/message', authMiddleware, async (req, res) => {
 
     await chat.save();
 
-    // Auto-respond with bot if patient sends message and no pharmacist is assigned
-    if (userRole === 'patient' && !chat.pharmacistId) {
+    // Auto-respond with bot if patient sends message
+    if (userRole === 'patient') {
       const botResponse = getBotResponse(message);
       const botMessage = {
         senderId: null,

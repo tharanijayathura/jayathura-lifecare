@@ -39,7 +39,7 @@ export const lifecareTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "Outfit", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Open Sans", "Roboto", "Helvetica", "Arial", sans-serif',
     h4: {
       fontWeight: 800,
       color: '#1e293b',

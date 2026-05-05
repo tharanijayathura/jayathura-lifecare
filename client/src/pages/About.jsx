@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import PageHeader from '../components/common/PageHeader';
 import Navbar from '../components/common/Navbar';
+import ChatWidget from '../components/chat/ChatWidget';
 import aboutusBg from '../assets/aboutusbg.jpg';
 
 const VALUES = [
@@ -89,7 +90,6 @@ const sx = {
 
   contentWrap: { maxWidth: 980, mx: 'auto' },
 
-  // ✅ Modern text sizes and alignments
   sectionTitle: {
     fontWeight: 700,
     textAlign: 'center',
@@ -169,7 +169,6 @@ const sx = {
 
   tilePad: { p: { xs: 2.25, sm: 2.75, md: 3.25 } },
 
-  // ✅ NORMAL titles
   tileTitle: {
     fontWeight: 700,
     color: 'text.primary',
@@ -193,7 +192,6 @@ const sx = {
     mb: { xs: 1.5, md: 2 },
   },
 
-  // ✅ Modern mission title
   missionTitle: {
     fontWeight: 700,
     color: 'text.primary',
@@ -259,7 +257,6 @@ const ValueCard = ({ Icon, title, description, index }) => (
             borderRadius: '50%',
             background: 'linear-gradient(135deg, rgba(171, 231, 178, 0.2), rgba(147, 191, 199, 0.2))',
             zIndex: -1,
-            animation: `pulseAbout 2s ease-in-out infinite ${index * 0.2}s`,
           },
         }}
       >
@@ -484,20 +481,6 @@ export default function About() {
                     </Grid>
                   ))}
                 </Grid>
-
-                <Typography
-                  sx={{
-                    ...sx.paragraph,
-                    mt: { xs: 2.5, md: 3 },
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    color: 'text.secondary',
-                    fontWeight: 400,
-                  }}
-                >
-                  As a modern healthcare solution from Sri Lanka, we are committed to making quality pharmaceutical care accessible, convenient,
-                  and reliable for everyone.
-                </Typography>
               </Box>
             </CardContent>
           </Card>
@@ -634,44 +617,6 @@ export default function About() {
             </CardContent>
           </Card>
 
-          {/* Why Choose Us */}
-          <Card
-            sx={{
-              ...sx.card,
-              ...sx.section,
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 244, 232, 0.3) 100%)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
-            }}
-          >
-            <CardContent sx={sx.cardPad}>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Chip
-                  icon={<TrendingUp sx={{ color: '#93BFC7' }} />}
-                  label="Why We're Different"
-                  sx={{
-                    mb: 2,
-                    px: 2,
-                    py: 3,
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
-                    background: 'linear-gradient(135deg, #93BFC7, #ABE7B2)',
-                    color: '#2C3E50',
-                  }}
-                />
-                <SectionTitle>Why Choose Us</SectionTitle>
-              </Box>
-              <Box sx={sx.contentWrap}>
-                <Grid container spacing={{ xs: 2, md: 3 }} alignItems="stretch">
-                  {FEATURES.map((feature, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      <FeatureCard {...feature} index={index} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </CardContent>
-          </Card>
-
           {/* Footer CTA */}
           <Box
             sx={{
@@ -708,8 +653,8 @@ export default function About() {
               </Typography>
             </Box>
           </Box>
+          <ChatWidget />
         </Container>
-
       </Box>
     </>
   );

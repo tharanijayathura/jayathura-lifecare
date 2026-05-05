@@ -594,7 +594,7 @@ const Home = () => {
         size="small"
         sx={{
           position: 'fixed',
-          bottom: 20,
+          bottom: 90, // Moved up to avoid overlap with Chat button
           right: 20,
           backgroundColor: '#ABE7B2',
           color: '#2C3E50',

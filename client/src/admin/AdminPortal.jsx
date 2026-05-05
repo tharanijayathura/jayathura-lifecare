@@ -23,7 +23,10 @@ const AdminPortal = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      <PageHeader title="Admin Portal" subtitle="Manage analytics, medicines, and users" />
+      <PageHeader 
+        title="Administrative Control Center" 
+        subtitle={`Administrator: ${user?.name || 'Authorized Personnel'}`} 
+      />
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
         <Tabs value={mainTabIndex} onChange={(e, v) => setMainTabIndex(v)} variant={isMobile ? 'scrollable' : 'standard'} scrollButtons={isMobile ? 'auto' : false}>

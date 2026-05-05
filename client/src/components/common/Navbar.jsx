@@ -117,6 +117,7 @@ const Navbar = () => {
             <Typography
               variant="h5"
               component="div"
+              onClick={() => navigate('/')}
               sx={{
                 flexGrow: 1,
                 fontWeight: 700,
@@ -124,6 +125,8 @@ const Navbar = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
+                cursor: 'pointer',
+                '&:hover': { opacity: 0.8 }
               }}
             >
               <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: 30 }} />

@@ -887,13 +887,12 @@ const Support = () => {
               </Typography>
             </Box>
           </CardContent>
-        </Card>
-      </Container>
+          </Card>
+          <ChatWidget />
+        </Container>
       </Box>
     </>
   );
 };
 
-  <ChatWidget />
 export default Support;
-

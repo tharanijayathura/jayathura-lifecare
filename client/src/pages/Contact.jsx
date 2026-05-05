@@ -512,11 +512,11 @@ const Contact = () => {
               {snackbarMessage}
             </Alert>
           </Snackbar>
+          <ChatWidget />
         </Container>
       </Box>
     </>
   );
 };
 
-  <ChatWidget />
 export default Contact;

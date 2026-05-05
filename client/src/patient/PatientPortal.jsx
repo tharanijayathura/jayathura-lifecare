@@ -173,8 +173,8 @@ const PatientPortal = () => {
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
       <PageHeader 
-        title={`Welcome back, ${user?.name || 'Patient'}!`}
-        subtitle="Manage your prescriptions, orders, and health needs"
+        title={user?.name ? `Patient Dashboard: ${user.name.split(' ')[0]}` : "Dashboard"}
+        subtitle="Manage health services and prescriptions"
         showBack={false}
       />
 

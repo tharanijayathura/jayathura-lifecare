@@ -34,8 +34,8 @@ const PharmacistPortal = () => {
   return (
     <Box>
       <PageHeader
-        title="Pharmacist Portal"
-        subtitle={`Welcome, ${user?.name || 'Pharmacist'}`}
+        title={user?.name ? `Pharmacist Console: ${user.name.split(' ')[0]}` : "Pharmacist"}
+        subtitle="Medical fulfillment and order verification"
         showBack={false}
       />
       <PharmacistDashboard />

@@ -40,7 +40,7 @@ const botResponses = {
   default: [
     "I understand you're looking for help. Let me connect you with one of our pharmacists who can assist you better.",
     "That's a great question! I'll make sure a pharmacist gets back to you soon with a detailed answer.",
-    "I'm here to help! One of our pharmacists will respond to your query shortly.",
+    "I'm here to help! One of our pharmacists will respond to your query shortly. Contact our pharmacist for direct assistance.",
   ],
 };
 
