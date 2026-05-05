@@ -1,15 +1,53 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Stack } from '@mui/material';
 import symbolImage from '../../assets/medical-symbol.png';
 
-const Brand = ({ size = 28, textVariant = 'h6', color = '#2C3E50', gap = 1 }) => {
+const Brand = ({ size = 32, textVariant = 'h6', color = '#1e293b', gap = 1.5 }) => {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap }}>
-      <Box component="img" src={symbolImage} alt="Jayathura LifeCare" sx={{ height: size }} />
-      <Typography variant={textVariant} sx={{ fontWeight: 700, color }}>
-        Jayathura LifeCare
-      </Typography>
-    </Box>
+    <Stack direction="row" alignItems="center" spacing={gap}>
+      <Box 
+        sx={{ 
+          p: 0.5, 
+          borderRadius: 3, 
+          bgcolor: '#ECF4E8', 
+          display: 'flex',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+        }}
+      >
+        <Box 
+          component="img" 
+          src={symbolImage} 
+          alt="Jayathura LifeCare" 
+          sx={{ height: size, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }} 
+        />
+      </Box>
+      <Box>
+        <Typography 
+          variant={textVariant} 
+          sx={{ 
+            fontWeight: 900, 
+            color,
+            lineHeight: 1,
+            letterSpacing: -0.5
+          }}
+        >
+          Jayathura
+        </Typography>
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            fontWeight: 800, 
+            color: '#93BFC7', 
+            textTransform: 'uppercase', 
+            letterSpacing: 1.5,
+            display: 'block',
+            mt: 0.2
+          }}
+        >
+          LifeCare
+        </Typography>
+      </Box>
+    </Stack>
   );
 };
 

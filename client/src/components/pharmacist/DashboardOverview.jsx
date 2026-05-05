@@ -14,17 +14,18 @@ import {
   Alert,
 } from '@mui/material';
 import {
-  Description,
-  ShoppingCart,
-  Warning,
-  LocalShipping,
-  Assessment,
   NotificationsActive,
   Refresh,
   Assignment,
-  Chat,
+  ShoppingCart,
+  Warning,
+  LocalShipping,
+  CheckCircle,
+  BarChart as DailyReportIcon,
   Error as ErrorIcon,
+  Person
 } from '@mui/icons-material';
+import { LinearProgress } from '@mui/material';
 import { useAuth } from '../../contexts/useAuth';
 import { pharmacistAPI } from '../../services/api';
 
@@ -48,34 +49,8 @@ const DashboardOverview = ({ onNavigate }) => {
     blue1: '#93BFC7',
     blue2: '#7AA8B0',
     text: '#2C3E50',
-    subtext: '#546E7A',
-    border: 'rgba(147, 191, 199, 0.35)',
-    paper: 'rgba(255,255,255,0.9)',
-  };
-
-  const basePaperSx = {
-    p: 2.25,
-    borderRadius: 3,
-    border: `1px solid ${COLORS.border}`,
-    backgroundColor: COLORS.paper,
-    backdropFilter: 'blur(10px)',
-    boxShadow: '0 12px 28px rgba(44,62,80,0.10)',
-  };
-
-  const primaryBtnSx = {
-    backgroundColor: COLORS.green3,
-    color: COLORS.text,
-    textTransform: 'none',
-    borderRadius: 2,
-    '&:hover': { backgroundColor: COLORS.green2 },
-  };
-
-  const outlineBtnSx = {
-    borderColor: COLORS.blue1,
-    color: COLORS.text,
-    textTransform: 'none',
-    borderRadius: 2,
-    '&:hover': { borderColor: COLORS.blue2, backgroundColor: 'rgba(236,244,232,0.7)' },
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
   };
 
   useEffect(() => {
@@ -97,162 +72,242 @@ const DashboardOverview = ({ onNavigate }) => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, gradient }) => (
-    <Card
+  const StatCard = ({ title, value, icon: Icon, color, delay }) => (
+    <Paper
+      elevation={0}
       sx={{
-        height: '100%',
-        borderRadius: 3,
+        p: 3,
+        borderRadius: 5,
+        bgcolor: 'white',
         border: `1px solid ${COLORS.border}`,
-        background: gradient,
-        boxShadow: '0 14px 30px rgba(44,62,80,0.10)',
-        transition: 'transform .25s ease, box-shadow .25s ease',
-        '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 18px 42px rgba(44,62,80,0.14)' },
+        boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        animation: `slideUp 0.6s ease-out ${delay}s both`,
+        '@keyframes slideUp': {
+          from: { opacity: 0, transform: 'translateY(20px)' },
+          to: { opacity: 1, transform: 'translateY(0)' }
+        },
+        '&:hover': {
+          transform: 'translateY(-5px)',
+          boxShadow: '0 12px 30px rgba(0,0,0,0.06)',
+          borderColor: color,
+        }
       }}
     >
-      <CardContent sx={{ p: 2.25 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-              {title}
-            </Typography>
-            <Typography sx={{ fontSize: '1.9rem', color: COLORS.text, mt: 0.5 }}>
-              {value}
-            </Typography>
-          </Box>
-          <Icon sx={{ fontSize: 44, color: COLORS.blue2, opacity: 0.55 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box sx={{ 
+          p: 1.5, 
+          borderRadius: 4, 
+          bgcolor: `${color}15`, 
+          color: color,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Icon />
         </Box>
-      </CardContent>
-    </Card>
+        <Box sx={{ textAlign: 'right' }}>
+          <Typography sx={{ color: COLORS.subtext, fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 1 }}>
+            {title}
+          </Typography>
+          <Typography sx={{ fontSize: '2rem', fontWeight: 800, color: COLORS.text, mt: 0.5 }}>
+            {value}
+          </Typography>
+        </Box>
+      </Box>
+      <Box sx={{ mt: 2, height: 4, borderRadius: 2, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
+        <Box sx={{ height: '100%', width: '70%', bgcolor: color, borderRadius: 2 }} />
+      </Box>
+    </Paper>
   );
 
   if (loading && !stats) return (
-    <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>
+    <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+      <CircularProgress sx={{ color: COLORS.blue2 }} />
+    </Box>
   );
 
   return (
-    <Box sx={{ p: { xs: 1, md: 2 } }}>
-      <Paper
-        sx={{
-          ...basePaperSx,
-          mb: 3,
-          background: `linear-gradient(135deg, ${COLORS.green1} 0%, ${COLORS.green2} 55%, rgba(147,191,199,0.18) 100%)`,
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography sx={{ fontSize: '1.35rem', color: COLORS.text }}>
-              Welcome back, {user?.name || 'Pharmacist'} 👋
-            </Typography>
-            <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-              Today: {currentDate}
-            </Typography>
-          </Box>
-          <Button variant="outlined" size="small" startIcon={<Refresh />} onClick={fetchStats} sx={outlineBtnSx}>
-            Refresh
-          </Button>
+    <Box sx={{ p: { xs: 1, md: 0 } }}>
+      {/* Header Section */}
+      <Box sx={{ mb: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1, letterSpacing: '-0.5px' }}>
+            Welcome, {user?.name?.split(' ')[0] || 'Pharmacist'} ✨
+          </Typography>
+          <Typography sx={{ color: COLORS.subtext, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <NotificationsActive sx={{ fontSize: 18, color: COLORS.blue2 }} />
+            Today is {currentDate}
+          </Typography>
         </Box>
-      </Paper>
+        <Button 
+          variant="contained" 
+          startIcon={<Refresh />} 
+          onClick={fetchStats}
+          sx={{ 
+            borderRadius: 4, 
+            px: 3, 
+            py: 1.2, 
+            bgcolor: COLORS.blue2, 
+            fontWeight: 700,
+            boxShadow: '0 8px 20px rgba(122, 168, 176, 0.25)',
+            '&:hover': { bgcolor: COLORS.blue1 }
+          }}
+        >
+          Refresh Data
+        </Button>
+      </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 4 }}>{error}</Alert>}
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={3}>
-          <StatCard
-            title="Pending Rx"
-            value={stats?.pendingPrescriptions || 0}
-            icon={Assignment}
-            gradient={`linear-gradient(135deg, ${COLORS.green1} 0%, ${COLORS.green2} 60%, rgba(147,191,199,0.18) 100%)`}
-          />
+      {/* Stats Grid */}
+      <Grid container spacing={3} sx={{ mb: 6 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Pending Rx" value={stats?.pendingPrescriptions || 0} icon={Assignment} color="#7AA8B0" delay={0.1} />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <StatCard
-            title="Active Orders"
-            value={stats?.activeOrders || 0}
-            icon={ShoppingCart}
-            gradient={`linear-gradient(135deg, ${COLORS.green1} 0%, rgba(147,191,199,0.22) 100%)`}
-          />
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Active Orders" value={stats?.activeOrders || 0} icon={ShoppingCart} color="#ABE7B2" delay={0.2} />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <StatCard
-            title="Low Stock"
-            value={stats?.lowStockAlerts || 0}
-            icon={Warning}
-            gradient={`linear-gradient(135deg, ${COLORS.green2} 0%, rgba(147,191,199,0.18) 100%)`}
-          />
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Low Stock" value={stats?.lowStockAlerts || 0} icon={Warning} color="#f43f5e" delay={0.3} />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <StatCard
-            title="Today's Deliveries"
-            value={stats?.todaysDeliveries || 0}
-            icon={LocalShipping}
-            gradient={`linear-gradient(135deg, rgba(147,191,199,0.28) 0%, ${COLORS.green1} 100%)`}
-          />
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard title="Deliveries" value={stats?.todaysDeliveries || 0} icon={LocalShipping} color="#93BFC7" delay={0.4} />
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={7}>
-          <Paper sx={basePaperSx}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-              <Typography sx={{ color: COLORS.text, fontWeight: 600 }}>
-                Recent Pending Prescriptions
+      <Grid container spacing={4}>
+        {/* Recent Activity */}
+        <Grid item xs={12} md={8}>
+          <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.text }}>
+                Recent Prescriptions
               </Typography>
-              <Button size="small" onClick={() => onNavigate?.(1)} sx={outlineBtnSx}>View All</Button>
+              <Chip label="Live Feed" size="small" sx={{ bgcolor: COLORS.green1, color: COLORS.blue2, fontWeight: 700 }} />
             </Stack>
-            <Divider sx={{ mb: 2, borderColor: COLORS.border }} />
 
-            <Stack spacing={1.25}>
+            <Stack spacing={2}>
               {stats?.recentPrescriptionsList?.length > 0 ? (
-                stats.recentPrescriptionsList.map((rx) => (
+                stats.recentPrescriptionsList.map((rx, idx) => (
                   <Box
                     key={rx.id}
                     sx={{
-                      p: 1.5,
-                      borderRadius: 2,
-                      border: `1px solid ${COLORS.border}`,
-                      background: 'rgba(255,255,255,0.75)',
+                      p: 2.5,
+                      borderRadius: 4,
+                      border: '1px solid #f1f5f9',
+                      bgcolor: '#f8fafc',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        bgcolor: 'white',
+                        borderColor: COLORS.blue1,
+                        transform: 'scale(1.01)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                      }
                     }}
                   >
-                    <Box>
-                      <Typography sx={{ color: COLORS.text, fontSize: '0.95rem', fontWeight: 600 }}>
-                        {rx.patient}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(rx.time).toLocaleTimeString()}
-                      </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={{ p: 1.5, borderRadius: '50%', bgcolor: 'white', color: COLORS.blue2 }}>
+                        <Person />
+                      </Box>
+                      <Box>
+                        <Typography sx={{ color: COLORS.text, fontWeight: 700 }}>
+                          {rx.patient}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: COLORS.subtext }}>
+                          {new Date(rx.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • New Upload
+                        </Typography>
+                      </Box>
                     </Box>
-                    <Button size="small" variant="contained" sx={primaryBtnSx} onClick={() => onNavigate?.(1)}>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      onClick={() => onNavigate?.(1)}
+                      sx={{ 
+                        borderRadius: 3, 
+                        fontWeight: 700, 
+                        color: COLORS.blue2, 
+                        borderColor: COLORS.blue2,
+                        '&:hover': { bgcolor: COLORS.green1, borderColor: COLORS.blue2 }
+                      }}
+                    >
                       Process
                     </Button>
                   </Box>
                 ))
               ) : (
-                <Typography color="text.secondary" align="center" sx={{ py: 3 }}>No pending prescriptions</Typography>
+                <Box sx={{ textAlign: 'center', py: 6 }}>
+                  <Assignment sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                  <Typography color="text.secondary">All prescriptions processed!</Typography>
+                </Box>
               )}
             </Stack>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={5}>
-          <Paper sx={{ ...basePaperSx, bgcolor: COLORS.blue1, color: 'white' }}>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-              <NotificationsActive />
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>System Status</Typography>
-            </Stack>
-            <Stack spacing={2}>
-              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
-                <Typography variant="subtitle2">Inventory Audit</Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>Last checked: 2 hours ago</Typography>
-              </Box>
-              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.1)' }}>
-                <Typography variant="subtitle2">Delivery Team</Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>All riders currently active.</Typography>
-              </Box>
-            </Stack>
-          </Paper>
+        {/* Quick Actions / System Health */}
+        <Grid item xs={12} md={4}>
+          <Stack spacing={3}>
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 6, bgcolor: COLORS.blue2, color: 'white' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>System Health</Typography>
+              <Stack spacing={3}>
+                <Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 600 }}>INVENTORY STATUS</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 600 }}>94%</Typography>
+                  </Box>
+                  <LinearProgress variant="determinate" value={94} sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.2)', '& .MuiLinearProgress-bar': { bgcolor: 'white' } }} />
+                </Box>
+                <Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 600 }}>DELIVERY PERFORMANCE</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 600 }}>88%</Typography>
+                  </Box>
+                  <LinearProgress variant="determinate" value={88} sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.2)', '& .MuiLinearProgress-bar': { bgcolor: 'white' } }} />
+                </Box>
+                <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircle sx={{ fontSize: 14 }} /> All pharmacy systems operational
+                  </Typography>
+                </Box>
+              </Stack>
+            </Paper>
+
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: COLORS.text, mb: 3 }}>Quick Links</Typography>
+              <Stack spacing={1.5}>
+                {[
+                  { label: 'Generate Daily Report', icon: <DailyReportIcon /> },
+                  { label: 'Manage Delivery Staff', icon: <LocalShipping /> },
+                  { label: 'Broadcast Inventory Alert', icon: <Warning /> }
+                ].map((action, i) => (
+                  <Box 
+                    key={i}
+                    sx={{ 
+                      p: 2, 
+                      borderRadius: 4, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 2, 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': { bgcolor: COLORS.green1, color: COLORS.blue2 }
+                    }}
+                  >
+                    <Box sx={{ color: 'inherit' }}>{action.icon}</Box>
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 700 }}>{action.label}</Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Paper>
+          </Stack>
         </Grid>
       </Grid>
     </Box>

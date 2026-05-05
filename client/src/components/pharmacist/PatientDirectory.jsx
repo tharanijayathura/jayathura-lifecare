@@ -16,8 +16,9 @@ import {
   InputAdornment,
   CircularProgress,
   Alert,
+  Stack,
 } from '@mui/material';
-import { Search, History } from '@mui/icons-material';
+import { Search, History, ContactPage } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
 
 const PatientDirectory = () => {
@@ -25,6 +26,17 @@ const PatientDirectory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
 
   useEffect(() => {
     fetchPatients();
@@ -37,7 +49,7 @@ const PatientDirectory = () => {
       setPatients(response.data || []);
     } catch (err) {
       console.error('Error fetching patients:', err);
-      setError('Failed to load patients');
+      setError('Failed to load patient records');
     } finally {
       setLoading(false);
     }
@@ -49,88 +61,115 @@ const PatientDirectory = () => {
   );
 
   if (loading) return (
-    <Box display="flex" justifyContent="center" p={4}>
-      <CircularProgress />
+    <Box display="flex" justifyContent="center" alignItems="center" height="400px">
+      <CircularProgress sx={{ color: COLORS.blue2 }} />
     </Box>
   );
 
   return (
-    <Box>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5">PATIENT DIRECTORY</Typography>
-        <TextField
-          size="small"
-          placeholder="Search patients..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-        />
+    <Box sx={{ p: { xs: 1, md: 0 } }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1 }}>
+          Patient Directory
+        </Typography>
+        <Typography sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+          Manage clinical records and order histories for registered patients
+        </Typography>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 4 }}>{error}</Alert>}
 
-      <TableContainer component={Paper} variant="outlined">
-        <Table>
-          <TableHead sx={{ bgcolor: 'action.hover' }}>
-            <TableRow>
-              <TableCell>Patient</TableCell>
-              <TableCell>Contact Info</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Member Since</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => (
-                <TableRow key={patient._id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ bgcolor: patient.flaggedAsChronic ? 'error.main' : 'primary.main' }}>
-                        {patient.name.charAt(0)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{patient.name}</Typography>
-                        {patient.flaggedAsChronic && (
-                          <Chip label="Chronic Condition" size="small" color="error" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
-                        )}
+      <Paper elevation={0} sx={{ mb: 4, borderRadius: 5, border: `1px solid ${COLORS.border}`, bgcolor: 'white', overflow: 'hidden' }}>
+        <Box sx={{ p: 2.5, bgcolor: '#f8fafc', borderBottom: `1px solid ${COLORS.border}` }}>
+          <TextField
+            fullWidth
+            placeholder="Search by patient name, email, or contact ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: COLORS.blue2 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 4, bgcolor: 'white' } }}
+          />
+        </Box>
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ '& th': { borderBottom: `2px solid #f1f5f9`, color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' } }}>
+                <TableCell>Patient Profile</TableCell>
+                <TableCell>Contact Details</TableCell>
+                <TableCell>Clinical Status</TableCell>
+                <TableCell>Registered On</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((patient) => (
+                  <TableRow key={patient._id} hover sx={{ '& td': { borderBottom: '1px solid #f1f5f9', py: 2.5 } }}>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ 
+                          bgcolor: COLORS.blue1, 
+                          width: 44, 
+                          height: 44, 
+                          fontWeight: 800,
+                          fontSize: '1rem',
+                          boxShadow: '0 4px 10px rgba(147, 191, 199, 0.3)'
+                        }}>
+                          {patient.name.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography sx={{ fontWeight: 800, color: COLORS.text }}>{patient.name}</Typography>
+                          <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 600 }}>PID: {patient._id.slice(-6).toUpperCase()}</Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{patient.email}</Typography>
-                    <Typography variant="caption" color="text.secondary">{patient.phone}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label="ACTIVE" size="small" color="success" />
-                  </TableCell>
-                  <TableCell>{new Date(patient.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <IconButton size="small" title="Order History">
-                      <History fontSize="small" />
-                    </IconButton>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: COLORS.text }}>{patient.email}</Typography>
+                      <Typography variant="caption" sx={{ color: COLORS.subtext }}>{patient.phone || 'No phone recorded'}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      {patient.flaggedAsChronic ? (
+                        <Chip label="CHRONIC CARE" size="small" sx={{ bgcolor: '#fff1f2', color: '#f43f5e', fontWeight: 800, borderRadius: 2 }} />
+                      ) : (
+                        <Chip label="STANDARD" size="small" sx={{ bgcolor: COLORS.green1, color: '#059669', fontWeight: 800, borderRadius: 2 }} />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{new Date(patient.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <IconButton size="small" sx={{ color: COLORS.blue2, bgcolor: '#f1f5f9' }} title="View History">
+                          <History fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" sx={{ color: COLORS.blue2, bgcolor: '#f1f5f9' }} title="Patient Records">
+                          <ContactPage fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
+                    <ContactPage sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                    <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>No patient records found</Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">No patients found</Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
     </Box>
   );
 };
 
 export default PatientDirectory;
-

@@ -108,7 +108,7 @@ export const usePatientPortal = () => {
     }
   };
 
-  const handleOrderSubmit = async ({ attachPrescription, paymentMethod = 'online' }) => {
+  const handleOrderSubmit = async ({ attachPrescription, paymentMethod = 'online', deliveryAddress }) => {
     if (cartItems.length === 0 || !currentOrderId) return;
     try {
       setLoading(true);
@@ -128,9 +128,31 @@ export const usePatientPortal = () => {
         setLoading(false);
         return;
       }
+
+      // Generate bill
       await API.post(`/orders/${currentOrderId}/generate-bill`);
-      setSelectedOrderForBill(currentOrderId);
-      setBillReviewOpen(true);
+
+      // If no prescription is involved, auto-confirm immediately with provided address/payment
+      if (!order.prescriptionId && deliveryAddress) {
+        await patientAPI.confirmOrder(currentOrderId, {
+          deliveryAddress,
+          paymentMethod,
+          requestAudioInstructions: false
+        });
+        
+        setSnackbar({ 
+          open: true, 
+          message: 'Order placed and confirmed successfully!', 
+          severity: 'success' 
+        });
+        setCartItems([]);
+        setCurrentOrderId(null);
+        fetchPrescriptionOrders();
+      } else {
+        // For prescription orders, still show bill review so they see what the pharmacist added
+        setSelectedOrderForBill(currentOrderId);
+        setBillReviewOpen(true);
+      }
     } catch (error) {
       console.error('Error submitting order:', error);
       const errorMessage = error.response?.data?.message || 'Failed to submit order. Please try again.';

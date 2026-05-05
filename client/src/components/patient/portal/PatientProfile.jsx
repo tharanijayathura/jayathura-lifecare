@@ -1,19 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Card, CardContent, Stack, Divider, TextField, Button, CircularProgress, Avatar, IconButton, Paper, Alert, Snackbar } from '@mui/material';
-import { PhotoCamera, Person, Email, Phone, LocationOn, Save, Edit, AccountCircle } from '@mui/icons-material';
+import { Box, Typography, Grid, Card, CardContent, Stack, Divider, TextField, Button, CircularProgress, Avatar, IconButton, Paper, Alert, Snackbar, Chip } from '@mui/material';
+import { PhotoCamera, Person, Email, Phone, LocationOn, Save, Edit, AccountCircle, History, ReceiptLong, LocalHospital } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/useAuth';
 import { patientAPI } from '../../../services/api';
-
-const COLORS = {
-  green1: '#ECF4E8',
-  green2: '#CBF3BB',
-  green3: '#ABE7B2',
-  blue1: '#93BFC7',
-  blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
-};
 
 const PatientProfile = () => {
   const { user } = useAuth();
@@ -25,12 +14,21 @@ const PatientProfile = () => {
   const [error, setError] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        console.log('DEBUG: PatientProfile fetching data...');
         const response = await patientAPI.getDetailedProfile();
-        console.log('DEBUG: PatientProfile data received:', response.data);
         
         if (!response.data || !response.data.user) {
           throw new Error('Profile data was not returned by the server');
@@ -55,7 +53,7 @@ const PatientProfile = () => {
         });
         setImagePreview(userData.image || '');
       } catch (err) {
-        console.error('DEBUG: PatientProfile error:', err);
+        console.error('PatientProfile error:', err);
         setError(err.message || 'Failed to connect to the server');
       } finally {
         setLoading(false);
@@ -103,32 +101,45 @@ const PatientProfile = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading profile...</Typography>
+      <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress sx={{ color: COLORS.blue2 }} />
+        <Typography sx={{ mt: 2, color: COLORS.subtext, fontWeight: 600 }}>Syncing profile data...</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: { xs: 1, md: 3 } }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+    <Box sx={{ p: { xs: 1, md: 0 } }}>
+      <Box sx={{ mb: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: COLORS.text }}>My Profile</Typography>
-          <Typography variant="body2" sx={{ color: COLORS.subtext }}>View and manage your account information</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1 }}>
+            Personal Health Profile
+          </Typography>
+          <Typography sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+            Manage your personal information, delivery addresses, and health records
+          </Typography>
         </Box>
         <Button 
-          variant={editing ? "contained" : "outlined"}
+          variant="contained" 
           startIcon={editing ? <Save /> : <Edit />}
           onClick={editing ? handleUpdate : () => setEditing(true)}
-          sx={{ borderRadius: 3 }}
+          sx={{ 
+            borderRadius: 4, 
+            px: 4, 
+            py: 1.5,
+            fontWeight: 800,
+            bgcolor: editing ? COLORS.green3 : COLORS.blue2,
+            color: editing ? COLORS.text : 'white',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+            '&:hover': { bgcolor: editing ? COLORS.green2 : COLORS.blue1 }
+          }}
         >
-          {editing ? 'Save Changes' : 'Edit Profile'}
+          {editing ? 'Save Profile' : 'Edit Information'}
         </Button>
       </Box>
       
       {error && (
-        <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
+        <Alert severity="error" sx={{ mb: 4, borderRadius: 4, fontWeight: 600 }}>
           {error}
         </Alert>
       )}
@@ -137,113 +148,138 @@ const PatientProfile = () => {
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
             <Stack spacing={3}>
-              <Paper sx={{ p: 4, borderRadius: 6, textAlign: 'center', bgcolor: COLORS.green1, border: `1px solid ${COLORS.border}` }}>
-                <Box sx={{ position: 'relative', width: 140, height: 140, mx: 'auto', mb: 3 }}>
-                  <Avatar src={imagePreview} sx={{ width: 140, height: 140, border: '6px solid white', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}>
-                    <AccountCircle sx={{ fontSize: 100 }} />
+              <Paper elevation={0} sx={{ p: 5, borderRadius: 8, textAlign: 'center', bgcolor: COLORS.green1, border: `1px solid ${COLORS.border}`, position: 'relative', overflow: 'hidden' }}>
+                <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, bgcolor: COLORS.green2, borderRadius: '50%', opacity: 0.2 }} />
+                <Box sx={{ position: 'relative', width: 160, height: 160, mx: 'auto', mb: 4 }}>
+                  <Avatar src={imagePreview} sx={{ width: 160, height: 160, border: '8px solid white', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', bgcolor: COLORS.blue2, fontSize: '4rem', fontWeight: 900 }}>
+                    {formData.firstName[0]}
                   </Avatar>
                   {editing && (
-                    <Box sx={{ position: 'absolute', bottom: 5, right: 5 }}>
+                    <Box sx={{ position: 'absolute', bottom: 10, right: 10 }}>
                       <input id="profile-image-upload" hidden accept="image/*" type="file" onChange={handleImageChange} />
                       <label htmlFor="profile-image-upload">
-                        <IconButton component="span" sx={{ bgcolor: COLORS.blue2, color: 'white', p: 1, boxShadow: 3, '&:hover': { bgcolor: COLORS.blue1 } }}>
-                          <PhotoCamera />
+                        <IconButton component="span" sx={{ bgcolor: COLORS.text, color: 'white', p: 1.5, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', border: '3px solid white', '&:hover': { bgcolor: '#000' } }}>
+                          <PhotoCamera fontSize="small" />
                         </IconButton>
                       </label>
                     </Box>
                   )}
                 </Box>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>{formData.firstName} {formData.lastName}</Typography>
-                <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 3 }}>
-                  Member since {profile.user?.createdAt ? new Date(profile.user.createdAt).getFullYear() : new Date().getFullYear()}
+                <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.text, mb: 0.5 }}>{formData.firstName} {formData.lastName}</Typography>
+                <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 500, mb: 3 }}>
+                  Patient Account • Since {profile.user?.createdAt ? new Date(profile.user.createdAt).getFullYear() : '2024'}
                 </Typography>
-                <Chip label="Patient" sx={{ bgcolor: COLORS.text, color: 'white', fontWeight: 700, borderRadius: 2 }} />
+                <Chip label="VERIFIED ACCOUNT" size="small" sx={{ bgcolor: COLORS.text, color: 'white', fontWeight: 900, borderRadius: 2, fontSize: '0.65rem' }} />
               </Paper>
 
-              <Paper sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}` }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, mb: 3, color: COLORS.text }}>Activity</Typography>
-                <Stack spacing={3}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 600 }}>Total Orders</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{profile.stats?.totalOrders || 0}</Typography>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 600 }}>Prescriptions</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{profile.stats?.totalPrescriptions || 0}</Typography>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 600 }}>Active Refills</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{profile.stats?.activeRefillPlans || 0}</Typography>
-                  </Box>
-                </Stack>
-              </Paper>
+              <Card elevation={0} sx={{ borderRadius: 8, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 3, textTransform: 'uppercase', letterSpacing: 1 }}>Health Activity Summary</Typography>
+                  <Stack spacing={3}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2 }}><History fontSize="small" /></Box>
+                        <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 700 }}>Orders Placed</Typography>
+                      </Stack>
+                      <Typography variant="h6" sx={{ fontWeight: 900 }}>{profile.stats?.totalOrders || 0}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2 }}><ReceiptLong fontSize="small" /></Box>
+                        <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 700 }}>Prescriptions</Typography>
+                      </Stack>
+                      <Typography variant="h6" sx={{ fontWeight: 900 }}>{profile.stats?.totalPrescriptions || 0}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2 }}><LocalHospital fontSize="small" /></Box>
+                        <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 700 }}>Active Refills</Typography>
+                      </Stack>
+                      <Typography variant="h6" sx={{ fontWeight: 900 }}>{profile.stats?.activeRefillPlans || 0}</Typography>
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
             </Stack>
           </Grid>
 
           <Grid item xs={12} md={8}>
-            <Paper sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}` }}>
-              <Typography variant="h6" sx={{ fontWeight: 800, mb: 4, color: COLORS.text }}>Personal Details</Typography>
+            <Paper elevation={0} sx={{ p: 5, borderRadius: 8, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+              <Typography variant="h6" sx={{ fontWeight: 900, mb: 5, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Person sx={{ color: COLORS.blue2 }} /> Identity & Contact
+              </Typography>
+              
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>First Name</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>First Name</Typography>
                     <TextField 
                       fullWidth 
                       value={formData.firstName} 
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
                       disabled={!editing} 
                       variant="outlined"
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: editing ? 'transparent' : 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ sx: { borderRadius: 4, bgcolor: editing ? 'white' : '#f8fafc', fontWeight: 700 } }}
                     />
                   </Stack>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Last Name</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>Last Name</Typography>
                     <TextField 
                       fullWidth 
                       value={formData.lastName} 
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
                       disabled={!editing} 
                       variant="outlined"
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: editing ? 'transparent' : 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ sx: { borderRadius: 4, bgcolor: editing ? 'white' : '#f8fafc', fontWeight: 700 } }}
                     />
                   </Stack>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Email Address</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>Email Address</Typography>
                     <TextField 
                       fullWidth 
                       value={profile.user?.email || ''} 
                       disabled 
                       variant="outlined"
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ 
+                        sx: { borderRadius: 4, bgcolor: '#f8fafc', fontWeight: 600, color: '#94a3b8' },
+                        startAdornment: <Email sx={{ mr: 1, fontSize: 20, color: '#cbd5e1' }} />
+                      }}
                     />
                   </Stack>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Phone Number</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>Mobile Number</Typography>
                     <TextField 
                       fullWidth 
                       value={formData.phone} 
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
                       disabled={!editing} 
                       variant="outlined"
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: editing ? 'transparent' : 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ 
+                        sx: { borderRadius: 4, bgcolor: editing ? 'white' : '#f8fafc', fontWeight: 700 },
+                        startAdornment: <Phone sx={{ mr: 1, fontSize: 20, color: editing ? COLORS.blue2 : '#cbd5e1' }} />
+                      }}
                     />
                   </Stack>
                 </Grid>
+                
                 <Grid item xs={12}>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 3, color: COLORS.text }}>Address Details</Typography>
+                  <Box sx={{ mt: 5, mb: 4 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 900, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <LocationOn sx={{ color: COLORS.blue2 }} /> Delivery Address
+                    </Typography>
+                    <Divider sx={{ mt: 2 }} />
+                  </Box>
                 </Grid>
+
                 <Grid item xs={12}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Street Address</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>Street / Landmark</Typography>
                     <TextField 
                       fullWidth 
                       value={formData.address?.street || ''} 
@@ -252,33 +288,33 @@ const PatientProfile = () => {
                       variant="outlined"
                       multiline
                       rows={2}
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: editing ? 'transparent' : 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ sx: { borderRadius: 4, bgcolor: editing ? 'white' : '#f8fafc', fontWeight: 700 } }}
                     />
                   </Stack>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>City</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>City</Typography>
                     <TextField 
                       fullWidth 
                       value={formData.address?.city || ''} 
                       onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })} 
                       disabled={!editing} 
                       variant="outlined"
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: editing ? 'transparent' : 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ sx: { borderRadius: 4, bgcolor: editing ? 'white' : '#f8fafc', fontWeight: 700 } }}
                     />
                   </Stack>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Stack spacing={1}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: COLORS.blue2, textTransform: 'uppercase' }}>Postal Code</Typography>
+                  <Stack spacing={1.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', letterSpacing: 1 }}>Postal Code</Typography>
                     <TextField 
                       fullWidth 
                       value={formData.address?.postalCode || ''} 
                       onChange={(e) => setFormData({ ...formData, address: { ...formData.address, postalCode: e.target.value } })} 
                       disabled={!editing} 
                       variant="outlined"
-                      InputProps={{ sx: { borderRadius: 3, bgcolor: editing ? 'transparent' : 'rgba(0,0,0,0.02)' } }}
+                      InputProps={{ sx: { borderRadius: 4, bgcolor: editing ? 'white' : '#f8fafc', fontWeight: 700 } }}
                     />
                   </Stack>
                 </Grid>

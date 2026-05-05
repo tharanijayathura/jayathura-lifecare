@@ -53,6 +53,17 @@ const ManualOrderPlacement = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -108,9 +119,9 @@ const ManualOrderPlacement = () => {
       await pharmacistAPI.createManualOrder({
         patientId: selectedPatient._id,
         items: orderItems,
-        paymentMethod: 'cod' // Assuming COD for manual for now
+        paymentMethod: 'cod'
       });
-      setSuccess('Order placed successfully!');
+      setSuccess('Order placed successfully! ✨');
       setOrderItems([]);
       setSelectedPatient(null);
       setTimeout(() => setSuccess(''), 3000);
@@ -125,69 +136,85 @@ const ManualOrderPlacement = () => {
   const totalAmount = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text, mb: 3, display: 'flex', alignItems: 'center' }}>
-        <PointOfSale sx={{ mr: 1, color: COLORS.blue2 }} /> Manual Order Placement
-      </Typography>
+    <Box sx={{ p: { xs: 1, md: 0 } }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1 }}>
+          Create New Order
+        </Typography>
+        <Typography sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+          Process walk-in or phone orders with manual inventory deduction
+        </Typography>
+      </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 4 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 3, borderRadius: 4 }}>{success}</Alert>}
 
-      <Grid container spacing={3}>
-        {/* Left Side: Configuration */}
+      <Grid container spacing={4}>
+        {/* Step 1 & 2: Input */}
         <Grid item xs={12} md={5}>
           <Stack spacing={3}>
-            {/* Patient Selection */}
-            <Paper sx={{ p: 3, borderRadius: 4, border: `1px solid ${COLORS.border}` }}>
-              <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>1. Select Patient</Typography>
+            {/* Patient Search */}
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+                <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2, display: 'flex' }}>
+                  <Person />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>Search Patient</Typography>
+              </Stack>
+              
               <Autocomplete
                 options={patients}
-                getOptionLabel={(option) => `${option.name} (${option.phone || 'No phone'})`}
+                getOptionLabel={(option) => `${option.name} (${option.phone || 'N/A'})`}
                 value={selectedPatient}
                 onChange={(e, newValue) => setSelectedPatient(newValue)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Search Patient" variant="outlined" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }} />
-                )}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 4, bgcolor: '#f8fafc' } }}
+                renderInput={(params) => <TextField {...params} placeholder="Name or phone number..." variant="outlined" />}
                 renderOption={(props, option) => (
                   <li {...props}>
-                    <Box>
-                      <Typography variant="body2" fontWeight={700}>{option.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{option.email} | {option.phone}</Typography>
+                    <Box sx={{ py: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>{option.name}</Typography>
+                      <Typography variant="caption" sx={{ color: COLORS.subtext }}>{option.phone} • {option.email}</Typography>
                     </Box>
                   </li>
                 )}
               />
+              
               {selectedPatient && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: COLORS.green1, borderRadius: 3, display: 'flex', alignItems: 'center' }}>
-                  <Person sx={{ mr: 1, color: COLORS.blue2 }} />
+                <Box sx={{ mt: 3, p: 2.5, bgcolor: COLORS.green1, borderRadius: 4, border: `1px solid ${COLORS.green3}`, display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ p: 1, borderRadius: '50%', bgcolor: 'white' }}><CheckCircle sx={{ color: COLORS.blue2 }} /></Box>
                   <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{selectedPatient.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">{selectedPatient.address?.city}</Typography>
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.9rem', color: COLORS.text }}>{selectedPatient.name}</Typography>
+                    <Typography variant="caption" sx={{ color: COLORS.subtext }}>Active Profile Selected</Typography>
                   </Box>
                 </Box>
               )}
             </Paper>
 
-            {/* Medicine Selection */}
-            <Paper sx={{ p: 3, borderRadius: 4, border: `1px solid ${COLORS.border}` }}>
-              <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>2. Add Items</Typography>
-              <Stack spacing={2}>
+            {/* Medicine Add */}
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
+                <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.blue1 + '20', color: COLORS.blue2, display: 'flex' }}>
+                  <Add />
+                </Box>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>Add Medicines</Typography>
+              </Stack>
+
+              <Stack spacing={2.5}>
                 <Autocomplete
                   options={medicines}
-                  getOptionLabel={(option) => `${option.name} (${option.brand}) - Rs. ${option.price}`}
+                  getOptionLabel={(option) => `${option.name} (${option.brand})`}
                   value={selectedMedicine}
                   onChange={(e, newValue) => setSelectedMedicine(newValue)}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Search Inventory" variant="outlined" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }} />
-                  )}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 4, bgcolor: '#f8fafc' } }}
+                  renderInput={(params) => <TextField {...params} placeholder="Search inventory..." variant="outlined" />}
                 />
-                <Box display="flex" gap={2}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
                   <TextField 
-                    label="Qty" 
+                    label="Quantity" 
                     type="number" 
                     value={quantity} 
                     onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                    sx={{ width: 100, '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+                    sx={{ width: 140, '& .MuiOutlinedInput-root': { borderRadius: 4, bgcolor: '#f8fafc' } }}
                   />
                   <Button 
                     fullWidth 
@@ -195,9 +222,15 @@ const ManualOrderPlacement = () => {
                     startIcon={<Add />}
                     onClick={handleAddItem}
                     disabled={!selectedMedicine}
-                    sx={{ borderRadius: 3, bgcolor: COLORS.blue2, fontWeight: 700 }}
+                    sx={{ 
+                      borderRadius: 4, 
+                      bgcolor: COLORS.blue2, 
+                      fontWeight: 800,
+                      boxShadow: '0 8px 20px rgba(122, 168, 176, 0.25)',
+                      '&:hover': { bgcolor: COLORS.blue1 }
+                    }}
                   >
-                    Add to Cart
+                    Add Item
                   </Button>
                 </Box>
               </Stack>
@@ -205,42 +238,49 @@ const ManualOrderPlacement = () => {
           </Stack>
         </Grid>
 
-        {/* Right Side: Cart Summary */}
+        {/* Summary & Checkout */}
         <Grid item xs={12} md={7}>
-          <Paper sx={{ p: 3, borderRadius: 4, border: `1px solid ${COLORS.border}`, height: '100%' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>Order Cart</Typography>
-              <Chip label={`${orderItems.length} items`} sx={{ bgcolor: COLORS.green2, fontWeight: 700 }} />
+          <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Typography variant="h6" sx={{ fontWeight: 900 }}>Checkout Cart</Typography>
+              <Chip label={`${orderItems.length} Products`} sx={{ bgcolor: COLORS.green2, fontWeight: 800, color: COLORS.text }} />
             </Box>
 
-            <TableContainer sx={{ minHeight: 300 }}>
-              <Table size="small">
+            <TableContainer sx={{ flex: 1 }}>
+              <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Item</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Price</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Qty</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}></TableCell>
+                  <TableRow sx={{ '& th': { borderBottom: '2px solid #f1f5f9', color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' } }}>
+                    <TableCell>Product Details</TableCell>
+                    <TableCell align="center">Qty</TableCell>
+                    <TableCell align="right">Amount</TableCell>
+                    <TableCell align="right"></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {orderItems.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                        <ShoppingCart sx={{ fontSize: 48, color: 'rgba(0,0,0,0.1)', mb: 2 }} />
-                        <Typography color="text.secondary">Cart is empty. Add items to proceed.</Typography>
+                      <TableCell colSpan={4} sx={{ border: 0 }}>
+                        <Box sx={{ py: 10, textAlign: 'center' }}>
+                          <ShoppingCart sx={{ fontSize: 64, color: '#e2e8f0', mb: 2 }} />
+                          <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>Your cart is empty</Typography>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ) : (
                     orderItems.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell sx={{ fontWeight: 600 }}>{item.medicineName}</TableCell>
-                        <TableCell>Rs. {item.price}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Rs. {(item.price * item.quantity).toFixed(2)}</TableCell>
+                      <TableRow key={index} sx={{ '& td': { borderBottom: '1px solid #f1f5f9', py: 2.5 } }}>
                         <TableCell>
-                          <IconButton size="small" color="error" onClick={() => handleRemoveItem(item.medicineId)}>
+                          <Typography sx={{ fontWeight: 700, color: COLORS.text }}>{item.medicineName}</Typography>
+                          <Typography variant="caption" sx={{ color: COLORS.subtext }}>Rs. {item.price} per unit</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip label={item.quantity} size="small" sx={{ fontWeight: 800, bgcolor: '#f1f5f9' }} />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography sx={{ fontWeight: 800 }}>Rs. {(item.price * item.quantity).toFixed(2)}</Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton size="small" sx={{ color: '#f43f5e', '&:hover': { bgcolor: '#fff1f2' } }} onClick={() => handleRemoveItem(item.medicineId)}>
                             <Delete fontSize="small" />
                           </IconButton>
                         </TableCell>
@@ -251,29 +291,33 @@ const ManualOrderPlacement = () => {
               </Table>
             </TableContainer>
 
-            <Box sx={{ mt: 4, p: 3, bgcolor: COLORS.green1, borderRadius: 4 }}>
-              <Stack spacing={1}>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">Order Total</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>Rs. {totalAmount.toFixed(2)}</Typography>
+            <Box sx={{ mt: 4, p: 4, borderRadius: 6, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>Payable Amount</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.blue2 }}>
+                    Rs. {totalAmount.toFixed(2)}
+                  </Typography>
                 </Box>
                 <Button 
                   fullWidth 
                   variant="contained" 
                   size="large"
-                  startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <CheckCircle />}
                   disabled={!selectedPatient || orderItems.length === 0 || loading}
                   onClick={handlePlaceOrder}
                   sx={{ 
-                    mt: 2, 
-                    borderRadius: 3, 
-                    bgcolor: COLORS.blue2, 
-                    fontWeight: 800,
-                    py: 1.5,
-                    '&:hover': { bgcolor: COLORS.blue1 }
+                    borderRadius: 4, 
+                    bgcolor: COLORS.text, 
+                    color: 'white',
+                    fontWeight: 900,
+                    py: 2,
+                    fontSize: '1.1rem',
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: '#000' },
+                    '&.Mui-disabled': { bgcolor: '#e2e8f0' }
                   }}
                 >
-                  Place Order Now
+                  {loading ? <CircularProgress size={28} color="inherit" /> : 'Confirm and Place Order'}
                 </Button>
               </Stack>
             </Box>

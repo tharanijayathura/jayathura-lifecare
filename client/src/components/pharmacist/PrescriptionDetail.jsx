@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Grid, Chip, CircularProgress, Stack } from '@mui/material';
-import { CheckCircle } from '@mui/icons-material';
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button, 
+  Box, 
+  Typography, 
+  Grid, 
+  Chip, 
+  CircularProgress, 
+  Stack, 
+  Paper, 
+  IconButton, 
+  Divider 
+} from '@mui/material';
+import { CheckCircle, Close, Assignment, Assessment } from '@mui/icons-material';
 import { pharmacistAPI, medicineAPI } from '../../services/api';
 import PrescriptionImage from './prescription/PrescriptionImage';
 import MedicineAddForm from './prescription/MedicineAddForm';
@@ -17,6 +32,17 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
+
   useEffect(() => {
     if (open && prescription) {
       fetchPrescriptionDetails();
@@ -32,12 +58,9 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
     try {
       setLoading(true);
       const response = await pharmacistAPI.getPrescriptionDetails(prescription._id);
-      // Response now includes both prescription and order
       if (response.data?.order) {
         setOrder(response.data.order);
       } else {
-        // If no order exists yet, create one or find it
-        // The order should have been created when prescription was uploaded
         setOrder(null);
       }
       setLoading(false);
@@ -57,9 +80,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
   };
 
   const handleAddMedicine = async () => {
-    if (!selectedMedicine || !quantity) {
-      return;
-    }
+    if (!selectedMedicine || !quantity) return;
 
     try {
       setLoading(true);
@@ -80,7 +101,6 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
       setDosage('');
       setFrequency('');
       setInstructions('');
-      // Refresh order data
       await fetchPrescriptionDetails();
       onUpdate?.();
     } catch (error) {
@@ -93,17 +113,14 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
 
   const handleRemoveItem = async (itemId) => {
     if (!order) return;
-    
     try {
       setLoading(true);
       await pharmacistAPI.removePrescriptionItem(order._id, itemId);
-      // Refresh order
       const response = await pharmacistAPI.getPrescriptionDetails(prescription._id);
       setOrder(response.data.order);
       onUpdate?.();
     } catch (error) {
       console.error('Error removing item:', error);
-      alert('Failed to remove item');
     } finally {
       setLoading(false);
     }
@@ -111,19 +128,16 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
 
   const handleGenerateBill = async () => {
     if (!order || order.items.length === 0) {
-      alert('Please add medicines to the order first');
+      alert('Please add medicines first');
       return;
     }
-
     try {
       setLoading(true);
       await pharmacistAPI.generateAutoBill(order._id);
-      alert('Bill generated successfully! Patient can now review and confirm.');
       onUpdate?.();
       onClose();
     } catch (error) {
       console.error('Error generating bill:', error);
-      alert('Failed to generate bill');
     } finally {
       setLoading(false);
     }
@@ -133,12 +147,10 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
     try {
       setLoading(true);
       await pharmacistAPI.markPrescriptionVerified(prescription._id);
-      alert('Prescription verified and bill sent to patient!');
       onUpdate?.();
       onClose();
     } catch (error) {
       console.error('Error verifying prescription:', error);
-      alert('Failed to verify prescription');
     } finally {
       setLoading(false);
     }
@@ -147,39 +159,50 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
   if (!prescription) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth scroll="body">
-      <DialogTitle sx={{ bgcolor: COLORS.green1, pb: 2 }}>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="xl" 
+      fullWidth 
+      scroll="body"
+      PaperProps={{
+        sx: { borderRadius: 8, bgcolor: '#f8fafc', backgroundImage: 'none' }
+      }}
+    >
+      <DialogTitle sx={{ p: 4, bgcolor: 'white', borderBottom: `1px solid ${COLORS.border}` }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>
-              Prescription Order Placement
-            </Typography>
-            <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-              Patient: {prescription.patientId?.name} | {new Date(prescription.createdAt).toLocaleDateString()}
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+              <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2, display: 'flex' }}>
+                <Assignment />
+              </Box>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.text }}>
+                Prescription Verification
+              </Typography>
+            </Stack>
+            <Typography sx={{ color: COLORS.subtext, fontWeight: 500, fontSize: '0.9rem' }}>
+              Order #{prescription._id?.slice(-6).toUpperCase()} • Patient: {prescription.patientId?.name}
             </Typography>
           </Box>
-          <Chip 
-            label={prescription.status.toUpperCase()} 
-            color={prescription.status === 'verified' ? 'success' : 'warning'}
-            sx={{ fontWeight: 700, borderRadius: 2 }}
-          />
+          <IconButton onClick={onClose} sx={{ bgcolor: '#f1f5f9' }}><Close /></IconButton>
         </Stack>
       </DialogTitle>
-      <DialogContent sx={{ p: 3 }}>
+
+      <DialogContent sx={{ p: { xs: 2, md: 4 } }}>
         <Grid container spacing={4}>
-          {/* Sticky Prescription View */}
+          {/* Prescription View */}
           <Grid item xs={12} md={5}>
-            <Box sx={{ position: 'sticky', top: 20 }}>
+            <Box sx={{ position: 'sticky', top: 0 }}>
               <PrescriptionImage prescription={prescription} />
             </Box>
           </Grid>
 
-          {/* Action and Items Panel */}
+          {/* Pharmacist Actions */}
           <Grid item xs={12} md={7}>
-            <Stack spacing={3}>
+            <Stack spacing={4}>
               <Box>
-                <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
-                  1. Identify & Add Medicines
+                <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Verification Form
                 </Typography>
                 <MedicineAddForm
                   medicines={medicines}
@@ -201,51 +224,68 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
               </Box>
 
               <Box>
-                <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>
-                  2. Review Order Summary
+                <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Consolidated Order List
                 </Typography>
-                {order ? (
+                {order && order.items?.length > 0 ? (
                   <OrderItems order={order} loading={loading} handleRemoveItem={handleRemoveItem} />
                 ) : (
-                  <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 4, border: `2px dashed ${COLORS.border}` }}>
-                    <Typography sx={{ color: COLORS.subtext }}>No items added to this order yet.</Typography>
+                  <Paper elevation={0} sx={{ p: 6, textAlign: 'center', borderRadius: 6, border: `2px dashed ${COLORS.border}`, bgcolor: 'white' }}>
+                    <Assessment sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                    <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>Ready to verify medicines.</Typography>
                   </Paper>
                 )}
               </Box>
-              
-              {loading && (
-                <Box display="flex" justifyContent="center" p={2}>
-                  <CircularProgress size={32} sx={{ color: COLORS.blue2 }} />
-                </Box>
-              )}
             </Stack>
           </Grid>
         </Grid>
       </DialogContent>
-      <Divider />
-      <DialogActions sx={{ p: 3, bgcolor: '#fcfdfc' }}>
-        <Button onClick={onClose} variant="outlined" sx={{ borderRadius: 2 }}>Close</Button>
+
+      <DialogActions sx={{ p: 4, bgcolor: 'white', borderTop: `1px solid ${COLORS.border}`, gap: 2 }}>
+        <Button 
+          onClick={onClose} 
+          sx={{ borderRadius: 4, px: 3, fontWeight: 700, color: COLORS.subtext }}
+        >
+          Cancel Process
+        </Button>
         <Box sx={{ flex: 1 }} />
-        {order && order.items.length > 0 && !order.finalAmount && (
+        
+        {order && order.items?.length > 0 && !order.finalAmount && (
           <Button
             variant="contained"
             onClick={handleGenerateBill}
             disabled={loading}
-            sx={{ bgcolor: COLORS.blue2, borderRadius: 2, px: 4, '&:hover': { bgcolor: COLORS.blue1 } }}
+            sx={{ 
+              borderRadius: 4, 
+              px: 4, 
+              py: 1.5,
+              bgcolor: COLORS.blue2, 
+              fontWeight: 800,
+              boxShadow: '0 8px 20px rgba(122, 168, 176, 0.2)',
+              '&:hover': { bgcolor: COLORS.blue1 }
+            }}
           >
-            Calculate & Generate Bill
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Finalize & Calculate Bill'}
           </Button>
         )}
+
         {order && order.finalAmount && (
           <Button
             variant="contained"
-            color="success"
             startIcon={<CheckCircle />}
             onClick={handleVerify}
             disabled={loading}
-            sx={{ bgcolor: COLORS.green3, color: COLORS.text, fontWeight: 700, borderRadius: 2, px: 4, '&:hover': { bgcolor: COLORS.green2 } }}
+            sx={{ 
+              borderRadius: 4, 
+              px: 4, 
+              py: 1.5,
+              bgcolor: COLORS.text, 
+              color: 'white',
+              fontWeight: 900,
+              '&:hover': { bgcolor: '#000' }
+            }}
           >
-            Approve & Send to Patient (Rs. {order.finalAmount?.toFixed(2)})
+            Confirm Approval (Rs. {order.finalAmount?.toFixed(2)})
           </Button>
         )}
       </DialogActions>

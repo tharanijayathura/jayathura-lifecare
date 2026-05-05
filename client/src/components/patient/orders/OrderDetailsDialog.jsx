@@ -19,6 +19,7 @@ import { Download, Payment, VolumeUp, PlayArrow, Pause } from '@mui/icons-materi
 import OrderItemsTable from './OrderItemsTable.jsx';
 import OrderTrackingStepper from './OrderTrackingStepper.jsx';
 import OrderReviewConfirmation from './OrderReviewConfirmation.jsx';
+import { getPublicFileUrl } from '../../../services/api';
 
 const getStatusColor = (status) => {
   const colors = {
@@ -92,7 +93,7 @@ const OrderDetailsDialog = ({ open, order, onClose, onDownloadInvoice }) => {
                     </Box>
                     <audio
                       ref={audioRef}
-                      src={order.audioInstructions.url}
+                      src={getPublicFileUrl(order.audioInstructions.url)}
                       onPlay={() => setIsPlayingAudio(true)}
                       onPause={() => setIsPlayingAudio(false)}
                       onEnded={() => setIsPlayingAudio(false)}

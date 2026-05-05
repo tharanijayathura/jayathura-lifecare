@@ -8,10 +8,21 @@ import {
   Alert,
   Paper,
   Container,
+  InputAdornment,
+  IconButton,
+  Stack,
+  Fade,
+  CircularProgress
 } from '@mui/material';
-import { LocalPharmacy, ArrowBack } from '@mui/icons-material';
+import { 
+  ArrowBack, 
+  EmailOutlined, 
+  KeyOutlined,
+  ChevronRight,
+  MarkEmailReadOutlined
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import PageHeader from '../common/PageHeader';
+import Brand from '../../shared/components/Brand';
 import axios from 'axios';
 
 const ForgotPassword = () => {
@@ -21,6 +32,16 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  const COLORS = {
+    primary: '#1e293b',
+    secondary: '#93BFC7',
+    accent: '#ABE7B2',
+    bg: '#f8fafc',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -28,144 +49,116 @@ const ForgotPassword = () => {
     setSuccess(false);
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/forgot-password`, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/forgot-password`, {
         email
       });
-
-      // Do not display the verification code in the UI. In development the server logs it to the server console.
-      if (response.data.code) {
-        console.log('🔑 Verification Code (Development):', response.data.code);
-      }
-
       setSuccess(true);
-      // Navigate to reset password page after 2 seconds
       setTimeout(() => {
         navigate('/reset-password', { state: { email } });
       }, 2000);
     } catch (err) {
-      console.error('Forgot password error:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to send verification code. Please try again.';
-      setError(errorMessage);
+      setError(err.response?.data?.message || 'Verification failure.');
       setLoading(false);
     }
   };
 
+  const FIELD_SX = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 4,
+      backgroundColor: '#f1f5f9',
+      '& fieldset': { border: 'none' },
+      '&:hover': { backgroundColor: '#e2e8f0' },
+      '&.Mui-focused': { 
+        backgroundColor: '#fff',
+        boxShadow: `0 0 0 2px ${COLORS.secondary}`,
+      },
+    },
+    '& .MuiInputLabel-root': {
+      fontWeight: 600,
+      fontSize: '0.9rem',
+      color: COLORS.subtext,
+      '&.Mui-focused': { color: COLORS.secondary }
+    }
+  };
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
-      <Container component="main" maxWidth="sm">
-        <PageHeader title="Forgot Password" subtitle="Enter your email to receive a verification code" showBack={true} backPath="/login" />
-        <Box
+    <Box
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: `radial-gradient(circle at 10% 20%, ${COLORS.accent}10 0%, transparent 40%), 
+                    radial-gradient(circle at 90% 80%, ${COLORS.secondary}10 0%, transparent 40%),
+                    ${COLORS.bg}`,
+        p: 3
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper
+          elevation={0}
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            p: { xs: 3, md: 5 },
+            borderRadius: 6,
+            border: `1px solid ${COLORS.border}`,
+            boxShadow: '0 30px 80px rgba(30, 41, 59, 0.08)',
+            bgcolor: 'white',
+            textAlign: 'center'
           }}
         >
-          <Paper
-            elevation={0}
-            sx={{
-              padding: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              backgroundColor: '#FFFFFF',
-              borderRadius: 3,
-              border: '1px solid #ECF4E8',
-              width: '100%',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <LocalPharmacy sx={{ color: '#ABE7B2', fontSize: 40, mr: 1 }} />
-              <Typography variant="h5" sx={{ color: '#2C3E50', fontWeight: 700 }}>
-                Reset Password
-              </Typography>
-            </Box>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+            <IconButton 
+              size="small"
+              onClick={() => navigate('/login')}
+              sx={{ bgcolor: '#f1f5f9', '&:hover': { bgcolor: COLORS.secondary, color: 'white' } }}
+            >
+              <ArrowBack fontSize="small" />
+            </IconButton>
+            <Brand size={22} textVariant="subtitle1" />
+          </Stack>
 
-            <Typography variant="body2" sx={{ color: '#546E7A', mb: 3, textAlign: 'center' }}>
-              Enter your email address and we'll send you a verification code to reset your password.
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ p: 1.5, borderRadius: '20px', bgcolor: '#ECF4E8', color: COLORS.secondary, display: 'inline-flex', mb: 2 }}>
+              <KeyOutlined sx={{ fontSize: 32 }} />
+            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.primary, mb: 0.5 }}>
+              Recover Access
             </Typography>
+            <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+              Enter your email for a secure verification code.
+            </Typography>
+          </Box>
 
-            {error && (
-              <Alert severity="error" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
-                {error}
-              </Alert>
-            )}
-
-            {success && (
-              <Alert severity="success" sx={{ width: '100%', mb: 2, backgroundColor: '#ECF4E8' }}>
-                Verification code sent! Redirecting to reset password page...
-              </Alert>
-            )}
-
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading || success}
-                sx={{
-                  mb: 2,
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#ABE7B2',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#ABE7B2',
-                    },
-                  },
-                }}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={loading || success}
-                sx={{
-                  mt: 2,
-                  mb: 2,
-                  py: 1.5,
-                  backgroundColor: '#ABE7B2',
-                  color: '#2C3E50',
-                  '&:hover': {
-                    backgroundColor: '#CBF3BB',
-                  },
-                  '&:disabled': {
-                    backgroundColor: '#ECF4E8',
-                    color: '#93BFC7',
-                  },
-                }}
-              >
-                {loading ? 'Sending...' : success ? 'Code Sent!' : 'Send Verification Code'}
-              </Button>
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => navigate('/login')}
-                sx={{
-                  color: '#93BFC7',
-                  '&:hover': {
-                    backgroundColor: '#ECF4E8',
-                  },
-                }}
-              >
-                Back to Login
-              </Button>
+          <Fade in={!!error || !!success}>
+            <Box>
+              {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 3, fontSize: '0.8rem' }}>{error}</Alert>}
+              {success && <Alert icon={<MarkEmailReadOutlined />} severity="success" sx={{ mb: 3, borderRadius: 3, fontSize: '0.8rem' }}>Code sent! Transferring...</Alert>}
             </Box>
-          </Paper>
-        </Box>
+          </Fade>
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth required label="Registered Email" size="small"
+              value={email} onChange={(e) => setEmail(e.target.value)}
+              disabled={loading || success} sx={FIELD_SX}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><EmailOutlined sx={{ color: COLORS.subtext, fontSize: 18, ml: 1, mr: 1 }} /></InputAdornment>) }}
+            />
+
+            <Button
+              type="submit" fullWidth variant="contained" disabled={loading || success}
+              endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ChevronRight />}
+              sx={{
+                mt: 3, py: 1.5, borderRadius: 4, bgcolor: COLORS.primary, color: 'white', fontWeight: 800, textTransform: 'none',
+                boxShadow: '0 10px 30px rgba(30, 41, 59, 0.15)', '&:hover': { bgcolor: '#000', transform: 'translateY(-1px)' }
+              }}
+            >
+              {loading ? 'Transmitting...' : 'Request Reset Code'}
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     </Box>
   );
 };
 
 export default ForgotPassword;
-

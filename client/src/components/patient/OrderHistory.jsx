@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Box, CircularProgress, Alert, Card, CardContent } from '@mui/material';
-import { LocalShipping } from '@mui/icons-material';
+import { Typography, Box, CircularProgress, Alert, Paper, Stack, Button } from '@mui/material';
+import { LocalShipping, Refresh, History } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
 import OrderCard from './orders/OrderCard.jsx';
 import OrderDetailsDialog from './orders/OrderDetailsDialog.jsx';
@@ -11,7 +11,17 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  // Dialog state for order details
+
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -22,21 +32,14 @@ const OrderHistory = () => {
       setLoading(true);
       setError(null);
       const response = await patientAPI.getOrdersHistory();
-      console.log('Orders history response:', response);
-      const ordersData = response.data || [];
-      console.log('Orders data:', ordersData);
-      setOrders(ordersData);
+      setOrders(response.data || []);
     } catch (err) {
       console.error('Error fetching orders:', err);
-      console.error('Error details:', err.response?.data);
-      setError(err.response?.data?.message || 'Failed to load order history. Please try again.');
-      setOrders([]);
+      setError('Unable to load your order history.');
     } finally {
       setLoading(false);
     }
   };
-
-  // Handlers
 
   const handleViewDetails = async (orderId) => {
     try {
@@ -45,75 +48,70 @@ const OrderHistory = () => {
       setDetailsDialogOpen(true);
     } catch (error) {
       console.error('Error fetching order details:', error);
-      alert('Failed to load order details. Please try again.');
     }
   };
 
   const handleDownloadInvoice = async (orderId) => {
     try {
       const response = await patientAPI.viewBill(orderId);
-      // You can open this in a new window or download as PDF
-      console.log('Invoice:', response.data);
       alert(`Invoice ID: ${response.data.invoiceId || response.data.orderId}\nTotal: Rs. ${response.data.totalAmount || 0}`);
     } catch (error) {
       console.error('Error fetching invoice:', error);
     }
   };
 
-  const handleTrackDelivery = async (orderId) => {
-    try {
-      const res = await patientAPI.trackDelivery(orderId);
-      alert(`Delivery Status: ${res.data.deliveryStatus || 'N/A'}\nEstimated Delivery: ${res.data.estimatedDelivery ? new Date(res.data.estimatedDelivery).toLocaleString() : 'N/A'}`);
-    } catch (err) {
-      console.error('Error tracking delivery:', err);
-      alert('Unable to track delivery right now.');
-    }
-  };
-
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress sx={{ color: COLORS.blue2 }} />
       </Box>
     );
   }
 
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        {error}
-      </Alert>
-    );
-  }
-
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
-        Order History
-      </Typography>
+    <Box sx={{ p: { xs: 1, md: 0 } }}>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1 }}>
+            Purchase History
+          </Typography>
+          <Typography sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+            Track your current orders and review past medical purchases
+          </Typography>
+        </Box>
+        <Button 
+          variant="outlined" 
+          startIcon={<Refresh />} 
+          onClick={fetchOrders}
+          sx={{ borderRadius: 3, fontWeight: 700, color: COLORS.blue2, borderColor: COLORS.blue2 }}
+        >
+          Refresh List
+        </Button>
+      </Box>
 
-      {orders.length > 0 && orders.map((order) => (
-        <OrderCard
-          key={order._id || order.orderId}
-          order={order}
-          onViewDetails={() => handleViewDetails(order._id || order.orderId)}
-          onDownloadInvoice={() => handleDownloadInvoice(order._id || order.orderId)}
-          onTrackDelivery={() => handleTrackDelivery(order._id || order.orderId)}
-        />
-      ))}
+      {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 4 }}>{error}</Alert>}
 
-      {orders.length === 0 && !loading && (
-        <Card sx={{ mt: 2 }}>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <LocalShipping sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              No orders yet
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Start shopping to see your orders here
-            </Typography>
-          </CardContent>
-        </Card>
+      {orders.length > 0 ? (
+        <Box>
+          {orders.map((order) => (
+            <OrderCard
+              key={order._id || order.orderId}
+              order={order}
+              onViewDetails={() => handleViewDetails(order._id || order.orderId)}
+              onDownloadInvoice={() => handleDownloadInvoice(order._id || order.orderId)}
+            />
+          ))}
+        </Box>
+      ) : (
+        <Paper elevation={0} sx={{ py: 12, textAlign: 'center', borderRadius: 8, border: `2px dashed ${COLORS.border}`, bgcolor: 'white' }}>
+          <Box sx={{ p: 3, borderRadius: '50%', bgcolor: COLORS.green1, display: 'inline-flex', mb: 3 }}>
+            <History sx={{ fontSize: 48, color: COLORS.blue2 }} />
+          </Box>
+          <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 800 }}>No Orders Found</Typography>
+          <Typography sx={{ color: COLORS.subtext, maxWidth: 400, mx: 'auto', mt: 1 }}>
+            You haven't placed any orders yet. Visit our shop or upload a prescription to get started.
+          </Typography>
+        </Paper>
       )}
 
       <OrderDetailsDialog

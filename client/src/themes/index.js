@@ -9,7 +9,7 @@ export const lifecareTheme = createTheme({
       dark: '#CBF3BB',
     },
     secondary: {
-      main: '#93BFC7',
+      main: '#7AA8B0',
       light: '#ECF4E8',
       dark: '#93BFC7',
     },
@@ -18,8 +18,8 @@ export const lifecareTheme = createTheme({
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#2C3E50',
-      secondary: '#546E7A',
+      primary: '#1e293b',
+      secondary: '#64748b',
     },
     success: {
       main: '#ABE7B2',
@@ -34,68 +34,69 @@ export const lifecareTheme = createTheme({
       light: '#ECF4E8',
     },
     error: {
-      main: '#ABE7B2',
-      light: '#ECF4E8',
+      main: '#f43f5e',
+      light: '#fff1f2',
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Outfit", "Roboto", "Helvetica", "Arial", sans-serif',
     h4: {
-      fontWeight: 700,
-      color: '#2C3E50',
-      fontSize: '2rem',
+      fontWeight: 800,
+      color: '#1e293b',
+      fontSize: '2.25rem',
+      letterSpacing: '-0.025em',
     },
     h5: {
-      fontWeight: 600,
-      color: '#2C3E50',
+      fontWeight: 700,
+      color: '#1e293b',
     },
     h6: {
-      fontWeight: 500,
-      color: '#2C3E50',
+      fontWeight: 700,
+      color: '#1e293b',
     },
     body1: {
       fontSize: '1rem',
       lineHeight: 1.6,
-      color: '#2C3E50',
+      color: '#1e293b',
     },
     body2: {
-      color: '#546E7A',
+      color: '#64748b',
     },
     button: {
       textTransform: 'none',
-      fontWeight: 500,
+      fontWeight: 700,
     },
+  },
+  shape: {
+    borderRadius: 12,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 12,
           textTransform: 'none',
-          fontWeight: 500,
-          padding: '8px 24px',
+          fontWeight: 700,
+          padding: '10px 24px',
           fontSize: '0.9rem',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         },
         contained: {
           backgroundColor: '#ABE7B2',
-          color: '#2C3E50',
+          color: '#1e293b',
+          boxShadow: 'none',
           '&:hover': {
             backgroundColor: '#CBF3BB',
-            boxShadow: '0 4px 8px rgba(171, 231, 178, 0.3)',
+            boxShadow: '0 8px 20px rgba(171, 231, 178, 0.25)',
+            transform: 'translateY(-1px)',
           },
         },
         outlined: {
-          borderColor: '#93BFC7',
-          color: '#93BFC7',
+          borderColor: 'rgba(147, 191, 199, 0.4)',
+          color: '#7AA8B0',
           '&:hover': {
             backgroundColor: '#ECF4E8',
-            borderColor: '#93BFC7',
-          },
-        },
-        text: {
-          color: '#93BFC7',
-          '&:hover': {
-            backgroundColor: '#ECF4E8',
+            borderColor: '#7AA8B0',
           },
         },
       },
@@ -103,9 +104,9 @@ export const lifecareTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 2px 12px rgba(171, 231, 178, 0.1)',
-          border: '1px solid #ECF4E8',
+          borderRadius: 20,
+          boxShadow: '0 4px 12px rgba(171, 231, 178, 0.08)',
+          border: '1px solid rgba(147, 191, 199, 0.2)',
           backgroundColor: '#FFFFFF',
         },
       },
@@ -114,9 +115,9 @@ export const lifecareTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: '#FFFFFF',
-          color: '#2C3E50',
-          boxShadow: '0 1px 3px rgba(171, 231, 178, 0.2)',
-          borderBottom: '1px solid #ECF4E8',
+          color: '#1e293b',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+          borderBottom: '1px solid rgba(147, 191, 199, 0.2)',
         },
       },
     },
@@ -124,12 +125,17 @@ export const lifecareTheme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
+            borderRadius: 12,
+            backgroundColor: '#f8fafc',
+            '& fieldset': {
+              borderColor: 'rgba(147, 191, 199, 0.2)',
+            },
             '&:hover fieldset': {
               borderColor: '#ABE7B2',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#93BFC7',
+              borderColor: '#7AA8B0',
+              borderWidth: '2px',
             },
           },
         },
@@ -137,23 +143,19 @@ export const lifecareTheme = createTheme({
     },
     MuiPaper: {
       styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+        },
         rounded: {
-          borderRadius: 12,
+          borderRadius: 16,
         },
       },
     },
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-        },
-        standardSuccess: {
-          backgroundColor: '#ECF4E8',
-          color: '#2C3E50',
-        },
-        standardError: {
-          backgroundColor: '#ECF4E8',
-          color: '#2C3E50',
+          borderRadius: 12,
+          fontWeight: 600,
         },
       },
     },

@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Grid, Stack, Divider, Alert, CircularProgress, IconButton, Paper } from '@mui/material';
-import { ShoppingCart, Close, ReceiptLong, LocalShipping, Payment, ShoppingBag, LocalPharmacy } from '@mui/icons-material';
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button, 
+  Box, 
+  Typography, 
+  Grid, 
+  Stack, 
+  Divider, 
+  Alert, 
+  CircularProgress, 
+  IconButton, 
+  Paper 
+} from '@mui/material';
+import { ShoppingCart, Close, ReceiptLong, LocalShipping, Payment, ShoppingBag, LocalPharmacy, Verified } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
 import PrescriptionItemsTable from './bill/PrescriptionItemsTable.jsx';
 import OtcItemsTable from './bill/OtcItemsTable.jsx';
 import BillSummary from './bill/BillSummary.jsx';
 import DeliveryAddressForm from './bill/DeliveryAddressForm.jsx';
 import PaymentMethodSection from './bill/PaymentMethodSection.jsx';
-
-const COLORS = {
-  green1: '#ECF4E8',
-  green2: '#CBF3BB',
-  green3: '#ABE7B2',
-  blue1: '#93BFC7',
-  blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
-  paper: 'rgba(255,255,255,0.9)',
-};
 
 const BillReview = ({ orderId, open, onClose, onConfirm }) => {
   const [order, setOrder] = useState(null);
@@ -31,6 +34,17 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
   });
   const [paymentMethod, setPaymentMethod] = useState('online');
   const [requestAudioInstructions, setRequestAudioInstructions] = useState(false);
+
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
 
   useEffect(() => {
     if (open && orderId) {
@@ -102,65 +116,74 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
       onClose={onClose} 
       maxWidth="md" 
       fullWidth
-      PaperProps={{ sx: { borderRadius: 4, overflow: 'hidden' } }}
+      PaperProps={{
+        sx: { borderRadius: 8, bgcolor: '#f8fafc', backgroundImage: 'none' }
+      }}
     >
-      <DialogTitle sx={{ p: 0 }}>
-        <Box sx={{ p: 3, bgcolor: COLORS.green1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Box sx={{ p: 1, bgcolor: 'white', borderRadius: 2, color: COLORS.text, display: 'flex' }}>
-              <ReceiptLong />
-            </Box>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.text }}>Review & Confirm Bill</Typography>
-              <Typography variant="caption" sx={{ color: COLORS.subtext }}>Order ID: {order?.orderId || orderId}</Typography>
-            </Box>
-          </Stack>
-          <IconButton onClick={onClose} size="small" sx={{ color: COLORS.text }}>
-            <Close />
-          </IconButton>
-        </Box>
+      <DialogTitle sx={{ p: 4, bgcolor: 'white', borderBottom: `1px solid ${COLORS.border}` }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+              <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2, display: 'flex' }}>
+                <ReceiptLong />
+              </Box>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.text }}>
+                Finalize Purchase
+              </Typography>
+            </Stack>
+            <Typography sx={{ color: COLORS.subtext, fontWeight: 500, fontSize: '0.9rem' }}>
+              Order ID: #{order?.orderId || orderId} • Verified by Pharmacist
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} sx={{ bgcolor: '#f1f5f9' }}><Close /></IconButton>
+        </Stack>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3, mt: 2 }}>
+      <DialogContent sx={{ p: { xs: 2, md: 4 } }}>
         {loading && !order ? (
-          <Box display="flex" flexDirection="column" alignItems="center" py={8}>
-            <CircularProgress size={40} sx={{ color: COLORS.blue2, mb: 2 }} />
-            <Typography variant="body2" color="text.secondary">Loading your bill details...</Typography>
+          <Box display="flex" flexDirection="column" alignItems="center" py={10}>
+            <CircularProgress size={48} sx={{ color: COLORS.blue2, mb: 3 }} />
+            <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 700 }}>Calculating your bill...</Typography>
+            <Typography sx={{ color: COLORS.subtext }}>Fetching prices and verifying stock levels.</Typography>
           </Box>
         ) : order ? (
           <Stack spacing={4}>
-            <Alert severity="info" icon={<ShoppingCart />} sx={{ borderRadius: 3, '& .MuiAlert-message': { fontWeight: 500 } }}>
-              Please review the medicines and products added by our pharmacist. You can remove non-prescription items if you've changed your mind.
-            </Alert>
+            {/* Verification Badge */}
+            <Box sx={{ p: 2.5, borderRadius: 5, bgcolor: '#eff6ff', border: '1px solid #dbeafe', display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Verified sx={{ color: '#2563eb' }} />
+              <Box>
+                <Typography sx={{ color: '#1e40af', fontWeight: 800, fontSize: '0.95rem' }}>Pharmacist Verified</Typography>
+                <Typography sx={{ color: '#60a5fa', fontSize: '0.85rem', fontWeight: 500 }}>Your prescription has been reviewed and priced by our licensed pharmacist.</Typography>
+              </Box>
+            </Box>
 
+            {/* Medicines List */}
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LocalPharmacy fontSize="small" sx={{ color: COLORS.blue2 }} /> Prescription Medicines
+              <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Prescription Items
               </Typography>
               <PrescriptionItemsTable items={order.items.filter(item => item.isPrescription)} />
             </Box>
 
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <ShoppingBag fontSize="small" sx={{ color: COLORS.blue2 }} /> Other Items
+              <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Additional OTC Products
               </Typography>
               <OtcItemsTable items={order.items.filter(item => !item.isPrescription)} onRemoveItem={handleRemoveItem} removingId={removing} />
             </Box>
 
-            <Divider sx={{ borderColor: COLORS.border }} />
-
             <Grid container spacing={4}>
               <Grid item xs={12} md={7}>
-                <Stack spacing={3}>
+                <Stack spacing={4}>
                   <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LocalShipping fontSize="small" sx={{ color: COLORS.blue2 }} /> Delivery Address
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Shipment Details
                     </Typography>
                     <DeliveryAddressForm address={deliveryAddress} setAddress={setDeliveryAddress} orderStatus={order.status} />
                   </Box>
                   <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Payment fontSize="small" sx={{ color: COLORS.blue2 }} /> Payment & Preferences
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      Payment Preference
                     </Typography>
                     <PaymentMethodSection
                       paymentMethod={paymentMethod}
@@ -172,44 +195,52 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
                 </Stack>
               </Grid>
               <Grid item xs={12} md={5}>
-                <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, bgcolor: COLORS.green1 + '44', borderColor: COLORS.border }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 2, color: COLORS.text }}>Order Summary</Typography>
-                  <BillSummary 
-                    totalAmount={order.totalAmount} 
-                    deliveryFee={order.deliveryFee} 
-                    finalAmount={order.finalAmount} 
-                  />
-                </Paper>
+                <Box sx={{ position: 'sticky', top: 0 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Cost Summary
+                  </Typography>
+                  <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+                    <BillSummary 
+                      totalAmount={order.totalAmount} 
+                      deliveryFee={order.deliveryFee} 
+                      finalAmount={order.finalAmount} 
+                    />
+                  </Paper>
+                </Box>
               </Grid>
             </Grid>
           </Stack>
         ) : (
-          <Alert severity="error">Failed to load bill. Please try again.</Alert>
+          <Alert severity="error" sx={{ borderRadius: 4 }}>Unable to retrieve bill. Please contact support.</Alert>
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, bgcolor: 'action.hover', borderTop: `1px solid ${COLORS.border}` }}>
-        <Button onClick={onClose} sx={{ color: COLORS.subtext, fontWeight: 600 }}>Cancel</Button>
+      <DialogActions sx={{ p: 4, bgcolor: 'white', borderTop: `1px solid ${COLORS.border}`, gap: 2 }}>
+        <Button onClick={onClose} sx={{ borderRadius: 4, px: 3, fontWeight: 700, color: COLORS.subtext }}>
+          Close Review
+        </Button>
+        <Box sx={{ flex: 1 }} />
         <Button
           variant="contained"
           onClick={handleConfirm}
           disabled={loading || !order || order.items.length === 0 || !deliveryAddress.street || order.status === 'confirmed'}
           sx={{ 
-            borderRadius: 2.5, 
-            px: 4, 
-            py: 1, 
-            bgcolor: COLORS.blue2, 
-            fontWeight: 700, 
-            boxShadow: '0 4px 14px rgba(122, 168, 176, 0.4)',
-            '&:hover': { bgcolor: COLORS.blue1 }
+            borderRadius: 4, 
+            px: 6, 
+            py: 1.8, 
+            bgcolor: COLORS.text, 
+            color: 'white',
+            fontWeight: 900,
+            fontSize: '1rem',
+            '&:hover': { bgcolor: '#000' }
           }}
         >
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : order?.status === 'confirmed' ? (
-            'Confirmed'
+            'Payment Confirmed'
           ) : (
-            'Confirm & Place Order'
+            'Complete Order'
           )}
         </Button>
       </DialogActions>

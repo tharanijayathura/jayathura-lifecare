@@ -12,14 +12,22 @@ import {
   InputAdornment,
   IconButton,
   Grid,
-  Divider,
+  Stack,
+  CircularProgress
 } from '@mui/material';
-import { Visibility, VisibilityOff, ArrowBack, Home } from '@mui/icons-material';
+import { 
+  Visibility, 
+  VisibilityOff, 
+  PersonOutline, 
+  EmailOutlined, 
+  LockOutlined, 
+  PhoneOutlined, 
+  WorkOutline,
+  ArrowForward
+} from '@mui/icons-material';
 import Brand from '../../shared/components/Brand';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
-
-// ✅ transparent doctor image
 import pimage from '../../assets/pimage.png';
 
 const Register = () => {
@@ -39,7 +47,6 @@ const Register = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -54,25 +61,9 @@ const Register = () => {
     setSuccess('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Registration Error: Passwords do not match.');
       setLoading(false);
       return;
-    }
-
-    // Password validation: at least 8 chars, one uppercase, one lowercase, one special char
-    const password = formData.password;
-    const passwordRequirements = [
-      { test: /.{8,}/, message: 'Password must be at least 8 characters.' },
-      { test: /[A-Z]/, message: 'Password must contain at least one uppercase letter.' },
-      { test: /[a-z]/, message: 'Password must contain at least one lowercase letter.' },
-      { test: /[@$!%*?&#^()_+=\-]/, message: 'Password must contain at least one special character (e.g. @, #, $).' },
-    ];
-    for (const req of passwordRequirements) {
-      if (!req.test.test(password)) {
-        setError(req.message);
-        setLoading(false);
-        return;
-      }
     }
 
     try {
@@ -82,287 +73,173 @@ const Register = () => {
         ...rest
       };
       const result = await register(registerData);
-
-      setSuccess(
-        result?.isApproved
-          ? 'Registration successful! You can now sign in.'
-          : 'Registration successful! Your account is pending approval.'
-      );
-
-      setTimeout(() => navigate('/login'), 1400);
+      setSuccess(result?.isApproved ? 'Identity verified! Redirecting to login...' : 'Credentials submitted for approval.');
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || 'System error. Please verify your details.');
       setLoading(false);
     }
   };
 
-  const FIELD_SX = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: 2,
-      backgroundColor: '#FFFFFF',
-      '&:hover fieldset': { borderColor: '#ABE7B2' },
-      '&.Mui-focused fieldset': { borderColor: '#ABE7B2' },
-    },
-  };
-
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        py: { xs: 3, md: 5 },
-        background: 'linear-gradient(135deg, #ECF4E8 0%, #CBF3BB 55%, #ABE7B2 100%)',
-      }}
-    >
-      <Container maxWidth="md">
-        {/* Top bar - aligned with Login */}
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 2 }}>
-          <IconButton
-            onClick={() => navigate(-1)}
-            sx={{ bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' } }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <IconButton
-            onClick={() => navigate('/')}
-            sx={{ bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,255,255,0.95)' } }}
-          >
-            <Home />
-          </IconButton>
-          <Box sx={{ ml: 'auto', textAlign: 'right' }}>
-            <Typography sx={{ fontSize: { xs: '1.25rem', md: '1.6rem' }, fontWeight: 600, color: '#2C3E50' }}>
-              Register
+    <Grid container sx={{ minHeight: '100vh' }}>
+      {/* Left side: Image and Branding */}
+      <Grid item xs={12} md={5} lg={4} sx={{ 
+        bgcolor: '#ECF4E8', 
+        display: { xs: 'none', md: 'flex' }, 
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 4,
+        position: 'relative',
+        minHeight: '100vh'
+      }}>
+        <Box 
+          onClick={() => navigate('/')}
+          sx={{ position: 'absolute', top: 40, left: 40, cursor: 'pointer', '&:hover': { opacity: 0.8 }, transition: 'opacity 0.2s' }}
+        >
+          <Brand size={32} textVariant="h6" />
+        </Box>
+        
+        <Box
+          component="img"
+          src={pimage}
+          alt="Healthcare Professional"
+          sx={{
+            width: '100%',
+            maxWidth: 400,
+            height: 'auto',
+            filter: 'drop-shadow(0 20px 40px rgba(171, 231, 178, 0.3))'
+          }}
+        />
+        
+        <Box sx={{ mt: 4, textAlign: 'center', maxWidth: 350 }}>
+          <Typography variant="h5" sx={{ fontWeight: 900, color: '#1e293b', mb: 1.5 }}>
+            Join our Community
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>
+            Gain access to personalized healthcare, real-time prescription tracking, and professional support.
+          </Typography>
+        </Box>
+      </Grid>
+
+      {/* Right side: Register Form */}
+      <Grid item xs={12} md={7} lg={8} sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        bgcolor: '#FFFFFF',
+        p: { xs: 3, md: 6 },
+        overflowY: 'auto'
+      }}>
+        <Container maxWidth="sm">
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h3" sx={{ fontWeight: 900, color: '#1e293b', letterSpacing: '-1px', mb: 1 }}>
+              Create account
             </Typography>
-            <Typography variant="body2" sx={{ color: '#546E7A' }}>
-              Create your account to get started
+            <Typography variant="body1" sx={{ color: '#64748b', fontWeight: 500 }}>
+              Start your journey with Jayathura LifeCare.
             </Typography>
           </Box>
-        </Box>
 
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 4,
-            overflow: 'hidden',
-            border: '1px solid rgba(171, 231, 178, 0.35)',
-            boxShadow: '0 18px 50px rgba(44,62,80,0.12)',
-            backgroundColor: 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          <Grid container>
-            {/* Left image panel */}
-            <Grid
-              item
-              xs={12}
-              md={5}
-              sx={{
-                position: 'relative',
-                minHeight: { xs: 220, md: 520 },
-                background: 'linear-gradient(180deg, rgba(147,191,199,0.18) 0%, rgba(171,231,178,0.18) 100%)',
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                p: { xs: 2, md: 3 },
-              }}
-            >
-              <Box
-                component="img"
-                src={pimage}
-                alt="Doctor"
-                sx={{
-                  width: { xs: 260, md: 320 },
-                  maxWidth: '90%',
-                  height: 'auto',
-                  filter: 'drop-shadow(0 18px 30px rgba(44,62,80,0.18))',
-                  position: 'relative',
-                  bottom: { xs: -10, md: -28 },
-                }}
-              />
-            </Grid>
+          {(error || success) && (
+            <Alert severity={error ? 'error' : 'success'} sx={{ mb: 3, borderRadius: 3, fontWeight: 600 }}>
+              {error || success}
+            </Alert>
+          )}
 
-            {/* Right form */}
-            <Grid item xs={12} md={7} sx={{ p: { xs: 3, md: 4 } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1 }}>
-                <Brand size={28} textVariant="h6" />
-              </Box>
-
-              <Typography sx={{ color: '#2C3E50', fontWeight: 600, mb: 0.5 }}>
-                Create your account
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#546E7A', mb: 2 }}>
-                Join Jayathura LifeCare and manage your health easily.
-              </Typography>
-
-              {(error || success) && (
-                <Alert
-                  severity={error ? 'error' : 'success'}
-                  sx={{ mb: 2, borderRadius: 2, backgroundColor: error ? '#FFEBEE' : '#E8F5E9' }}
+          <Box component="form" onSubmit={handleSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth required label="First Name" name="firstName"
+                  value={formData.firstName} onChange={handleChange}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth required label="Last Name" name="lastName"
+                  value={formData.lastName} onChange={handleChange}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth required label="Email Address" name="email" type="email"
+                  value={formData.email} onChange={handleChange}
+                  InputProps={{ startAdornment: (<InputAdornment position="start"><EmailOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>) }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth required label="Password" name="password" type={showPassword ? 'text' : 'password'}
+                  value={formData.password} onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (<InputAdornment position="start"><LockOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>),
+                    endAdornment: (<InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end"><Visibility fontSize="small" /></IconButton></InputAdornment>)
+                  }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth required label="Confirm Password" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword} onChange={handleChange}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth required label="Phone Number" name="phone"
+                  value={formData.phone} onChange={handleChange}
+                  InputProps={{ startAdornment: (<InputAdornment position="start"><PhoneOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>) }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth required select label="Register as" name="role"
+                  value={formData.role} onChange={handleChange}
+                  InputProps={{ startAdornment: (<InputAdornment position="start"><WorkOutline sx={{ color: '#93BFC7' }} /></InputAdornment>) }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 >
-                  {error || success}
-                </Alert>
-              )}
-
-              <Box component="form" onSubmit={handleSubmit}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="First Name"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Last Name"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Email Address"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton onClick={() => setShowPassword((v) => !v)} edge="end">
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Confirm Password"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                      error={formData.confirmPassword !== '' && formData.password !== formData.confirmPassword}
-                      helperText={
-                        formData.confirmPassword !== '' && formData.password !== formData.confirmPassword
-                          ? 'Passwords do not match'
-                          : ' '
-                      }
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton onClick={() => setShowConfirmPassword((v) => !v)} edge="end">
-                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Phone Number"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      select
-                      label="Role"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      sx={FIELD_SX}
-                    >
-                      <MenuItem value="patient">Patient</MenuItem>
-                      <MenuItem value="pharmacist">Pharmacist</MenuItem>
-                      <MenuItem value="delivery">Delivery Person</MenuItem>
-                      <MenuItem value="admin">Admin</MenuItem>
-                    </TextField>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      disabled={loading}
-                      sx={{
-                        py: 1.5,
-                        borderRadius: 2,
-                        backgroundColor: '#93BFC7',
-                        color: '#fff',
-                        fontWeight: 600,
-                        boxShadow: '0 10px 22px rgba(147, 191, 199, 0.28)',
-                        '&:hover': { backgroundColor: '#7AA8B0' },
-                        '&:disabled': { backgroundColor: '#ECF4E8', color: '#93BFC7' },
-                      }}
-                    >
-                      {loading ? 'Creating Account...' : 'Create Account'}
-                    </Button>
-                  </Grid>
-                </Grid>
-
-                <Divider sx={{ my: 2.5, borderColor: 'rgba(147,191,199,0.35)' }} />
-
+                  <MenuItem value="patient">Patient</MenuItem>
+                  <MenuItem value="pharmacist">Pharmacist</MenuItem>
+                  <MenuItem value="delivery">Delivery Person</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sx={{ mt: 2 }}>
                 <Button
-                  fullWidth
-                  variant="text"
-                  onClick={() => navigate('/login')}
+                  type="submit" fullWidth variant="contained" disabled={loading}
+                  endIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ArrowForward />}
                   sx={{
-                    color: '#93BFC7',
-                    textTransform: 'none',
-                    '&:hover': { backgroundColor: 'rgba(236,244,232,0.9)' },
+                    py: 2, borderRadius: 3, bgcolor: '#1e293b', color: '#FFFFFF', fontWeight: 800, fontSize: '1rem',
+                    textTransform: 'none', boxShadow: '0 10px 25px rgba(30, 41, 59, 0.15)',
+                    '&:hover': { bgcolor: '#000', transform: 'translateY(-2px)' }, transition: 'all 0.2'
                   }}
                 >
-                  Already have an account? Sign In
+                  {loading ? 'Creating account...' : 'Create Account'}
                 </Button>
-              </Box>
+              </Grid>
             </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    </Box>
+          </Box>
+
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+              Already have an account?{' '}
+              <Button 
+                onClick={() => navigate('/login')}
+                sx={{ color: '#93BFC7', fontWeight: 800, textTransform: 'none', p: 0, minWidth: 0, ml: 0.5 }}
+              >
+                Log in
+              </Button>
+            </Typography>
+          </Box>
+        </Container>
+      </Grid>
+    </Grid>
   );
 };
 

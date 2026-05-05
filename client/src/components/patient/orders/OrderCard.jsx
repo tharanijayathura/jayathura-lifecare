@@ -1,156 +1,153 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Chip, Stack, Button, Divider, Grid } from '@mui/material';
-import { Visibility, Download, LocalShipping, ShoppingBag, Description } from '@mui/icons-material';
-
-const COLORS = {
-  green1: '#ECF4E8',
-  green2: '#CBF3BB',
-  green3: '#ABE7B2',
-  blue1: '#93BFC7',
-  blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
-  paper: 'rgba(255,255,255,0.9)',
-};
-
-const getStatusColor = (status) => {
-  const colors = {
-    delivered: 'success',
-    processing: 'warning',
-    pending: 'info',
-    confirmed: 'info',
-    ready: 'success',
-    out_for_delivery: 'warning',
-    cancelled: 'error',
-    draft: 'default',
-  };
-  return colors[status] || 'default';
-};
+import { Card, CardContent, Typography, Box, Chip, Stack, Button, Divider, Grid, Avatar, Paper, IconButton } from '@mui/material';
+import { Visibility, Download, LocalShipping, ShoppingBag, Description, ReceiptLong, ConfirmationNumber } from '@mui/icons-material';
 
 const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery }) => {
   const items = order.items || [];
   const totalItems = items.length;
   const isPrescriptionOrder = !!order.prescriptionId;
 
+  const COLORS = {
+    green1: '#ECF4E8',
+    green2: '#CBF3BB',
+    green3: '#ABE7B2',
+    blue1: '#93BFC7',
+    blue2: '#7AA8B0',
+    text: '#1e293b',
+    subtext: '#64748b',
+    border: 'rgba(147, 191, 199, 0.25)',
+  };
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      delivered: { color: '#059669', bg: '#ecfdf5', label: 'Delivered' },
+      out_for_delivery: { color: '#0284c7', bg: '#f0f9ff', label: 'Out for Delivery' },
+      ready: { color: '#7c3aed', bg: '#f5f3ff', label: 'Ready to Collect' },
+      processing: { color: '#d97706', bg: '#fffbeb', label: 'Processing' },
+      confirmed: { color: '#0891b2', bg: '#ecfeff', label: 'Confirmed' },
+      pending: { color: '#64748b', bg: '#f8fafc', label: 'Pending Review' },
+      cancelled: { color: '#dc2626', bg: '#fef2f2', label: 'Cancelled' },
+      draft: { color: '#94a3b8', bg: '#f1f5f9', label: 'Draft' },
+    };
+    return configs[status] || configs.pending;
+  };
+
+  const status = getStatusConfig(order.status);
+
   return (
-    <Card 
-      sx={{ 
-        mb: 3, 
-        borderRadius: 4, 
+    <Paper
+      elevation={0}
+      sx={{
+        mb: 3,
+        p: 3,
+        borderRadius: 6,
         border: `1px solid ${COLORS.border}`,
-        boxShadow: '0 4px 12px rgba(44,62,80,0.04)',
-        transition: 'transform 0.2s ease',
-        '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(44,62,80,0.08)' }
+        bgcolor: 'white',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: '0 12px 30px rgba(0,0,0,0.04)',
+          borderColor: COLORS.blue2
+        }
       }}
     >
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+      <Grid container spacing={3} alignItems="center">
+        {/* Order Icon & ID */}
+        <Grid item xs={12} md={4}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Box 
-              sx={{ 
-                p: 1.5, 
-                borderRadius: 3, 
-                bgcolor: isPrescriptionOrder ? 'primary.light' : COLORS.green1, 
-                color: isPrescriptionOrder ? 'primary.main' : COLORS.text,
-                display: 'flex'
-              }}
-            >
+            <Avatar sx={{ 
+              bgcolor: isPrescriptionOrder ? '#eff6ff' : '#f0fdf4', 
+              color: isPrescriptionOrder ? '#2563eb' : '#16a34a',
+              width: 56, 
+              height: 56,
+              borderRadius: 4
+            }}>
               {isPrescriptionOrder ? <Description /> : <ShoppingBag />}
-            </Box>
+            </Avatar>
             <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.text }}>
-                Order #{order.orderId || order._id?.slice(-6) || 'N/A'}
+              <Typography sx={{ fontWeight: 900, color: COLORS.text, fontSize: '1.1rem' }}>
+                #{order.orderId || order._id?.slice(-6).toUpperCase()}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
+              <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 600 }}>
+                {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </Typography>
             </Box>
           </Stack>
-          <Box sx={{ textAlign: 'right' }}>
-            <Chip
-              label={(order.status || 'pending').toUpperCase().replace(/_/g, ' ')}
-              color={getStatusColor(order.status)}
-              size="small"
-              sx={{ fontWeight: 700, borderRadius: 1.5, mb: 1 }}
-            />
-            <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>
-              Rs. {(order.finalAmount || order.totalAmount || 0).toFixed(2)}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 2, borderColor: COLORS.border }} />
-
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={8}>
-            <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 1 }}>
-              <strong>Items ({totalItems}):</strong>
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {items.slice(0, 3).map((item, idx) => (
-                <Chip 
-                  key={idx} 
-                  label={item.medicineName || item.medicineId?.name || item.name || 'Item'} 
-                  size="small" 
-                  variant="outlined" 
-                  sx={{ borderColor: COLORS.blue1, fontSize: '0.7rem' }} 
-                />
-              ))}
-              {totalItems > 3 && (
-                <Typography variant="caption" sx={{ color: COLORS.blue2, fontWeight: 600, mt: 0.5 }}>
-                  +{totalItems - 3} more
-                </Typography>
-              )}
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Stack direction="row" spacing={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
-              <Button 
-                startIcon={<Visibility />} 
-                variant="outlined" 
-                size="small" 
-                onClick={onViewDetails}
-                sx={{ borderRadius: 2, textTransform: 'none', borderColor: COLORS.blue1, color: COLORS.text }}
-              >
-                Details
-              </Button>
-              <Button 
-                startIcon={<Download />} 
-                variant="outlined" 
-                size="small" 
-                onClick={onDownloadInvoice}
-                sx={{ borderRadius: 2, textTransform: 'none', borderColor: COLORS.blue1, color: COLORS.text }}
-              >
-                Invoice
-              </Button>
-              {order.status === 'pending' && (
-                <Button
-                  startIcon={<Description />}
-                  variant="contained"
-                  size="small"
-                  onClick={onViewDetails}
-                  sx={{ borderRadius: 2, textTransform: 'none', bgcolor: COLORS.blue2, color: 'white', '&:hover': { bgcolor: COLORS.blue1 } }}
-                >
-                  Review & Confirm
-                </Button>
-              )}
-              {(order.status === 'out_for_delivery' || order.status === 'confirmed' || order.status === 'processing' || order.status === 'ready') && (
-                <Button
-                  startIcon={<LocalShipping />}
-                  variant="contained"
-                  size="small"
-                  onClick={onViewDetails}
-                  sx={{ borderRadius: 2, textTransform: 'none', bgcolor: COLORS.green3, color: COLORS.text, '&:hover': { bgcolor: COLORS.green2 } }}
-                >
-                  Track
-                </Button>
-              )}
-            </Stack>
-          </Grid>
         </Grid>
-      </CardContent>
-    </Card>
+
+        {/* Status & Amount */}
+        <Grid item xs={12} md={4}>
+          <Stack direction="row" spacing={4} alignItems="center" justifyContent={{ md: 'center' }}>
+            <Box>
+              <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 700, display: 'block', mb: 0.5, textTransform: 'uppercase' }}>Status</Typography>
+              <Chip 
+                label={status.label} 
+                size="small" 
+                sx={{ 
+                  bgcolor: status.bg, 
+                  color: status.color, 
+                  fontWeight: 800, 
+                  borderRadius: 2,
+                  fontSize: '0.7rem'
+                }} 
+              />
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 700, display: 'block', mb: 0.5, textTransform: 'uppercase' }}>Amount</Typography>
+              <Typography sx={{ fontWeight: 900, color: COLORS.text }}>
+                Rs. {(order.finalAmount || order.totalAmount || 0).toFixed(2)}
+              </Typography>
+            </Box>
+          </Stack>
+        </Grid>
+
+        {/* Actions */}
+        <Grid item xs={12} md={4}>
+          <Stack direction="row" spacing={1} justifyContent="flex-end">
+            <IconButton 
+              onClick={onDownloadInvoice}
+              sx={{ bgcolor: '#f8fafc', color: COLORS.blue2, '&:hover': { bgcolor: COLORS.green1 } }}
+              title="Download Invoice"
+            >
+              <ReceiptLong fontSize="small" />
+            </IconButton>
+            
+            {order.status === 'pending' ? (
+              <Button
+                variant="contained"
+                onClick={onViewDetails}
+                sx={{ 
+                  borderRadius: 4, 
+                  px: 3, 
+                  bgcolor: COLORS.blue2, 
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  '&:hover': { bgcolor: COLORS.blue1 }
+                }}
+              >
+                Review Rx
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                startIcon={<Visibility />}
+                onClick={onViewDetails}
+                sx={{ 
+                  borderRadius: 4, 
+                  px: 3, 
+                  bgcolor: COLORS.text, 
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  '&:hover': { bgcolor: '#000' }
+                }}
+              >
+                View Track
+              </Button>
+            )}
+          </Stack>
+        </Grid>
+      </Grid>
+    </Paper>
   );
 };
 

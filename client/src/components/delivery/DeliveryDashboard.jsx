@@ -36,9 +36,9 @@ const COLORS = {
   green3: '#ABE7B2',
   blue1: '#93BFC7',
   blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
+  text: '#1e293b',
+  subtext: '#64748b',
+  border: 'rgba(147, 191, 199, 0.25)',
 };
 
 const DeliveryDashboard = () => {
@@ -46,6 +46,7 @@ const DeliveryDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
+
 
   useEffect(() => {
     fetchOrders();
@@ -76,195 +77,239 @@ const DeliveryDashboard = () => {
   };
 
   const getStatusChip = (status) => {
-    switch (status) {
-      case 'ready': return <Chip label="Ready for Pickup" size="small" sx={{ bgcolor: COLORS.green2, color: COLORS.text, fontWeight: 700 }} />;
-      case 'out_for_delivery': return <Chip label="In Transit" size="small" sx={{ bgcolor: COLORS.blue1, color: 'white', fontWeight: 700 }} />;
-      case 'delivered': return <Chip label="Delivered" size="small" sx={{ bgcolor: COLORS.green3, color: COLORS.text, fontWeight: 700 }} />;
-      default: return <Chip label={status} size="small" />;
-    }
+    const styles = {
+      ready: { bg: COLORS.green2, text: COLORS.text, label: 'Ready to Pick' },
+      out_for_delivery: { bg: COLORS.blue2, text: 'white', label: 'In Transit' },
+      delivered: { bg: COLORS.green3, text: COLORS.text, label: 'Completed' }
+    };
+    const style = styles[status] || { bg: '#f1f5f9', text: COLORS.subtext, label: status };
+    return (
+      <Chip 
+        label={style.label} 
+        size="small" 
+        sx={{ 
+          bgcolor: style.bg, 
+          color: style.text, 
+          fontWeight: 800,
+          borderRadius: 2,
+          fontSize: '0.65rem',
+          textTransform: 'uppercase',
+          letterSpacing: 0.5
+        }} 
+      />
+    );
   };
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
         <CircularProgress sx={{ color: COLORS.blue2 }} />
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Grid container spacing={3}>
+    <Box sx={{ p: { xs: 1, md: 3 }, bgcolor: '#f8fafc', minHeight: '100vh' }}>
+      <Grid container spacing={4}>
+        {/* Left Column: Tasks */}
         <Grid item xs={12} md={4}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 800, color: COLORS.text, display: 'flex', alignItems: 'center' }}>
-            <AccessTime sx={{ mr: 1, color: COLORS.blue2 }} /> My Assignments
-          </Typography>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.text }}>
+              Tasks <Box component="span" sx={{ color: COLORS.blue2 }}>({orders.length})</Box>
+            </Typography>
+            <IconButton onClick={fetchOrders} sx={{ color: COLORS.blue2 }}><AccessTime /></IconButton>
+          </Box>
+          
           <Stack spacing={2}>
             {orders.length === 0 ? (
-              <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 4, bgcolor: 'rgba(0,0,0,0.02)' }}>
-                <LocalShipping sx={{ fontSize: 48, color: COLORS.blue1, mb: 2, opacity: 0.5 }} />
-                <Typography sx={{ color: COLORS.subtext }}>No orders assigned yet.</Typography>
+              <Paper elevation={0} sx={{ p: 6, textAlign: 'center', borderRadius: 6, border: `2px dashed ${COLORS.border}`, bgcolor: 'transparent' }}>
+                <LocalShipping sx={{ fontSize: 64, color: COLORS.blue1, mb: 2, opacity: 0.2 }} />
+                <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>No deliveries active.</Typography>
               </Paper>
             ) : (
               orders.map((order) => (
-                <Card 
-                  key={order._id} 
+                <Paper
+                  key={order._id}
+                  elevation={0}
                   onClick={() => setSelectedOrder(order)}
-                  sx={{ 
+                  sx={{
+                    p: 2.5,
                     cursor: 'pointer',
-                    borderRadius: 4,
-                    border: `2px solid ${selectedOrder?._id === order._id ? COLORS.blue2 : 'transparent'}`,
-                    transition: '0.2s',
-                    '&:hover': { boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }
+                    borderRadius: 5,
+                    border: `2px solid ${selectedOrder?._id === order._id ? COLORS.blue2 : 'white'}`,
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: selectedOrder?._id === order._id ? '0 10px 25px rgba(122, 168, 176, 0.15)' : '0 4px 12px rgba(0,0,0,0.02)',
+                    '&:hover': { transform: 'translateX(8px)', boxShadow: '0 8px 20px rgba(0,0,0,0.05)' }
                   }}
                 >
-                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                      <Typography sx={{ fontWeight: 800, color: COLORS.text }}>{order.orderId}</Typography>
-                      {getStatusChip(order.status)}
-                    </Box>
-                    <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 1 }}>
-                      <Person sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      {order.patientId?.name}
-                    </Typography>
-                    <Typography variant="body2" noWrap sx={{ color: COLORS.subtext }}>
-                      <LocationOn sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'text-bottom' }} />
-                      {order.deliveryAddress?.city}, {order.deliveryAddress?.street}
-                    </Typography>
-                  </CardContent>
-                </Card>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.9rem' }}>{order.orderId}</Typography>
+                    {getStatusChip(order.status)}
+                  </Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: COLORS.text, mb: 0.5 }}>{order.patientId?.name}</Typography>
+                  <Typography variant="caption" sx={{ color: COLORS.subtext, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <LocationOn sx={{ fontSize: 14 }} /> {order.deliveryAddress?.city}
+                  </Typography>
+                </Paper>
               ))
             )}
           </Stack>
         </Grid>
 
+        {/* Right Column: Details */}
         <Grid item xs={12} md={8}>
           {selectedOrder ? (
-            <Paper sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}` }}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: { xs: 3, md: 5 }, 
+                borderRadius: 8, 
+                border: `1px solid ${COLORS.border}`, 
+                bgcolor: 'white',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.04)',
+                position: 'sticky',
+                top: 24
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 5 }}>
                 <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>Order {selectedOrder.orderId}</Typography>
-                  <Typography variant="body2" sx={{ color: COLORS.subtext }}>
-                    Assigned on {new Date(selectedOrder.updatedAt).toLocaleString()}
-                  </Typography>
+                  <Chip label="Delivery Assignment" size="small" sx={{ mb: 1.5, bgcolor: COLORS.green1, color: COLORS.blue2, fontWeight: 800 }} />
+                  <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text }}>{selectedOrder.orderId}</Typography>
                 </Box>
-                <IconButton onClick={() => setSelectedOrder(null)}>
-                  <CheckCircle sx={{ color: COLORS.blue1 }} />
+                <IconButton onClick={() => setSelectedOrder(null)} sx={{ height: 48, width: 48, border: '1px solid #f1f5f9' }}>
+                  <Close />
                 </IconButton>
               </Box>
 
               <Grid container spacing={4}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ p: 3, bgcolor: COLORS.green1, borderRadius: 4 }}>
-                    <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>Patient Details</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>{selectedOrder.patientId?.name}</Typography>
-                    <Stack spacing={1}>
-                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Phone sx={{ fontSize: 18, mr: 1, color: COLORS.blue2 }} /> {selectedOrder.patientId?.phone || 'No phone provided'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                        <LocationOn sx={{ fontSize: 18, mr: 1, color: COLORS.blue2, mt: 0.5 }} />
-                        {selectedOrder.deliveryAddress?.street}, {selectedOrder.deliveryAddress?.city}, {selectedOrder.deliveryAddress?.postalCode}
-                      </Typography>
-                    </Stack>
-                    <Button 
-                      variant="contained" 
-                      startIcon={<MapIcon />}
-                      fullWidth
-                      onClick={() => setMapDialogOpen(true)}
-                      sx={{ mt: 3, borderRadius: 3, bgcolor: COLORS.blue2, '&:hover': { bgcolor: COLORS.blue1 } }}
-                    >
-                      View on Map
-                    </Button>
+                <Grid item xs={12} sm={7}>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.subtext, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>Recipient</Typography>
+                    <Paper elevation={0} sx={{ p: 3, borderRadius: 5, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5 }}>{selectedOrder.patientId?.name}</Typography>
+                      <Stack spacing={1.5}>
+                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, color: COLORS.text }}>
+                          <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'white', color: COLORS.blue2, display: 'flex' }}><Phone fontSize="small" /></Box>
+                          {selectedOrder.patientId?.phone || 'No phone'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, color: COLORS.text }}>
+                          <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'white', color: COLORS.blue2, display: 'flex' }}><LocationOn fontSize="small" /></Box>
+                          <Box>
+                            {selectedOrder.deliveryAddress?.street}<br />
+                            {selectedOrder.deliveryAddress?.city}, {selectedOrder.deliveryAddress?.postalCode}
+                          </Box>
+                        </Typography>
+                      </Stack>
+                    </Paper>
                   </Box>
+
+                  <Button 
+                    variant="contained" 
+                    startIcon={<MapIcon />}
+                    fullWidth
+                    onClick={() => setMapDialogOpen(true)}
+                    sx={{ 
+                      borderRadius: 4, 
+                      py: 2, 
+                      bgcolor: COLORS.blue2, 
+                      fontWeight: 800,
+                      boxShadow: '0 10px 25px rgba(122, 168, 176, 0.2)',
+                      '&:hover': { bgcolor: COLORS.blue1 }
+                    }}
+                  >
+                    Open GPS Navigation
+                  </Button>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>Order Items</Typography>
-                  <Stack spacing={1}>
+                <Grid item xs={12} sm={5}>
+                  <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.subtext, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>Items</Typography>
+                  <Stack spacing={2} sx={{ mb: 4 }}>
                     {selectedOrder.items?.map((item, idx) => (
-                      <Box key={idx} display="flex" justifyContent="space-between">
-                        <Typography variant="body2">{item.medicineName} x{item.quantity}</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>Rs. {item.price * item.quantity}</Typography>
+                      <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.medicineName} <Box component="span" sx={{ color: COLORS.subtext, fontSize: '0.7rem' }}>x{item.quantity}</Box></Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 800 }}>Rs. {item.price * item.quantity}</Typography>
                       </Box>
                     ))}
-                    <Divider sx={{ my: 1 }} />
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>Total Amount</Typography>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>Rs. {selectedOrder.finalAmount}</Typography>
+                    <Divider sx={{ borderStyle: 'dashed' }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography sx={{ fontWeight: 800 }}>Total</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: COLORS.blue2 }}>Rs. {selectedOrder.finalAmount}</Typography>
                     </Box>
                   </Stack>
 
-                  <Box sx={{ mt: 4 }}>
-                    <Typography variant="subtitle2" sx={{ color: COLORS.blue2, fontWeight: 800, mb: 2, textTransform: 'uppercase' }}>Update Status</Typography>
-                    <Stack direction="row" spacing={2}>
-                      {selectedOrder.status === 'ready' && (
-                        <Button 
-                          variant="contained" 
-                          fullWidth
-                          startIcon={<DirectionsCar />}
-                          onClick={() => handleUpdateStatus(selectedOrder._id, 'out_for_delivery', 'Order picked up and out for delivery')}
-                          sx={{ borderRadius: 3, bgcolor: COLORS.blue1 }}
-                        >
-                          Pick Up
-                        </Button>
-                      )}
-                      {selectedOrder.status === 'out_for_delivery' && (
-                        <Button 
-                          variant="contained" 
-                          fullWidth
-                          startIcon={<CheckCircle />}
-                          onClick={() => handleUpdateStatus(selectedOrder._id, 'delivered', 'Order successfully delivered to customer')}
-                          sx={{ borderRadius: 3, bgcolor: COLORS.green3, color: COLORS.text }}
-                        >
-                          Mark Delivered
-                        </Button>
-                      )}
-                    </Stack>
+                  <Box sx={{ mt: 'auto', pt: 4 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.subtext, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>Status Control</Typography>
+                    {selectedOrder.status === 'ready' && (
+                      <Button 
+                        variant="contained" 
+                        fullWidth
+                        startIcon={<DirectionsCar />}
+                        onClick={() => handleUpdateStatus(selectedOrder._id, 'out_for_delivery', 'Picked up')}
+                        sx={{ borderRadius: 4, py: 2, bgcolor: COLORS.blue1, fontWeight: 800 }}
+                      >
+                        Start Delivery
+                      </Button>
+                    )}
+                    {selectedOrder.status === 'out_for_delivery' && (
+                      <Button 
+                        variant="contained" 
+                        fullWidth
+                        startIcon={<CheckCircle />}
+                        onClick={() => handleUpdateStatus(selectedOrder._id, 'delivered', 'Delivered')}
+                        sx={{ borderRadius: 4, py: 2, bgcolor: COLORS.green3, color: COLORS.text, fontWeight: 800 }}
+                      >
+                        Complete Delivery
+                      </Button>
+                    )}
                   </Box>
                 </Grid>
               </Grid>
             </Paper>
           ) : (
-            <Paper sx={{ p: 8, textAlign: 'center', borderRadius: 6, border: `2px dashed ${COLORS.border}`, bgcolor: 'rgba(0,0,0,0.01)' }}>
-              <LocalShipping sx={{ fontSize: 64, color: COLORS.blue1, mb: 2, opacity: 0.3 }} />
-              <Typography variant="h6" sx={{ color: COLORS.subtext }}>Select an order to view details and start delivery</Typography>
+            <Paper elevation={0} sx={{ p: 10, textAlign: 'center', borderRadius: 8, border: `2px dashed ${COLORS.border}`, bgcolor: 'transparent' }}>
+              <Box sx={{ p: 4, borderRadius: '50%', bgcolor: 'white', display: 'inline-flex', mb: 3 }}>
+                <LocalShipping sx={{ fontSize: 80, color: COLORS.blue1, opacity: 0.2 }} />
+              </Box>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.subtext, mb: 1 }}>Ready for action?</Typography>
+              <Typography sx={{ color: COLORS.subtext }}>Select an assignment to see the customer details and start your route.</Typography>
             </Paper>
           )}
         </Grid>
       </Grid>
 
-      {/* Simulated Map Dialog */}
-      <Dialog open={mapDialogOpen} onClose={() => setMapDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>Delivery Location</DialogTitle>
+      <Dialog open={mapDialogOpen} onClose={() => setMapDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 6, p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 900, pb: 1 }}>Navigation</DialogTitle>
         <DialogContent>
           <Box 
             sx={{ 
               width: '100%', 
-              height: 400, 
-              bgcolor: '#f0f4f8', 
-              borderRadius: 4, 
+              height: 350, 
+              bgcolor: '#f8fafc', 
+              borderRadius: 5, 
               display: 'flex', 
               flexDirection: 'column',
               alignItems: 'center', 
               justifyContent: 'center',
-              border: `2px solid ${COLORS.border}`
+              border: `1px solid #f1f5f9`
             }}
           >
-            <LocationOn sx={{ fontSize: 64, color: '#f44336', mb: 2 }} />
-            <Typography variant="h6" sx={{ color: COLORS.text }}>{selectedOrder?.deliveryAddress?.street}</Typography>
-            <Typography sx={{ color: COLORS.subtext }}>{selectedOrder?.deliveryAddress?.city}, Sri Lanka</Typography>
-            <Typography variant="caption" sx={{ mt: 4, color: COLORS.blue2 }}>[ Simulated Map View - Integration with Google Maps API would go here ]</Typography>
+            <Box sx={{ p: 3, borderRadius: '50%', bgcolor: 'white', boxShadow: '0 8px 20px rgba(0,0,0,0.05)', mb: 3 }}>
+              <LocationOn sx={{ fontSize: 48, color: '#f43f5e' }} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.text }}>{selectedOrder?.deliveryAddress?.street}</Typography>
+            <Typography sx={{ color: COLORS.subtext, mb: 4 }}>{selectedOrder?.deliveryAddress?.city}, Sri Lanka</Typography>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setMapDialogOpen(false)} variant="outlined" sx={{ borderRadius: 3 }}>Close</Button>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={() => setMapDialogOpen(false)} sx={{ fontWeight: 700, color: COLORS.subtext }}>Dismiss</Button>
           <Button 
             variant="contained" 
-            sx={{ borderRadius: 3, bgcolor: COLORS.blue2 }}
+            sx={{ borderRadius: 4, px: 3, bgcolor: COLORS.blue2, fontWeight: 800 }}
             onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedOrder?.deliveryAddress?.street + ' ' + selectedOrder?.deliveryAddress?.city)}`, '_blank')}
           >
-            Open in Google Maps
+            Open Maps
           </Button>
         </DialogActions>
       </Dialog>
