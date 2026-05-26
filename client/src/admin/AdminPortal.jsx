@@ -6,7 +6,7 @@ import PageHeader from '../components/common/PageHeader';
 import AdminAnalytics from './AdminAnalytics';
 import MedicineManager from './MedicineManager';
 import UserApprovals from './UserApprovals';
-import UserList from '../components/admin/UserList';
+import UserList from './UserList';
 
 const AdminPortal = () => {
   const { user, loading: authLoading } = useAuth();

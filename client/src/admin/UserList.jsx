@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Paper, Typography, Grid, Card, CardContent, Stack, Button, CircularProgress, Alert } from '@mui/material';
-import { adminAPI } from '../../services/api';
+import { adminAPI } from '../services/api';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
