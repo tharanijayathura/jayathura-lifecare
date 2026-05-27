@@ -6,21 +6,21 @@ import CatalogFilters from './catalog/CatalogFilters';
 import MedicineGrid from './catalog/MedicineGrid';
 
 const COLORS = {
-  green1: '#ECF4E8',
-  green2: '#CBF3BB',
-  green3: '#ABE7B2',
-  blue1: '#93BFC7',
-  blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
+  green1: '#eef7f2',
+  green2: '#059669',
+  green3: '#10b981',
+  blue1: '#10b981',
+  blue2: '#10b981',
+  text: '#0f172a',
+  subtext: '#64748b',
+  border: 'rgba(226, 232, 240, 0.8)',
   paper: 'rgba(255,255,255,0.9)',
 };
 
 const CATEGORY_OPTIONS = [
   { value: 'frequent', label: 'Frequently Used Items' },
   { value: 'all', label: 'All categories' },
-  { value: 'otc', label: 'Non Prescription Items' },
+  { value: 'otc', label: 'Over-the-Counter (OTC)' },
   { value: 'herbal', label: 'Herbal & Ayurvedic' },
   { value: 'vitamins', label: 'Vitamins & Supplements' },
   { value: 'medical-devices', label: 'Medical Devices & Equipment' },
@@ -205,20 +205,6 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
 
   return (
     <Box>
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Paper sx={{ p: 1.5, bgcolor: COLORS.green1, color: COLORS.text, borderRadius: 3 }}>
-          <ShoppingBag />
-        </Paper>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800, color: COLORS.text }}>
-            Pharmacy Shop
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Browse and order your healthcare essentials with ease.
-          </Typography>
-        </Box>
-      </Box>
-
       <CatalogFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}

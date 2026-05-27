@@ -3,14 +3,14 @@ import { Grid, TextField, MenuItem, InputAdornment, Box, Paper } from '@mui/mate
 import { Search, FilterList } from '@mui/icons-material';
 
 const COLORS = {
-  green1: '#ECF4E8',
-  green2: '#CBF3BB',
-  green3: '#ABE7B2',
-  blue1: '#93BFC7',
-  blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
+  green1: '#f8fafc',
+  green2: '#059669',
+  green3: '#10b981',
+  blue1: '#10b981',
+  blue2: '#059669',
+  text: '#0f172a',
+  subtext: '#64748b',
+  border: 'rgba(226, 232, 240, 0.8)',
   paper: 'rgba(255,255,255,0.9)',
 };
 
@@ -29,20 +29,20 @@ const CatalogFilters = ({
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
-      borderRadius: 3,
+      borderRadius: 3.5,
       bgcolor: 'white',
-      '& fieldset': { borderColor: COLORS.border },
-      '&:hover fieldset': { borderColor: COLORS.blue1 },
-      '&.Mui-focused fieldset': { borderColor: COLORS.blue2 },
+      '& fieldset': { borderColor: 'rgba(226, 232, 240, 0.9)' },
+      '&:hover fieldset': { borderColor: COLORS.green3 },
+      '&.Mui-focused fieldset': { borderColor: COLORS.green2 },
     },
-    '& .MuiInputLabel-root': { color: COLORS.subtext },
-    '& .MuiInputLabel-root.Mui-focused': { color: COLORS.blue2 },
+    '& .MuiInputLabel-root': { color: COLORS.subtext, fontWeight: 600, fontSize: '0.85rem' },
+    '& .MuiInputLabel-root.Mui-focused': { color: COLORS.green2 },
   };
 
   return (
     <Box sx={{ mb: 4 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3.5}>
           <TextField
             fullWidth
             variant="outlined"
@@ -59,7 +59,7 @@ const CatalogFilters = ({
             }}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={2}>
+        <Grid item xs={12} sm={6} md={2.5}>
           <TextField 
             select 
             fullWidth 

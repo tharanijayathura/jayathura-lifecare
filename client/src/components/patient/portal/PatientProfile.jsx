@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Card, CardContent, Stack, Divider, TextField, Button, CircularProgress, Avatar, IconButton, Paper, Alert, Snackbar, Chip } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Stack, Divider, TextField, Button, CircularProgress, Avatar, IconButton, Paper, Alert, Snackbar, Chip, useTheme, useMediaQuery } from '@mui/material';
 import { PhotoCamera, Person, Email, Phone, LocationOn, Save, Edit, AccountCircle, History, ReceiptLong, LocalHospital } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/useAuth';
 import { patientAPI } from '../../../services/api';
 
 const PatientProfile = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,9 +117,16 @@ const PatientProfile = () => {
 
   return (
     <Box sx={{ p: { xs: 1, md: 0 } }}>
-      <Box sx={{ mb: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
+      <Box sx={{ 
+        mb: 5, 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'stretch', sm: 'flex-end' }, 
+        gap: 3 
+      }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1 }}>
+          <Typography variant="h4" sx={{ fontSize: { xs: '1.8rem', md: '2.125rem' }, fontWeight: 900, color: COLORS.text, mb: 1 }}>
             Personal Health Profile
           </Typography>
           <Typography sx={{ color: COLORS.subtext, fontWeight: 500 }}>
@@ -128,6 +137,7 @@ const PatientProfile = () => {
           variant="contained" 
           startIcon={editing ? <Save /> : <Edit />}
           onClick={editing ? handleUpdate : () => setEditing(true)}
+          fullWidth={isMobile}
           sx={{ 
             borderRadius: 4, 
             px: 4, 
@@ -153,7 +163,7 @@ const PatientProfile = () => {
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
             <Stack spacing={3}>
-              <Paper elevation={0} sx={{ p: 5, borderRadius: 8, textAlign: 'center', bgcolor: COLORS.green1, border: `1px solid ${COLORS.border}`, position: 'relative', overflow: 'hidden' }}>
+              <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 8, textAlign: 'center', bgcolor: COLORS.green1, border: `1px solid ${COLORS.border}`, position: 'relative', overflow: 'hidden' }}>
                 <Box sx={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, bgcolor: COLORS.green2, borderRadius: '50%', opacity: 0.2 }} />
                 <Box sx={{ position: 'relative', width: 160, height: 160, mx: 'auto', mb: 4 }}>
                   <Avatar src={imagePreview} sx={{ width: 160, height: 160, border: '8px solid white', boxShadow: '0 15px 35px rgba(0,0,0,0.1)', bgcolor: COLORS.blue2, fontSize: '4rem', fontWeight: 900 }}>
@@ -209,7 +219,7 @@ const PatientProfile = () => {
           </Grid>
 
           <Grid item xs={12} md={8}>
-            <Paper elevation={0} sx={{ p: 5, borderRadius: 8, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+            <Paper elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: 8, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
               <Typography variant="h6" sx={{ fontWeight: 900, mb: 5, color: COLORS.text, display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Person sx={{ color: COLORS.blue2 }} /> Identity & Contact
               </Typography>

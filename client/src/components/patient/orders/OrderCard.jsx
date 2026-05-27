@@ -103,7 +103,7 @@ const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery })
 
         {/* Actions */}
         <Grid item xs={12} md={4}>
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} justifyContent={{ xs: 'flex-start', sm: 'flex-start', md: 'flex-end' }}>
             <IconButton 
               onClick={onDownloadInvoice}
               sx={{ bgcolor: '#f8fafc', color: COLORS.blue2, '&:hover': { bgcolor: COLORS.green1 } }}

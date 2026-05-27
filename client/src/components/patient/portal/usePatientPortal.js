@@ -20,14 +20,16 @@ export const usePatientPortal = () => {
   const handleAddToCart = async (item) => {
     try {
       setLoading(true);
-      let orderId = currentOrderId;
-      if (!orderId) {
-        const orderResponse = await patientAPI.createOrder();
-        orderId = orderResponse.data._id;
-        setCurrentOrderId(orderId);
-      }
-      const response = await patientAPI.addToCart({ orderId, medicineId: item.itemId, quantity: item.quantity || 1 });
+      const response = await patientAPI.addToCart({ 
+        orderId: currentOrderId, 
+        medicineId: item.itemId, 
+        quantity: item.quantity || 1 
+      });
       if (response.data?.order) {
+        const newOrderId = response.data.order._id;
+        if (newOrderId !== currentOrderId) {
+          setCurrentOrderId(newOrderId);
+        }
         const seenItems = new Map();
         const orderItems = (response.data.order.items || [])
           .map(orderItem => {
@@ -205,24 +207,23 @@ export const usePatientPortal = () => {
   };
 
   useEffect(() => {
-    const checkAndClearInvalidOrder = async () => {
-      if (currentOrderId) {
-        try {
-          const orderResponse = await patientAPI.getOrderStatus(currentOrderId);
-          const order = orderResponse.data;
-          if (!order || (order.status !== 'draft' && order.status !== 'pending')) {
-            setCurrentOrderId(null);
-            setCartItems([]);
-          }
-        } catch (error) {
-          setCurrentOrderId(null);
+    const fetchActiveCart = async () => {
+      try {
+        setLoading(true);
+        const response = await patientAPI.getActiveCart();
+        if (response.data && response.data._id) {
+          setCurrentOrderId(response.data._id);
+        } else {
           setCartItems([]);
         }
-      } else {
+      } catch (error) {
+        console.error('Error fetching active cart on mount:', error);
         setCartItems([]);
+      } finally {
+        setLoading(false);
       }
     };
-    checkAndClearInvalidOrder();
+    fetchActiveCart();
   }, []);
 
   useEffect(() => {

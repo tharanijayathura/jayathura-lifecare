@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Box, CircularProgress, Alert, Paper, Stack, Button } from '@mui/material';
+import { Typography, Box, CircularProgress, Alert, Paper, Stack, Button, useTheme, useMediaQuery } from '@mui/material';
 import { LocalShipping, Refresh, History } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
 import OrderCard from './orders/OrderCard.jsx';
 import OrderDetailsDialog from './orders/OrderDetailsDialog.jsx';
 
 const OrderHistory = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,9 +72,16 @@ const OrderHistory = () => {
 
   return (
     <Box sx={{ p: { xs: 1, md: 0 } }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
+      <Box sx={{ 
+        mb: 4, 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'stretch', sm: 'flex-end' }, 
+        gap: 3 
+      }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1 }}>
+          <Typography variant="h4" sx={{ fontSize: { xs: '1.8rem', md: '2.125rem' }, fontWeight: 900, color: COLORS.text, mb: 1 }}>
             Purchase History
           </Typography>
           <Typography sx={{ color: COLORS.subtext, fontWeight: 500 }}>
@@ -83,7 +92,8 @@ const OrderHistory = () => {
           variant="outlined" 
           startIcon={<Refresh />} 
           onClick={fetchOrders}
-          sx={{ borderRadius: 3, fontWeight: 700, color: COLORS.blue2, borderColor: COLORS.blue2 }}
+          fullWidth={isMobile}
+          sx={{ borderRadius: 3, fontWeight: 700, color: COLORS.blue2, borderColor: COLORS.blue2, py: { xs: 1.2, sm: 0.8 } }}
         >
           Refresh List
         </Button>

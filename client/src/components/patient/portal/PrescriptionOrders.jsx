@@ -120,7 +120,18 @@ const PrescriptionOrders = ({
                           </Stack>
                         </Grid>
 
-                        <Grid item xs={12} md={4} sx={{ borderLeft: { md: `1px solid ${COLORS.border}` }, pl: { md: 4 } }}>
+                        <Grid 
+                          item 
+                          xs={12} 
+                          md={4} 
+                          sx={{ 
+                            borderLeft: { md: `1px solid ${COLORS.border}` }, 
+                            pl: { md: 4 },
+                            borderTop: { xs: `1px solid ${COLORS.border}`, md: 'none' },
+                            pt: { xs: 3, md: 0 },
+                            mt: { xs: 1, md: 0 }
+                          }}
+                        >
                           <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                             {order.finalAmount ? (
                               <Box sx={{ textAlign: { md: 'right' }, mb: 2 }}>

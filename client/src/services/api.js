@@ -141,6 +141,7 @@ export const patientAPI = {
   
   // Cart
   addToCart: (data) => API.post('/patients/cart/add', data),
+  getActiveCart: () => API.get('/patients/cart/active'),
   // Align with backend: remove item via order path
   removeFromCart: (orderItemId, orderId) => API.delete(`/patients/order/${orderId}/item/${orderItemId}`),
   removeOrderItem: (orderId, itemId) => API.delete(`/patients/order/${orderId}/item/${itemId}`),

@@ -41,14 +41,14 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
   const [deliveryAddress, setDeliveryAddress] = useState({ street: '', city: '', postalCode: '' });
 
   const COLORS = {
-    green1: '#ECF4E8',
-    green2: '#CBF3BB',
-    green3: '#ABE7B2',
-    blue1: '#93BFC7',
-    blue2: '#7AA8B0',
-    text: '#1e293b',
+    green1: '#eef7f2',
+    green2: '#059669',
+    green3: '#10b981',
+    blue1: '#10b981',
+    blue2: '#059669',
+    text: '#0f172a',
     subtext: '#64748b',
-    border: 'rgba(147, 191, 199, 0.25)',
+    border: 'rgba(226, 232, 240, 0.8)',
   };
 
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -93,10 +93,10 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
     >
       <Box sx={{ p: 3, bgcolor: '#f8fafc', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Stack direction="row" spacing={2} alignItems="center">
-          <Box sx={{ p: 1, borderRadius: 2, bgcolor: COLORS.green1, color: COLORS.blue2, display: 'flex' }}>
+          <Box sx={{ p: 1.25, borderRadius: '10px', bgcolor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', display: 'flex' }}>
             <ShoppingBag />
           </Box>
-          <Typography variant="h6" sx={{ fontWeight: 900, color: COLORS.text }}>Cart Summary</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 900, color: COLORS.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Cart Summary</Typography>
         </Stack>
         {cartItems.length > 0 && (
           <Chip label={`${cartItems.length} items`} size="small" sx={{ bgcolor: COLORS.text, fontWeight: 800, color: 'white', borderRadius: 2 }} />
@@ -106,8 +106,8 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
       <CardContent sx={{ p: 0 }}>
         {cartItems.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10, px: 4 }}>
-            <Box sx={{ p: 3, borderRadius: '50%', bgcolor: '#f1f5f9', display: 'inline-flex', mb: 3 }}>
-              <CartIcon sx={{ fontSize: 64, color: COLORS.blue1, opacity: 0.3 }} />
+            <Box sx={{ p: 3, borderRadius: '50%', bgcolor: '#f8fafc', display: 'inline-flex', mb: 3, border: '1px solid rgba(226, 232, 240, 0.8)' }}>
+              <CartIcon sx={{ fontSize: 64, color: COLORS.green3, opacity: 0.35 }} />
             </Box>
             <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 900, mb: 1 }}>Your cart is empty</Typography>
             <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 500 }}>

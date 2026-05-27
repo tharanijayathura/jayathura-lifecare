@@ -4,15 +4,14 @@ import { AddShoppingCart, InfoOutlined } from '@mui/icons-material';
 import medPlaceholder from '../../../assets/med.png';
 
 const COLORS = {
-  green1: '#ECF4E8',
-  green2: '#CBF3BB',
-  green3: '#ABE7B2',
-  blue1: '#93BFC7',
-  blue2: '#7AA8B0',
-  text: '#2C3E50',
-  subtext: '#546E7A',
-  border: 'rgba(147, 191, 199, 0.35)',
-  paper: 'rgba(255,255,255,0.9)',
+  green1: '#f8fafc',
+  green2: '#059669',
+  green3: '#10b981',
+  blue1: '#3b82f6',
+  blue2: '#64748b',
+  text: '#0f172a',
+  subtext: '#64748b',
+  border: 'rgba(226, 232, 240, 0.8)',
 };
 
 const formatCategory = (value = '') => value.split('-').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
@@ -31,35 +30,46 @@ const MedicineCard = ({ medicine, onAdd }) => {
         flexDirection: 'column',
         borderRadius: 4,
         border: `1px solid ${COLORS.border}`,
-        boxShadow: '0 8px 24px rgba(44,62,80,0.06)',
+        boxShadow: '0 8px 24px rgba(15,23,42,0.04)',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         overflow: 'hidden',
+        textAlign: 'left',
         '&:hover': {
           transform: 'translateY(-8px)',
-          boxShadow: '0 12px 32px rgba(44,62,80,0.12)',
+          boxShadow: '0 12px 32px rgba(15,23,42,0.08)',
         }
       }}
     >
-      <Box sx={{ position: 'relative' }}>
-        <CardMedia 
+      <Box sx={{ 
+        position: 'relative',
+        bgcolor: '#f8fafc',
+        height: 150,
+        p: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.8)'
+      }}>
+        <Box 
           component="img" 
-          height="200" 
-          image={image} 
+          src={image} 
           alt={medicine.name}
           sx={{ 
-            objectFit: 'cover',
+            maxHeight: '100%', 
+            maxWidth: '100%',
+            objectFit: 'contain',
             transition: 'transform 0.5s ease',
             '&:hover': { transform: 'scale(1.05)' }
           }} 
         />
-        <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end' }}>
+        <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end', zIndex: 3 }}>
           <Chip 
             label={formatCategory(medicine.category)} 
             size="small" 
             sx={{ 
-              bgcolor: 'rgba(255,255,255,0.9)', 
+              bgcolor: 'rgba(255,255,255,0.95)', 
               backdropFilter: 'blur(4px)',
-              fontWeight: 600,
+              fontWeight: 700,
               color: COLORS.text,
               fontSize: '0.65rem'
             }} 
@@ -69,32 +79,32 @@ const MedicineCard = ({ medicine, onAdd }) => {
               label="Rx Required" 
               size="small" 
               color="error"
-              sx={{ fontWeight: 600, fontSize: '0.65rem' }} 
+              sx={{ fontWeight: 700, fontSize: '0.65rem' }} 
             />
           )}
         </Box>
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
-        <Box sx={{ mb: 1.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.text, lineHeight: 1.2, mb: 0.5 }}>
+      <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'left' }}>
+        <Box sx={{ mb: 1.5, textAlign: 'left' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.text, lineHeight: 1.2, mb: 0.5, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '0.95rem', textAlign: 'left' }}>
             {medicine.name}
           </Typography>
           {medicine.brand && (
-            <Typography variant="caption" sx={{ color: COLORS.blue2, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem', display: 'block', textAlign: 'left' }}>
               {medicine.brand}
             </Typography>
           )}
         </Box>
 
-        <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '2.5rem' }}>
+        <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '2.5rem', fontSize: '0.8rem', lineHeight: 1.5, textAlign: 'left' }}>
           {medicine.description || 'Quality medicine for your recovery and wellness.'}
         </Typography>
 
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-end">
-          <Box>
-            <Typography variant="caption" color="text.secondary">Price</Typography>
-            <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 800 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ textAlign: 'left' }}>
+          <Box sx={{ textAlign: 'left' }}>
+            <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 500, display: 'block', textAlign: 'left' }}>Price</Typography>
+            <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 800, fontSize: '1.05rem', textAlign: 'left' }}>
               Rs. {medicine.price?.toFixed(2)}
               <Typography component="span" variant="caption" sx={{ ml: 0.5, color: COLORS.subtext }}>/ {unit}</Typography>
             </Typography>
@@ -104,12 +114,12 @@ const MedicineCard = ({ medicine, onAdd }) => {
             size="small"
             variant="outlined"
             color={inStock ? (isLowStock ? 'warning' : 'success') : 'error'}
-            sx={{ fontWeight: 600, borderRadius: 1.5, fontSize: '0.7rem' }}
+            sx={{ fontWeight: 700, borderRadius: 2, fontSize: '0.68rem', px: 0.5 }}
           />
         </Stack>
       </CardContent>
 
-      <CardActions sx={{ p: 2.5, pt: 0 }}>
+      <CardActions sx={{ p: 2.5, pt: 0, justifyContent: 'center' }}>
         <Button 
           fullWidth 
           variant="contained" 
@@ -117,20 +127,22 @@ const MedicineCard = ({ medicine, onAdd }) => {
           onClick={() => onAdd(medicine)} 
           disabled={!inStock} 
           sx={{ 
-            borderRadius: 2.5,
-            py: 1,
+            borderRadius: 3,
+            py: 1.2,
             textTransform: 'none',
-            fontWeight: 700,
+            fontWeight: 800,
             boxShadow: 'none',
             bgcolor: COLORS.green3,
-            color: COLORS.text,
+            color: 'white',
             '&:hover': { 
               bgcolor: COLORS.green2,
-              boxShadow: '0 4px 12px rgba(171, 231, 178, 0.4)'
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)',
+              transform: 'translateY(-1px)'
             },
+            transition: 'all 0.2s',
             '&.Mui-disabled': {
-              bgcolor: '#f5f5f5',
-              color: '#bdbdbd'
+              bgcolor: '#f1f5f9',
+              color: '#94a3b8'
             }
           }}
         >
