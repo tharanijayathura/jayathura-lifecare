@@ -18,8 +18,8 @@ const PaymentMethodSection = ({ paymentMethod, setPaymentMethod, requestAudioIns
     <Stack spacing={3}>
       <Stack direction="row" spacing={2}>
         <Button 
-          variant={paymentMethod === 'online' ? 'contained' : 'outlined'} 
-          onClick={() => setPaymentMethod('online')} 
+          variant="outlined"
+          disabled
           fullWidth
           startIcon={<Payment />}
           sx={{ 
@@ -27,13 +27,15 @@ const PaymentMethodSection = ({ paymentMethod, setPaymentMethod, requestAudioIns
             py: 1.2, 
             textTransform: 'none',
             fontWeight: 700,
-            bgcolor: paymentMethod === 'online' ? COLORS.blue2 : 'transparent',
-            borderColor: COLORS.blue1,
-            color: paymentMethod === 'online' ? 'white' : COLORS.text,
-            '&:hover': { bgcolor: paymentMethod === 'online' ? COLORS.blue1 : COLORS.green1 }
+            borderColor: COLORS.border,
+            color: COLORS.subtext,
+            '&.Mui-disabled': {
+              borderColor: COLORS.border,
+              bgcolor: 'rgba(0,0,0,0.02)'
+            }
           }}
         >
-          Online Payment
+          Online Payment (Coming Soon)
         </Button>
         <Button 
           variant={paymentMethod === 'cod' ? 'contained' : 'outlined'} 

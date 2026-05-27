@@ -32,7 +32,7 @@ import {
   TextField,
   Grid
 } from '@mui/material';
-import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer } from '@mui/icons-material';
+import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer, LocalPharmacy } from '@mui/icons-material';
 
 const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading, orderId }) => {
   const [attachPrescription, setAttachPrescription] = useState(false);
@@ -61,8 +61,15 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
     }
   }, [latestPrescription]);
 
+  const hasPrescription = !!latestPrescription || cartItems.some(i => i.itemType === 'Prescription' || i.itemType === 'prescription');
+
   const handleSendToPharmacist = () => {
-    setPaymentDialogOpen(true);
+    if (hasPrescription) {
+      // Direct send to pharmacist without asking for payment/address upfront
+      onSubmitOrder?.({ attachPrescription: true });
+    } else {
+      setPaymentDialogOpen(true);
+    }
   };
 
   const handleConfirmOrder = () => {
@@ -72,7 +79,7 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
     }
     setPaymentDialogOpen(false);
     onSubmitOrder?.({
-      attachPrescription: attachPrescription && !!latestPrescription,
+      attachPrescription: false,
       paymentMethod: paymentMethod,
       deliveryAddress: deliveryAddress
     });
@@ -244,10 +251,10 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
                   '&:disabled': { bgcolor: '#e2e8f0' }
                 }}
                 onClick={handleSendToPharmacist}
-                disabled={cartItems.length === 0 || loading}
+                disabled={(cartItems.length === 0 && !hasPrescription) || loading}
                 startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircleOutline />}
               >
-                {loading ? 'Finalizing...' : 'Proceed to Checkout'}
+                {loading ? 'Processing...' : (hasPrescription ? 'Send Order to Pharmacist' : 'Proceed to Checkout')}
               </Button>
             </Box>
           </Box>

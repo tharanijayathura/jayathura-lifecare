@@ -40,7 +40,7 @@ const PharmacistPortal = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f0f0ff', pb: 6 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f8fafc' }}>
       <PortalHeader
         title="Pharmacist Console"
         subtitle="Medical fulfillment and order verification"

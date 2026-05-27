@@ -123,26 +123,27 @@ const MedicineCard = ({ medicine, onAdd }) => {
         <Button 
           fullWidth 
           variant="contained" 
-          startIcon={<AddShoppingCart />} 
+          size="small"
+          startIcon={<AddShoppingCart fontSize="small" />} 
           onClick={() => onAdd(medicine)} 
           disabled={!inStock} 
           sx={{ 
-            borderRadius: 3,
-            py: 1.2,
+            borderRadius: 2,
+            py: 0.8,
             textTransform: 'none',
-            fontWeight: 800,
+            fontWeight: 700,
             boxShadow: 'none',
-            bgcolor: COLORS.green3,
-            color: 'white',
+            bgcolor: '#f1f5f9',
+            color: '#475569',
             '&:hover': { 
-              bgcolor: COLORS.green2,
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)',
+              bgcolor: '#e2e8f0',
+              boxShadow: 'none',
               transform: 'translateY(-1px)'
             },
             transition: 'all 0.2s',
             '&.Mui-disabled': {
-              bgcolor: '#f1f5f9',
-              color: '#94a3b8'
+              bgcolor: '#f8fafc',
+              color: '#cbd5e1'
             }
           }}
         >

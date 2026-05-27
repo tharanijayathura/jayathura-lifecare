@@ -32,7 +32,7 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
     city: '',
     postalCode: ''
   });
-  const [paymentMethod, setPaymentMethod] = useState('online');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [requestAudioInstructions, setRequestAudioInstructions] = useState(false);
 
   const COLORS = {
@@ -50,7 +50,7 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
     if (open && orderId) {
       setOrder(null);
       setDeliveryAddress({ street: '', city: '', postalCode: '' });
-      setPaymentMethod('online');
+      setPaymentMethod('cod');
       setRequestAudioInstructions(false);
       fetchBill();
     }

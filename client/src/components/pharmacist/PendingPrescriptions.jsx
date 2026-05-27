@@ -128,7 +128,7 @@ const PendingPrescriptions = ({ onSelectPrescription }) => {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {filteredPrescriptions.map((rx) => (
+          {filteredPrescriptions.slice((page - 1) * 12, page * 12).map((rx) => (
             <Grid item xs={12} sm={6} md={4} key={rx._id}>
               <Paper
                 elevation={0}

@@ -112,7 +112,7 @@ const PatientPortal = () => {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#eef7f2', pb: 6 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#eef7f2', pb: 6, textAlign: 'left' }}>
 
       {/* ── Shared Portal Header (fetches live name from DB) ── */}
       <PortalHeader

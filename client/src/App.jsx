@@ -15,6 +15,7 @@ import PatientPortal from './patient/PatientPortal';
 import PharmacistPortal from './pharmacist/PharmacistPortal';
 import AdminPortal from './admin/AdminPortal';
 import DeliveryPortal from './pages/DeliveryPortal';
+import ErrorBoundary from './components/ErrorBoundary';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Chat from './pages/Chat';
@@ -35,7 +36,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/patient" element={<PatientPortal />} />
+                <Route path="/patient" element={<ErrorBoundary><PatientPortal /></ErrorBoundary>} />
                 <Route path="/pharmacist" element={<PharmacistPortal />} />
                 <Route path="/admin" element={<AdminPortal />} />
                 <Route path="/delivery" element={<DeliveryPortal />} />

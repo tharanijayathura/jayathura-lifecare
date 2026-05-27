@@ -62,7 +62,7 @@ router.get('/prescriptions/pending', authMiddleware, pharmacistMiddleware, async
     const prescriptionIds = prescriptions.map(p => p._id);
     const orders = await Order.find({ 
       prescriptionId: { $in: prescriptionIds },
-      status: { $in: ['draft', 'pending'] } // Show both draft and pending
+      status: 'pending' // Only show after patient sends it to pharmacist
     })
       .populate('patientId', 'name email phone')
       .sort({ createdAt: -1 });
@@ -71,19 +71,24 @@ router.get('/prescriptions/pending', authMiddleware, pharmacistMiddleware, async
     console.log('Found orders:', orders.length);
 
     // Add order status info to each prescription for frontend
-    const prescriptionsWithOrderInfo = prescriptions.map(prescription => {
+    const prescriptionsWithOrderInfo = prescriptions.reduce((acc, prescription) => {
       const relatedOrder = orders.find(o => {
         if (!o.prescriptionId) return false;
         // Handle both ObjectId and string comparisons
         const orderPrescriptionId = o.prescriptionId._id || o.prescriptionId;
         return orderPrescriptionId.toString() === prescription._id.toString();
       });
-      return {
-        ...prescription.toObject(),
-        orderStatus: relatedOrder?.status || 'draft', // Default to draft if no order found
-        orderId: relatedOrder?._id || null
-      };
-    });
+      
+      // Only include if the patient has sent it to the pharmacist (status = 'pending')
+      if (relatedOrder) {
+        acc.push({
+          ...prescription.toObject(),
+          orderStatus: relatedOrder.status,
+          orderId: relatedOrder._id
+        });
+      }
+      return acc;
+    }, []);
 
     console.log('Returning prescriptions:', prescriptionsWithOrderInfo.length);
 

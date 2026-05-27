@@ -39,8 +39,8 @@ const invoiceSchema = new mongoose.Schema({
   paidAt: Date
 }, { timestamps: true });
 
-// Generate invoice ID before saving
-invoiceSchema.pre('save', async function(next) {
+// Generate invoice ID before validation
+invoiceSchema.pre('validate', async function(next) {
   if (!this.invoiceId) {
     try {
       const count = await mongoose.model('Invoice').countDocuments();

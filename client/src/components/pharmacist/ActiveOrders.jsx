@@ -19,10 +19,12 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel,
   Avatar,
+  Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
-import { Refresh, Visibility, Search, FilterList, Payment, EventBusy, Assignment } from '@mui/icons-material';
+import { Refresh, Visibility, Search, Payment, Assignment } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
 
 const ActiveOrders = ({ onSelectOrder }) => {
@@ -31,6 +33,9 @@ const ActiveOrders = ({ onSelectOrder }) => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const COLORS = {
     green1: '#ECF4E8',
@@ -143,94 +148,183 @@ const ActiveOrders = ({ onSelectOrder }) => {
           </Stack>
         </Box>
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ '& th': { borderBottom: `2px solid #f1f5f9`, color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' } }}>
-                <TableCell>Order Info</TableCell>
-                <TableCell>Patient</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Total Bill</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => {
-                  const status = getStatusConfig(order.status);
-                  return (
-                    <TableRow key={order._id} hover sx={{ '& td': { borderBottom: '1px solid #f1f5f9', py: 2.5 } }}>
-                      <TableCell>
-                        <Typography sx={{ fontWeight: 800, color: COLORS.text }}>
-                          #{order.orderId || order._id.slice(-6).toUpperCase()}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: COLORS.subtext }}>
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Avatar sx={{ bgcolor: COLORS.blue1, width: 32, height: 32, fontSize: '0.8rem', fontWeight: 700 }}>
-                            {(order.patientId?.name || 'U')[0]}
-                          </Avatar>
-                          <Box>
-                            <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{order.patientId?.name || 'Unknown'}</Typography>
-                            <Typography variant="caption" sx={{ color: COLORS.subtext }}>{order.patientId?.phone || 'No contact'}</Typography>
+        {/* Responsive Table / Card Switcher */}
+        {!isMobile ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ '& th': { borderBottom: `2px solid #f1f5f9`, color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' } }}>
+                  <TableCell>Order Info</TableCell>
+                  <TableCell>Patient</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell>Total Bill</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell align="right">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.map((order) => {
+                    const status = getStatusConfig(order.status);
+                    return (
+                      <TableRow key={order._id} hover sx={{ '& td': { borderBottom: '1px solid #f1f5f9', py: 2.5 } }}>
+                        <TableCell>
+                          <Typography sx={{ fontWeight: 800, color: COLORS.text }}>
+                            #{order.orderId || order._id.slice(-6).toUpperCase()}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: COLORS.subtext }}>
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Avatar sx={{ bgcolor: COLORS.blue1, width: 32, height: 32, fontSize: '0.8rem', fontWeight: 700 }}>
+                              {(order.patientId?.name || 'U')[0]}
+                            </Avatar>
+                            <Box>
+                              <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{order.patientId?.name || 'Unknown'}</Typography>
+                              <Typography variant="caption" sx={{ color: COLORS.subtext }}>{order.patientId?.phone || 'No contact'}</Typography>
+                            </Box>
                           </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={order.type?.toUpperCase() || 'OTC'} 
+                            size="small" 
+                            sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: COLORS.green1, color: COLORS.blue2 }} 
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography sx={{ fontWeight: 800 }}>Rs. {order.finalAmount?.toFixed(2)}</Typography>
+                          <Typography variant="caption" sx={{ color: COLORS.subtext, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Payment sx={{ fontSize: 12 }} /> {order.paymentMethod?.toUpperCase()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={status.label.toUpperCase()} 
+                            size="small" 
+                            sx={{ bgcolor: status.bg, color: status.color, fontWeight: 900, borderRadius: 2, fontSize: '0.65rem' }} 
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button 
+                            variant="contained" 
+                            size="small" 
+                            startIcon={<Visibility />}
+                            onClick={() => onSelectOrder(order)}
+                            sx={{ 
+                              borderRadius: 3, 
+                              bgcolor: COLORS.blue2, 
+                              fontWeight: 800,
+                              boxShadow: '0 4px 12px rgba(122, 168, 176, 0.2)',
+                              '&:hover': { bgcolor: COLORS.blue1 }
+                            }}
+                          >
+                            Manage
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                      <Assignment sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                      <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>No active orders found</Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Stack spacing={2} sx={{ p: 2 }}>
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map(order => {
+                const status = getStatusConfig(order.status);
+                return (
+                  <Paper
+                    key={order._id}
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 4,
+                      borderColor: COLORS.border,
+                      bgcolor: 'white',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.01)'
+                    }}
+                  >
+                    <Stack spacing={2}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                        <Box>
+                          <Typography sx={{ fontWeight: 800, color: COLORS.text }}>
+                            #{order.orderId || order._id.slice(-6).toUpperCase()}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: COLORS.subtext }}>
+                            Placed: {new Date(order.createdAt).toLocaleDateString()}
+                          </Typography>
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={order.type?.toUpperCase() || 'OTC'} 
-                          size="small" 
-                          sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: COLORS.green1, color: COLORS.blue2 }} 
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography sx={{ fontWeight: 800 }}>Rs. {order.finalAmount?.toFixed(2)}</Typography>
-                        <Typography variant="caption" sx={{ color: COLORS.subtext, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Payment sx={{ fontSize: 12 }} /> {order.paymentMethod?.toUpperCase()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
                         <Chip 
                           label={status.label.toUpperCase()} 
                           size="small" 
                           sx={{ bgcolor: status.bg, color: status.color, fontWeight: 900, borderRadius: 2, fontSize: '0.65rem' }} 
                         />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button 
-                          variant="contained" 
-                          size="small" 
-                          startIcon={<Visibility />}
-                          onClick={() => onSelectOrder(order)}
-                          sx={{ 
-                            borderRadius: 3, 
-                            bgcolor: COLORS.blue2, 
-                            fontWeight: 800,
-                            boxShadow: '0 4px 12px rgba(122, 168, 176, 0.2)',
-                            '&:hover': { bgcolor: COLORS.blue1 }
-                          }}
-                        >
-                          Manage
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
-                    <Assignment sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
-                    <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>No active orders found</Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </Stack>
+
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Avatar sx={{ bgcolor: COLORS.blue1, width: 36, height: 36, fontSize: '0.9rem', fontWeight: 700 }}>
+                          {(order.patientId?.name || 'U')[0]}
+                        </Avatar>
+                        <Box>
+                          <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{order.patientId?.name || 'Unknown'}</Typography>
+                          <Typography variant="caption" sx={{ color: COLORS.subtext }}>{order.patientId?.phone || 'No contact'}</Typography>
+                        </Box>
+                      </Stack>
+
+                      <Divider sx={{ borderStyle: 'dashed' }} />
+
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Box>
+                          <Chip 
+                            label={order.type?.toUpperCase() || 'OTC'} 
+                            size="small" 
+                            sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: COLORS.green1, color: COLORS.blue2, mr: 1 }} 
+                          />
+                          <Typography variant="caption" sx={{ color: COLORS.subtext }}>
+                            COD
+                          </Typography>
+                        </Box>
+                        <Typography sx={{ fontWeight: 800 }}>Rs. {order.finalAmount?.toFixed(2)}</Typography>
+                      </Stack>
+
+                      <Button 
+                        variant="contained" 
+                        fullWidth
+                        startIcon={<Visibility />}
+                        onClick={() => onSelectOrder(order)}
+                        sx={{ 
+                          borderRadius: 3, 
+                          py: 1,
+                          bgcolor: COLORS.blue2, 
+                          fontWeight: 800,
+                          '&:hover': { bgcolor: COLORS.blue1 }
+                        }}
+                      >
+                        Manage Order
+                      </Button>
+                    </Stack>
+                  </Paper>
+                );
+              })
+            ) : (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <Assignment sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>No active orders found</Typography>
+              </Box>
+            )}
+          </Stack>
+        )}
       </Paper>
     </Box>
   );

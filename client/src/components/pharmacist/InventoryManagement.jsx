@@ -265,8 +265,8 @@ const InventoryManagement = () => {
           />
         </Box>
 
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 750 }}>
             <TableHead>
               <TableRow sx={{ '& th': { borderBottom: `2px solid #f1f5f9`, color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' } }}>
                 <TableCell>Medicine Details</TableCell>
