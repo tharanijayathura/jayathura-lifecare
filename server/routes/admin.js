@@ -89,5 +89,35 @@ router.get('/users', adminMiddleware, async (req, res) => {
   }
 });
 
+
+// Get admin profile
+router.get('/profile', adminMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (error) {
+    console.error('Get admin profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update admin profile
+router.put('/profile', adminMiddleware, async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { ...(name && { name }), ...(phone && { phone }) },
+      { new: true }
+    ).select('-password');
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Update admin profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
+
 

@@ -5,7 +5,7 @@ import { useAuth } from '../../../contexts/useAuth';
 import { patientAPI } from '../../../services/api';
 
 const PatientProfile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -90,6 +90,11 @@ const PatientProfile = () => {
       setEditing(false);
       const response = await patientAPI.getDetailedProfile();
       setProfile(response.data);
+      // Sync updated name to global auth context so the top header refreshes
+      const updatedUser = response.data?.user;
+      if (updatedUser?.name) {
+        updateUser({ name: updatedUser.name, image: updatedUser.image });
+      }
       setSnackbar({ open: true, message: 'Profile updated successfully!', severity: 'success' });
     } catch (err) {
       console.error('Error updating profile:', err);

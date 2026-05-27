@@ -6,7 +6,7 @@ export const medicineFormatHelp = `Format: Name | Brand | Category | BaseUnit | 
 Fields:
 - Name: Medicine/Product name (required)
 - Brand: Brand name (optional)
-- Category: prescription, otc, herbal, medical-devices, personal-care, groceries, baby-care, first-aid, vitamins, seasonal, dermatology, eye-ear-care, womens-health, mens-health, dental-care, home-healthcare, fitness-weight, cold-chain, pet-health (required)
+- Category: prescription, otc, herbal, medical-devices, personal-care, baby-care, first-aid, vitamins (required)
 - BaseUnit: tablet, capsule, ml, gram, piece (required)
 - Packaging: blister, bottle, tube, box, unit, card, sachet (required)
 - QtyPerPack: Quantity per pack (required, number)

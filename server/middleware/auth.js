@@ -87,9 +87,24 @@ const superAdminMiddleware = async (req, res, next) => {
   }
 };
 
+// Middleware to check if user is admin, pharmacist or super admin
+const adminOrPharmacistMiddleware = async (req, res, next) => {
+  try {
+    await authMiddleware(req, res, () => {
+      if (req.user.role !== 'admin' && req.user.role !== 'pharmacist' && !req.user.isSuperAdmin) {
+        return res.status(403).json({ message: 'Admin or Pharmacist access required' });
+      }
+      next();
+    });
+  } catch (error) {
+    return res.status(403).json({ message: 'Admin or Pharmacist access required' });
+  }
+};
+
 module.exports = {
   authMiddleware,
   adminMiddleware,
-  superAdminMiddleware
+  superAdminMiddleware,
+  adminOrPharmacistMiddleware
 };
 

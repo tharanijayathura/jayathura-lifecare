@@ -13,35 +13,15 @@ export const MEDICINE_CATEGORY_GROUPS = [
     groupName: 'Health & Wellness',
     categories: [
       { value: 'vitamins', label: 'Vitamins & Supplements' },
-      { value: 'dermatology', label: 'Dermatology & Skin Care' },
-      { value: 'eye-ear-care', label: 'Eye & Ear Care' },
-      { value: 'dental-care', label: 'Dental Care' },
-    ]
-  },
-  {
-    groupName: 'Specialized Care',
-    categories: [
-      { value: 'womens-health', label: "Women's Health" },
-      { value: 'mens-health', label: "Men's Health" },
+      { value: 'personal-care', label: 'Personal Care & Hygiene' },
       { value: 'baby-care', label: 'Baby & Infant Care' },
-      { value: 'pet-health', label: 'Pet Health' },
     ]
   },
   {
     groupName: 'Medical Equipment',
     categories: [
-      { value: 'medical-devices', label: 'Medical Devices' },
-      { value: 'home-healthcare', label: 'Home Healthcare' },
+      { value: 'medical-devices', label: 'Medical Devices & Equipment' },
       { value: 'first-aid', label: 'First Aid & Emergency' },
-    ]
-  },
-  {
-    groupName: 'Lifestyle',
-    categories: [
-      { value: 'personal-care', label: 'Personal Care & Hygiene' },
-      { value: 'fitness-weight', label: 'Fitness & Weight Management' },
-      { value: 'seasonal', label: 'Seasonal & Special' },
-      { value: 'cold-chain', label: 'Cold Chain Products' },
     ]
   }
 ];

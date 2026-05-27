@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useAuth } from '../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Container, Alert, Box } from '@mui/material';
-import PageHeader from '../components/common/PageHeader';
+import PortalHeader from '../components/common/PortalHeader';
 import PharmacistDashboard from '../components/pharmacist/PharmacistDashboard';
 
 const PharmacistPortal = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  // dashboardRef exposes a setActiveTab function from PharmacistDashboard
+  const dashboardRef = useRef(null);
 
   React.useEffect(() => {
     if (!authLoading && (!user || (user.role !== 'pharmacist' && !user.isSuperAdmin))) {
@@ -31,14 +33,22 @@ const PharmacistPortal = () => {
     );
   }
 
+  const handleProfileClick = () => {
+    if (dashboardRef.current?.goToProfile) {
+      dashboardRef.current.goToProfile();
+    }
+  };
+
   return (
-    <Box>
-      <PageHeader
-        title={user?.name ? `Pharmacist Console: ${user.name.split(' ')[0]}` : "Pharmacist"}
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f0f0ff', pb: 6 }}>
+      <PortalHeader
+        title="Pharmacist Console"
         subtitle="Medical fulfillment and order verification"
-        showBack={false}
+        role="pharmacist"
+        onLogoClick={() => dashboardRef.current?.goToTab?.(0)}
+        onProfile={handleProfileClick}
       />
-      <PharmacistDashboard />
+      <PharmacistDashboard ref={dashboardRef} />
     </Box>
   );
 };

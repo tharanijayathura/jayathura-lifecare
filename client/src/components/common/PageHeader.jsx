@@ -3,6 +3,7 @@ import React from 'react';
 import { Box, IconButton, Typography, Stack, useTheme, useMediaQuery } from '@mui/material';
 import { ArrowBack, Home, CalendarToday } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import medicalSymbol from '../../assets/medical-symbol.png';
 
 const PageHeader = ({ title, subtitle, showBack = true, showHome = true, backPath }) => {
   const navigate = useNavigate();
@@ -65,11 +66,20 @@ const PageHeader = ({ title, subtitle, showBack = true, showHome = true, backPat
                 sx={{ 
                   bgcolor: 'white', 
                   border: `1px solid ${COLORS.border}`,
-                  padding: '6px',
+                  padding: '4px',
                   '&:hover': { bgcolor: '#f8fafc', borderColor: COLORS.secondary } 
                 }}
               >
-                <Home sx={{ fontSize: 18, color: COLORS.primary }} />
+                <Box
+                  component="img"
+                  src={medicalSymbol}
+                  alt="Home"
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    objectFit: 'contain'
+                  }}
+                />
               </IconButton>
             )}
           </Box>

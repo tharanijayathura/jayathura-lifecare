@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Medicine = require('../models/Medicine');
-const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const { authMiddleware, adminMiddleware, adminOrPharmacistMiddleware } = require('../middleware/auth');
 const router = express.Router();
 
 // Configure multer for image uploads
@@ -149,7 +149,7 @@ router.get('/pharmacist', authMiddleware, async (req, res) => {
 });
 
 // GET /api/medicines/admin - Get all medicines for admin (with stock alerts)
-router.get('/admin', adminMiddleware, async (req, res) => {
+router.get('/admin', adminOrPharmacistMiddleware, async (req, res) => {
   try {
     const { category, includeInactive } = req.query;
     const query = {};
@@ -203,8 +203,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/medicines - Create new medicine (admin only)
-router.post('/', adminMiddleware, upload.single('image'), async (req, res) => {
+// POST /api/medicines - Create new medicine (admin/pharmacist)
+router.post('/', adminOrPharmacistMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { 
       name, 
@@ -300,8 +300,8 @@ router.post('/', adminMiddleware, upload.single('image'), async (req, res) => {
   }
 });
 
-// PUT /api/medicines/:id - Update medicine (admin only)
-router.put('/:id', adminMiddleware, upload.single('image'), async (req, res) => {
+// PUT /api/medicines/:id - Update medicine (admin/pharmacist)
+router.put('/:id', adminOrPharmacistMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { 
       name, 
@@ -409,8 +409,8 @@ router.put('/:id', adminMiddleware, upload.single('image'), async (req, res) => 
   }
 });
 
-// DELETE /api/medicines/all - Delete all medicines (admin only)
-router.delete('/all', adminMiddleware, async (req, res) => {
+// DELETE /api/medicines/all - Delete all medicines (admin/pharmacist)
+router.delete('/all', adminOrPharmacistMiddleware, async (req, res) => {
   try {
     const result = await Medicine.deleteMany({});
     res.json({ 
@@ -423,8 +423,8 @@ router.delete('/all', adminMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /api/medicines/:id - Delete medicine (admin only)
-router.delete('/:id', adminMiddleware, async (req, res) => {
+// DELETE /api/medicines/:id - Delete medicine (admin/pharmacist)
+router.delete('/:id', adminOrPharmacistMiddleware, async (req, res) => {
   try {
     const medicine = await Medicine.findById(req.params.id);
     if (!medicine) {
@@ -476,8 +476,8 @@ router.post('/:id/alert', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/medicines/:id/clear-alert - Admin can clear alert
-router.post('/:id/clear-alert', adminMiddleware, async (req, res) => {
+// POST /api/medicines/:id/clear-alert - Admin/pharmacist can clear alert
+router.post('/:id/clear-alert', adminOrPharmacistMiddleware, async (req, res) => {
   try {
     const medicine = await Medicine.findById(req.params.id);
     if (!medicine) {

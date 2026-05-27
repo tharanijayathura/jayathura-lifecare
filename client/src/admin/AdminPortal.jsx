@@ -1,52 +1,104 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Box, Tabs, Tab, useTheme, useMediaQuery } from '@mui/material';
+import { Container, Box, Tabs, Tab, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
-import PageHeader from '../components/common/PageHeader';
+import PortalHeader from '../components/common/PortalHeader';
 import AdminAnalytics from './AdminAnalytics';
 import MedicineManager from './MedicineManager';
 import UserApprovals from './UserApprovals';
 import UserList from './UserList';
+import AdminProfile from './AdminProfile';
+
+const TAB_ANALYTICS   = 0;
+const TAB_MEDICINES   = 1;
+const TAB_USERS       = 2;
+const TAB_PROFILE     = 3;
 
 const AdminPortal = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [mainTabIndex, setMainTabIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState(TAB_ANALYTICS);
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate('/login'); return; }
-    if (user.role !== 'admin' && !user.isSuperAdmin) { alert('Access denied. Admin privileges required.'); navigate('/'); }
+    if (user.role !== 'admin' && !user.isSuperAdmin) {
+      alert('Access denied. Admin privileges required.');
+      navigate('/');
+    }
   }, [user, authLoading, navigate]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      <PageHeader 
-        title="Administrative Control Center" 
-        subtitle={`Administrator: ${user?.name || 'Authorized Personnel'}`} 
+    <Box sx={{ minHeight: '100vh', bgcolor: '#fffbeb', pb: 6 }}>
+      <PortalHeader
+        title="Admin Console"
+        subtitle="System management and analytics"
+        role="admin"
+        onLogoClick={() => setActiveTab(TAB_ANALYTICS)}
+        onProfile={() => setActiveTab(TAB_PROFILE)}
       />
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tabs value={mainTabIndex} onChange={(e, v) => setMainTabIndex(v)} variant={isMobile ? 'scrollable' : 'standard'} scrollButtons={isMobile ? 'auto' : false}>
-          <Tab label="Analytics" />
-          <Tab label="Medicines" />
-          <Tab label="Users" />
-        </Tabs>
-      </Box>
-
-      {mainTabIndex === 0 && <AdminAnalytics />}
-      {mainTabIndex === 1 && <MedicineManager />}
-      {mainTabIndex === 2 && (
-        <>
-          <UserApprovals />
-          <Box sx={{ mt: 3 }}>
-            <UserList />
+      <Container maxWidth="xl">
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 6,
+            border: '1px solid rgba(245,158,11,0.12)',
+            bgcolor: 'white',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+          }}
+        >
+          {/* Tab Bar */}
+          <Box sx={{ borderBottom: '1px solid #fef3c7', px: { xs: 2, md: 4 }, pt: 0.5 }}>
+            <Tabs
+              value={activeTab}
+              onChange={(e, v) => setActiveTab(v)}
+              variant={isMobile ? 'scrollable' : 'standard'}
+              scrollButtons={isMobile ? 'auto' : false}
+              TabIndicatorProps={{ sx: { bgcolor: '#f59e0b', height: 3, borderRadius: '3px 3px 0 0' } }}
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.92rem',
+                  fontWeight: 800,
+                  fontFamily: "'Inter', sans-serif",
+                  color: '#64748b',
+                  minWidth: 'auto',
+                  px: 2.5,
+                  py: 2.2,
+                  transition: 'color 0.2s',
+                  '&.Mui-selected': { color: '#f59e0b' },
+                  '&:hover': { color: '#f59e0b' },
+                },
+              }}
+            >
+              <Tab label="Analytics" />
+              <Tab label="Medicines" />
+              <Tab label="Users" />
+              <Tab label="Profile" />
+            </Tabs>
           </Box>
-        </>
-      )}
-    </Container>
+
+          {/* Content Area */}
+          <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
+            {activeTab === TAB_ANALYTICS && <AdminAnalytics />}
+            {activeTab === TAB_MEDICINES && <MedicineManager />}
+            {activeTab === TAB_USERS && (
+              <>
+                <UserApprovals />
+                <Box sx={{ mt: 3 }}>
+                  <UserList />
+                </Box>
+              </>
+            )}
+            {activeTab === TAB_PROFILE && <AdminProfile />}
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

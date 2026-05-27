@@ -25,19 +25,8 @@ const CATEGORY_OPTIONS = [
   { value: 'vitamins', label: 'Vitamins & Supplements' },
   { value: 'medical-devices', label: 'Medical Devices & Equipment' },
   { value: 'personal-care', label: 'Personal Care & Hygiene' },
-  { value: 'groceries', label: 'Groceries & Snacks' },
   { value: 'baby-care', label: 'Baby & Infant Care' },
   { value: 'first-aid', label: 'First Aid & Emergency' },
-  { value: 'seasonal', label: 'Seasonal & Special' },
-  { value: 'dermatology', label: 'Dermatology & Skin Care' },
-  { value: 'eye-ear-care', label: 'Eye & Ear Care' },
-  { value: 'womens-health', label: "Women's Health" },
-  { value: 'mens-health', label: "Men's Health" },
-  { value: 'dental-care', label: 'Dental Care' },
-  { value: 'home-healthcare', label: 'Home Healthcare' },
-  { value: 'fitness-weight', label: 'Fitness & Weight Management' },
-  { value: 'cold-chain', label: 'Cold Chain' },
-  { value: 'pet-health', label: 'Pet Health' },
 ];
 
 const FREQUENTLY_USED_KEYWORDS = [
@@ -65,6 +54,12 @@ const MedicineCatalog = ({ onAddToCart, filterFrequentlyUsed = false }) => {
   useEffect(() => {
     fetchMedicines();
   }, []);
+
+  useEffect(() => {
+    if (filterFrequentlyUsed) {
+      setFilters(prev => ({ ...prev, category: 'frequent' }));
+    }
+  }, [filterFrequentlyUsed]);
 
   const fetchMedicines = async () => {
     try {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Grid, Paper, Alert, Typography, Stack, Chip, Divider } from '@mui/material';
 import { ShoppingBag, Description, Info } from '@mui/icons-material';
 import MedicineCatalog from '../../patient/MedicineCatalog';
@@ -24,8 +24,16 @@ const ShopPharmacy = ({
   loading,
   currentOrderId,
   orderStatus,
+  initialShopCategory,
+  setInitialShopCategory,
 }) => {
   const isAddingToPrescription = !!latestPrescription || cartItems.some(i => i.itemType === 'Prescription');
+
+  useEffect(() => {
+    if (initialShopCategory === 'frequent') {
+      setInitialShopCategory('all');
+    }
+  }, [initialShopCategory, setInitialShopCategory]);
 
   return (
     <Grid container spacing={3}>
@@ -71,7 +79,7 @@ const ShopPharmacy = ({
               </Box>
             </Box>
             
-            <MedicineCatalog onAddToCart={handleAddToCart} filterFrequentlyUsed={false} />
+            <MedicineCatalog onAddToCart={handleAddToCart} filterFrequentlyUsed={initialShopCategory === 'frequent'} />
           </Paper>
         </Stack>
       </Grid>

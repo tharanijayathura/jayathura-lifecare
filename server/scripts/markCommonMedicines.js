@@ -1,3 +1,5 @@
+const dns = require('dns');
+dns.setServers(['1.1.1.1', '8.8.8.8']);
 const mongoose = require('mongoose');
 const Medicine = require('../models/Medicine');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });

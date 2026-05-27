@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Grid, Tabs, Tab, Paper, Alert, useTheme, useMediaQuery, Snackbar } from '@mui/material';
-import { Info } from '@mui/icons-material';
+import { Container, Typography, Box, Tabs, Tab, Paper, Alert, useTheme, useMediaQuery, Snackbar } from '@mui/material';
 import { useAuth } from '../contexts/useAuth';
 import PrescriptionUpload from '../components/patient/PrescriptionUpload';
-import MedicineCatalog from '../components/patient/MedicineCatalog';
 import ShoppingCart from '../components/patient/ShoppingCart';
 import OrderHistory from '../components/patient/OrderHistory';
-import GroceryCatalog from '../components/patient/GroceryCatalog';
 import ShopPharmacy from '../components/patient/portal/ShopPharmacy.jsx';
 import ChatWidget from '../components/chat/ChatWidget';
 import BillReview from '../components/patient/BillReview';
@@ -14,17 +11,19 @@ import AddItemsToPrescription from '../components/patient/AddItemsToPrescription
 import DashboardOverview from '../components/patient/portal/DashboardOverview.jsx';
 import PatientProfile from '../components/patient/portal/PatientProfile.jsx';
 import PrescriptionOrders from '../components/patient/portal/PrescriptionOrders.jsx';
+import PortalHeader from '../components/common/PortalHeader';
 import { useNavigate } from 'react-router-dom';
-import PageHeader from '../components/common/PageHeader';
 import { patientAPI } from '../services/api';
-import API from '../services/api';
-
 import { usePatientPortal } from '../components/patient/portal/usePatientPortal.js';
+
 const PatientPortal = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const navigate = useNavigate();
+
+  const [initialShopCategory, setInitialShopCategory] = useState('all');
+
   const {
     activeTab, setActiveTab,
     cartItems, setCartItems,
@@ -48,10 +47,7 @@ const PatientPortal = () => {
     handleBillConfirmed,
   } = usePatientPortal();
 
-  useEffect(() => {
-    console.log('DEBUG: PatientPortal activeTab is:', activeTab);
-  }, [activeTab]);
-
+  // Validate current order on mount
   useEffect(() => {
     const checkAndClearInvalidOrder = async () => {
       if (currentOrderId) {
@@ -73,6 +69,7 @@ const PatientPortal = () => {
     checkAndClearInvalidOrder();
   }, []);
 
+  // Reload cart from order on order ID change
   useEffect(() => {
     const loadCartFromOrder = async () => {
       if (currentOrderId) {
@@ -121,7 +118,19 @@ const PatientPortal = () => {
   }, [currentOrderId]);
 
   const tabs = [
-    { label: 'Dashboard', component: <DashboardOverview onNavigate={setActiveTab} handleAddToCart={handleAddToCart} /> },
+    {
+      label: 'Dashboard',
+      component: (
+        <DashboardOverview
+          onNavigate={setActiveTab}
+          handleAddToCart={handleAddToCart}
+          onSeeMoreCommon={() => {
+            setInitialShopCategory('frequent');
+            setActiveTab(2);
+          }}
+        />
+      )
+    },
     {
       label: 'Upload Prescription',
       component: (
@@ -149,6 +158,8 @@ const PatientPortal = () => {
           loading={loading}
           currentOrderId={currentOrderId}
           orderStatus={orderStatus}
+          initialShopCategory={initialShopCategory}
+          setInitialShopCategory={setInitialShopCategory}
         />
       ),
     },
@@ -171,48 +182,77 @@ const PatientPortal = () => {
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
-      <PageHeader 
-        title={user?.name ? `Patient Dashboard: ${user.name.split(' ')[0]}` : "Dashboard"}
+    <Box sx={{ minHeight: '100vh', bgcolor: '#eef7f2', pb: 6 }}>
+
+      {/* ── Shared Portal Header (fetches live name from DB) ── */}
+      <PortalHeader
+        title="Patient Dashboard"
         subtitle="Manage health services and prescriptions"
-        showBack={false}
+        role="patient"
+        onLogoClick={() => setActiveTab(0)}
+        onProfile={() => setActiveTab(5)}
       />
 
-      <Paper sx={{ width: '100%' }}>
-        <Tabs
-          value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
-          sx={{ 
-            borderBottom: 1, 
-            borderColor: 'divider',
-            '& .MuiTab-root': {
-              fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
-              minWidth: { xs: 60, sm: 80, md: 120 },
-              px: { xs: 1, sm: 2, md: 3 },
-            },
+      {/* ── Main Content Card with Tabs ── */}
+      <Container maxWidth="xl">
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 6,
+            border: '1px solid rgba(0,0,0,0.04)',
+            bgcolor: 'white',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
           }}
-          variant={isMobile ? 'scrollable' : 'standard'}
-          scrollButtons={isMobile ? 'auto' : false}
         >
-          {tabs.map((tab, index) => (
-            <Tab key={index} label={tab.label} />
-          ))}
-        </Tabs>
+          {/* Tab Navigation Bar */}
+          <Box sx={{ borderBottom: '1px solid #f1f5f9', px: { xs: 2, md: 4 }, pt: 0.5 }}>
+            <Tabs
+              value={activeTab}
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              TabIndicatorProps={{ sx: { bgcolor: '#10b981', height: 3, borderRadius: '3px 3px 0 0' } }}
+              sx={{
+                '& .MuiTabs-indicator': { bgcolor: '#10b981' },
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.92rem',
+                  fontWeight: 800,
+                  fontFamily: "'Inter', sans-serif",
+                  color: '#64748b',
+                  minWidth: 'auto',
+                  px: 2.5,
+                  py: 2.2,
+                  transition: 'color 0.2s',
+                  '&.Mui-selected': { color: '#10b981' },
+                  '&:hover': { color: '#10b981' },
+                }
+              }}
+            >
+              {tabs.map((tab, idx) => (
+                <Tab key={idx} label={tab.label} />
+              ))}
+            </Tabs>
+          </Box>
 
-        <Box sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
-          {tabs[activeTab].component}
-        </Box>
-      </Paper>
+          {/* Tab Content */}
+          <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
+            {tabs[activeTab].component}
+          </Box>
+        </Paper>
+      </Container>
+
       <ChatWidget onOpenFullScreen={() => window.location.href = '/chat'} />
-      
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
           sx={{ width: '100%' }}
         >
@@ -248,7 +288,7 @@ const PatientPortal = () => {
           });
         }}
       />
-    </Container>
+    </Box>
   );
 };
 

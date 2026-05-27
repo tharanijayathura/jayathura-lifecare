@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/useAuth';
 import { pharmacistAPI } from '../../services/api';
 
 const PharmacistProfile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -46,6 +46,10 @@ const PharmacistProfile = () => {
       setEditing(false);
       const response = await pharmacistAPI.getProfile();
       setProfile(response.data);
+      // Sync updated name to global auth context so the top header refreshes
+      if (response.data?.name) {
+        updateUser({ name: response.data.name });
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
     }

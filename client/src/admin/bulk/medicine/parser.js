@@ -16,9 +16,7 @@ export const parseMedicines = (inputText) => {
 
     const validCategories = [
       'prescription', 'otc', 'herbal', 'medical-devices', 'personal-care',
-      'groceries', 'baby-care', 'first-aid', 'vitamins', 'seasonal',
-      'dermatology', 'eye-ear-care', 'womens-health', 'mens-health',
-      'dental-care', 'home-healthcare', 'fitness-weight', 'cold-chain', 'pet-health'
+      'baby-care', 'first-aid', 'vitamins'
     ];
     const validBaseUnits = ['tablet', 'capsule', 'ml', 'gram', 'piece'];
     const validPackaging = ['blister', 'bottle', 'tube', 'box', 'unit', 'card', 'sachet'];

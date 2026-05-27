@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import {
   Container,
   Box,
@@ -37,13 +37,19 @@ import {
   PointOfSale
 } from '@mui/icons-material';
 
-const PharmacistDashboard = () => {
+const PharmacistDashboard = forwardRef((props, ref) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [activeTab, setActiveTab] = useState(0);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState(null);
+
+  // Expose navigation methods to parent (PharmacistPortal header dropdown)
+  useImperativeHandle(ref, () => ({
+    goToProfile: () => setActiveTab(9),
+    goToTab: (n) => setActiveTab(n),
+  }));
 
   const tabs = [
     { label: 'Overview', value: 0, icon: <Assessment /> },
@@ -185,7 +191,7 @@ const PharmacistDashboard = () => {
       </Container>
     </Box>
   );
-};
+});
 
 export default PharmacistDashboard;
 

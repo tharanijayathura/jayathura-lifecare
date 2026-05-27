@@ -92,6 +92,8 @@ export const adminAPI = {
   rejectUser: (userId) => API.post(`/admin/reject/${userId}`),
   getAllUsers: () => API.get('/admin/users'),
   removeUser: (userId) => API.delete(`/admin/users/${userId}`),
+  getProfile: () => API.get('/admin/profile'),
+  updateProfile: (data) => API.put('/admin/profile', data),
 };
 
 export const groceryAPI = {

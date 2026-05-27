@@ -132,7 +132,7 @@ router.post('/login', async (req, res) => {
 // 3. viewPatientProfile() - View dashboard
 router.get('/profile', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -166,7 +166,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
 // 3a. updateProfile() - Update personal information
 router.put('/profile', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -308,7 +308,7 @@ router.get('/order/:orderId/status', authMiddleware, async (req, res) => {
 // 6. browseOTC() - Get all non-prescription medicines
 router.get('/medicines/otc', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -346,7 +346,7 @@ router.get('/medicines/otc', authMiddleware, async (req, res) => {
 // 6a. getCommonMedicines() - Get commonly used medicines for dashboard
 router.get('/medicines/common', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -384,7 +384,7 @@ router.get('/medicines/common', authMiddleware, async (req, res) => {
 // 7. searchMedicines(keyword) - Find medicines (excluding prescription medicines)
 router.get('/medicines/search', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -1393,7 +1393,7 @@ router.get('/invoices', authMiddleware, async (req, res) => {
 // 25. updateProfile(patientData) - Update information
 router.put('/profile', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -1435,7 +1435,7 @@ router.post('/logout', authMiddleware, async (req, res) => {
 // 27. profile - Get profile (alternative endpoint)
 router.get('/profile/detailed', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'patient') {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
