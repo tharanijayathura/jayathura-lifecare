@@ -90,25 +90,35 @@ const OrderItems = ({ order, loading, handleRemoveItem }) => {
             </Table>
           </TableContainer>
 
-          <Box sx={{ mt: 4, p: 3, borderRadius: 5, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
-            <Stack spacing={1.5}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography sx={{ color: COLORS.subtext, fontWeight: 600, fontSize: '0.85rem' }}>Subtotal</Typography>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Rs. {(order.totalAmount || 0).toFixed(2)}</Typography>
+          {(() => {
+            const subtotal = order.totalAmount || order.items?.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0) || 0;
+            const deliveryFee = order.totalAmount !== undefined && order.totalAmount > 0 
+              ? (order.deliveryFee || 0) 
+              : (subtotal > 1000 ? 0 : (subtotal > 0 ? 200 : 0));
+            const totalAmount = order.finalAmount || (subtotal + deliveryFee);
+
+            return (
+              <Box sx={{ mt: 4, p: 3, borderRadius: 5, bgcolor: '#f8fafc', border: '1px solid #f1f5f9' }}>
+                <Stack spacing={1.5}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography sx={{ color: COLORS.subtext, fontWeight: 600, fontSize: '0.85rem' }}>Subtotal</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Rs. {subtotal.toFixed(2)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography sx={{ color: COLORS.subtext, fontWeight: 600, fontSize: '0.85rem' }}>Delivery (Est.)</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Rs. {deliveryFee.toFixed(2)}</Typography>
+                  </Box>
+                  <Divider sx={{ borderStyle: 'dashed', my: 0.5 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography sx={{ fontWeight: 800, color: COLORS.text }}>Total Balance</Typography>
+                    <Typography sx={{ fontWeight: 900, color: COLORS.blue2, fontSize: '1.25rem' }}>
+                      Rs. {totalAmount.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Stack>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography sx={{ color: COLORS.subtext, fontWeight: 600, fontSize: '0.85rem' }}>Delivery (Est.)</Typography>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>Rs. {(order.deliveryFee || 0).toFixed(2)}</Typography>
-              </Box>
-              <Divider sx={{ borderStyle: 'dashed', my: 0.5 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography sx={{ fontWeight: 800, color: COLORS.text }}>Total Balance</Typography>
-                <Typography sx={{ fontWeight: 900, color: COLORS.blue2, fontSize: '1.25rem' }}>
-                  Rs. {(order.finalAmount || order.totalAmount || 0).toFixed(2)}
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
+            );
+          })()}
         </>
       )}
     </Paper>

@@ -1,7 +1,20 @@
 // server/scripts/listAllUsers.js
 const mongoose = require('mongoose');
 const User = require('../models/User');
+const dns = require('dns');
 require('dotenv').config();
+
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (MONGO_URI && MONGO_URI.startsWith('mongodb+srv://') && process.env.MONGO_DNS_SERVERS) {
+  const dnsServers = process.env.MONGO_DNS_SERVERS
+    .split(',')
+    .map((server) => server.trim())
+    .filter(Boolean);
+
+  if (dnsServers.length > 0) {
+    dns.setServers(dnsServers);
+  }
+}
 
 async function listUsers() {
   try {

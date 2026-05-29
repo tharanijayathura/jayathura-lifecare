@@ -244,6 +244,22 @@ router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacist
       order.type = 'mixed';
     }
 
+    // Recalculate totals
+    if (order.items.length > 0) {
+      let subtotal = 0;
+      order.items.forEach(item => {
+        const price = item.price || 0;
+        subtotal += price * item.quantity;
+      });
+      order.totalAmount = subtotal;
+      order.deliveryFee = subtotal > 1000 ? 0 : 200;
+      order.finalAmount = subtotal + order.deliveryFee;
+    } else {
+      order.totalAmount = 0;
+      order.deliveryFee = 0;
+      order.finalAmount = 0;
+    }
+
     await order.save();
     await order.populate('items.medicineId', 'name price stock');
 
@@ -744,6 +760,50 @@ router.post('/order/:orderId/audio', authMiddleware, pharmacistMiddleware, audio
     });
   } catch (error) {
     console.error('Provide audio instructions error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 38. flagChronicPatient(patientId) - Mark chronic patient
+// Delete audio instructions from order (pharmacist can re-record)
+router.delete('/order/:orderId/audio', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (!order.audioInstructions?.url) {
+      return res.status(400).json({ message: 'No audio instructions to delete' });
+    }
+
+    // Try to delete the file from disk
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, '..', order.audioInstructions.url);
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (fileErr) {
+      console.error('Error deleting audio file from disk:', fileErr);
+      // Continue even if file deletion fails
+    }
+
+    // Clear url and provider info, keep requested status
+    order.audioInstructions = {
+      requested: order.audioInstructions.requested || false,
+      requestedAt: order.audioInstructions.requestedAt
+    };
+    await order.save();
+
+    res.json({
+      message: 'Audio instructions deleted successfully',
+      order: order
+    });
+  } catch (error) {
+    console.error('Delete audio instructions error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

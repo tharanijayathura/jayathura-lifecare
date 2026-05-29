@@ -261,7 +261,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
                     Personalized Voice Guide
                   </Typography>
                   <Typography variant="body1" sx={{ color: COLORS.text, fontWeight: 800 }}>
-                    {prescription.requestAudioInstructions || order?.requestAudioInstructions ? 'Requested' : 'Not Requested'}
+                    {prescription.requestAudioInstructions || order?.audioInstructions?.requested ? 'Requested' : 'Not Requested'}
                   </Typography>
                 </Paper>
               </Stack>

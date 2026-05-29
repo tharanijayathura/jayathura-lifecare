@@ -183,6 +183,7 @@ export const pharmacistAPI = {
   provideAudioInstructions: (orderId, formData) => API.post(`/pharmacists/order/${orderId}/audio`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  deleteAudioInstructions: (orderId) => API.delete(`/pharmacists/order/${orderId}/audio`),
   markPrescriptionVerified: (prescriptionId) => API.put(`/pharmacists/prescription/${prescriptionId}/verify`),
   markPrescriptionRejected: (prescriptionId, reason) => API.put(`/pharmacists/prescription/${prescriptionId}/reject`, { reason }),
   

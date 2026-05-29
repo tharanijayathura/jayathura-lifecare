@@ -154,12 +154,10 @@ const OrderPreparation = ({ order: initialOrder, onBack }) => {
  
         <Grid item xs={12} lg={4}>
           <Stack spacing={4} sx={{ position: 'sticky', top: 24 }}>
-            {order.audioInstructions?.requested && (
-              <AudioInstructionRecorder 
-                order={order} 
-                onUploadSuccess={(updatedOrder) => setOrder(updatedOrder)} 
-              />
-            )}
+            <AudioInstructionRecorder 
+              order={order} 
+              onUploadSuccess={(updatedOrder) => setOrder(updatedOrder)} 
+            />
  
             <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
               <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 3, textTransform: 'uppercase', letterSpacing: 1 }}>

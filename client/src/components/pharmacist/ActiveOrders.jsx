@@ -26,7 +26,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { Refresh, Visibility, Search, Payment, Assignment, LocalPharmacy, ShoppingBag } from '@mui/icons-material';
+import { Refresh, Visibility, Search, Payment, Assignment, LocalPharmacy, ShoppingBag, Mic } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
 
 const ActiveOrders = ({ onSelectOrder }) => {
@@ -231,6 +231,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
                   <TableCell>Patient</TableCell>
                   <TableCell>Category</TableCell>
                   <TableCell>Total Bill</TableCell>
+                  <TableCell>Audio</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
@@ -284,6 +285,25 @@ const ActiveOrders = ({ onSelectOrder }) => {
                           </Typography>
                         </TableCell>
                         <TableCell>
+                          {order.audioInstructions?.url ? (
+                            <Chip 
+                              icon={<Mic sx={{ fontSize: '0.8rem !important', color: '#059669 !important' }} />}
+                              label="Sent" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.62rem', fontWeight: 800, bgcolor: '#ecfdf5', color: '#059669' }} 
+                            />
+                          ) : order.audioInstructions?.requested ? (
+                            <Chip 
+                              icon={<Mic sx={{ fontSize: '0.8rem !important', color: '#ea580c !important' }} />}
+                              label="Needed" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.62rem', fontWeight: 800, bgcolor: '#fff7ed', color: '#ea580c' }} 
+                            />
+                          ) : (
+                            <Typography variant="caption" sx={{ color: COLORS.subtext }}>—</Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <Chip 
                             label={status.label.toUpperCase()} 
                             size="small" 
@@ -313,7 +333,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                    <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
                       <Assignment sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
                       <Typography sx={{ color: COLORS.subtext, fontWeight: 600 }}>No active orders found</Typography>
                     </TableCell>
@@ -388,6 +408,21 @@ const ActiveOrders = ({ onSelectOrder }) => {
                           <Typography variant="caption" sx={{ color: COLORS.subtext }}>
                             COD
                           </Typography>
+                          {order.audioInstructions?.url ? (
+                            <Chip 
+                              icon={<Mic sx={{ fontSize: '0.7rem !important', color: '#059669 !important' }} />}
+                              label="Audio Sent" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.6rem', fontWeight: 800, bgcolor: '#ecfdf5', color: '#059669', ml: 0.5 }} 
+                            />
+                          ) : order.audioInstructions?.requested ? (
+                            <Chip 
+                              icon={<Mic sx={{ fontSize: '0.7rem !important', color: '#ea580c !important' }} />}
+                              label="Audio Needed" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.6rem', fontWeight: 800, bgcolor: '#fff7ed', color: '#ea580c', ml: 0.5 }} 
+                            />
+                          ) : null}
                         </Box>
                         <Typography sx={{ fontWeight: 800 }}>Rs. {order.finalAmount?.toFixed(2)}</Typography>
                       </Stack>

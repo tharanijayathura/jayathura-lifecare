@@ -24,7 +24,7 @@ import {
   Person,
   LocalShipping,
   Chat,
-  AudioFile,
+
   BarChart as AnalyticsIcon,
   PointOfSale,
   Menu as MenuIcon,
@@ -43,7 +43,7 @@ import PatientDirectory from './PatientDirectory';
 import PatientProfile from './PatientProfile';
 import DeliveryAssignment from './DeliveryAssignment';
 import ChatDashboard from './ChatDashboard';
-import AudioInstructions from './AudioInstructions';
+
 import PharmacistProfile from './PharmacistProfile';
 import ManualOrderPlacement from './ManualOrderPlacement';
 import PharmacistAnalytics from './PharmacistAnalytics';
@@ -88,6 +88,7 @@ const PharmacistDashboard = forwardRef((props, ref) => {
     { label: 'Patients', value: 4, icon: <Person /> },
     { label: 'Delivery', value: 5, icon: <LocalShipping /> },
     { label: 'Chat', value: 6, icon: <Chat /> },
+
     { label: 'Analytics', value: 8, icon: <AnalyticsIcon /> },
     { label: 'New Order', value: 10, icon: <PointOfSale /> },
   ];
@@ -149,7 +150,7 @@ const PharmacistDashboard = forwardRef((props, ref) => {
       case 4: return <PatientDirectory onSelectPatient={setSelectedPatient} />;
       case 5: return <DeliveryAssignment />;
       case 6: return <ChatDashboard />;
-      case 7: return <AudioInstructions />;
+
       case 8: return <PharmacistAnalytics />;
       case 9: return <PharmacistProfile />;
       case 10: return <ManualOrderPlacement />;

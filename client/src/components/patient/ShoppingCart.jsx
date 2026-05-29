@@ -30,15 +30,17 @@ import {
   FormLabel,
   Paper,
   TextField,
-  Grid
+  Grid,
+  Checkbox
 } from '@mui/material';
-import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer, LocalPharmacy } from '@mui/icons-material';
+import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer, LocalPharmacy, VolumeUp } from '@mui/icons-material';
 
 const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading, orderId }) => {
   const [attachPrescription, setAttachPrescription] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online');
   const [deliveryAddress, setDeliveryAddress] = useState({ street: '', city: '', postalCode: '' });
+  const [requestAudio, setRequestAudio] = useState(false);
 
   const COLORS = {
     green1: '#eef7f2',
@@ -81,7 +83,8 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
     onSubmitOrder?.({
       attachPrescription: false,
       paymentMethod: paymentMethod,
-      deliveryAddress: deliveryAddress
+      deliveryAddress: deliveryAddress,
+      requestAudioInstructions: requestAudio
     });
   };
 
@@ -336,6 +339,38 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
               />
             </Stack>
           </Box>
+
+            <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mt: 5, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>Additional Options</Typography>
+            <Paper 
+              elevation={0}
+              onClick={() => setRequestAudio(!requestAudio)}
+              sx={{ 
+                p: 2.5, 
+                borderRadius: 4, 
+                cursor: 'pointer',
+                border: `2px solid ${requestAudio ? COLORS.blue2 : '#f1f5f9'}`,
+                bgcolor: requestAudio ? COLORS.green1 : 'white',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}
+            >
+              <Checkbox 
+                checked={requestAudio} 
+                onChange={(e) => setRequestAudio(e.target.checked)}
+                size="small"
+                sx={{ p: 0, color: COLORS.blue2, '&.Mui-checked': { color: COLORS.blue2 } }}
+              />
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <VolumeUp sx={{ fontSize: 16, color: COLORS.blue2 }} /> Request Voice Guide
+                </Typography>
+                <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+                  Ask the pharmacist to record audio instructions for your medicines
+                </Typography>
+              </Box>
+            </Paper>
         </DialogContent>
         <DialogActions sx={{ p: 4, pt: 2 }}>
           <Button onClick={() => setPaymentDialogOpen(false)} sx={{ fontWeight: 700, color: COLORS.subtext }}>Dismiss</Button>
