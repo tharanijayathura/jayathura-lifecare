@@ -142,7 +142,7 @@ const PharmacistDashboard = forwardRef((props, ref) => {
     }
 
     switch (activeTab) {
-      case 0: return <DashboardOverview onNavigate={handleTabChange} />;
+      case 0: return <DashboardOverview onNavigate={handleTabChange} onSelectPrescription={setSelectedPrescription} />;
       case 1: return <PendingPrescriptions onSelectPrescription={setSelectedPrescription} />;
       case 2: return <ActiveOrders onSelectOrder={setSelectedOrder} />;
       case 3: return <InventoryManagement />;
@@ -153,7 +153,7 @@ const PharmacistDashboard = forwardRef((props, ref) => {
       case 8: return <PharmacistAnalytics />;
       case 9: return <PharmacistProfile />;
       case 10: return <ManualOrderPlacement />;
-      default: return <DashboardOverview onNavigate={handleTabChange} />;
+      default: return <DashboardOverview onNavigate={handleTabChange} onSelectPrescription={setSelectedPrescription} />;
     }
   };
 

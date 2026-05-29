@@ -872,7 +872,7 @@ const Support = () => {
                   fontWeight: 600,
                 }}
               >
-                📞 Phone: <strong>+94 71 259 9785</strong>
+                Phone: <strong>+94 71 259 9785</strong>
               </Typography>
               <Typography
                 variant="body1"
@@ -883,7 +883,7 @@ const Support = () => {
                   fontWeight: 600,
                 }}
               >
-                ✉️ Email: <strong>jayathuralifecare@gmail.com</strong>
+                Email: <strong>jayathuralifecare@gmail.com</strong>
               </Typography>
             </Box>
           </CardContent>

@@ -271,11 +271,11 @@ const PortalHeader = ({
             </Box>
 
             {onProfile && (
-              <MenuItem onClick={handleProfileClick}>👤 Profile</MenuItem>
+              <MenuItem onClick={handleProfileClick}>Profile</MenuItem>
             )}
             {onProfile && <Divider sx={{ my: 0.5 }} />}
             <MenuItem onClick={handleLogout} sx={{ color: '#ef4444 !important' }}>
-              🚪 Logout
+              Logout
             </MenuItem>
           </Menu>
         </Stack>

@@ -49,6 +49,7 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
   const [profile, setProfile] = useState(null);
   const [commonMedicines, setCommonMedicines] = useState([]);
   const [rxOrders, setRxOrders] = useState([]);
+  const [chronicAlerts, setChronicAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantities, setQuantities] = useState({});
 
@@ -71,15 +72,17 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
     const fetchDashboardData = async (showLoading = true) => {
       if (showLoading) setLoading(true);
       try {
-        const [profileRes, commonRes, rxOrdersRes] = await Promise.all([
+        const [profileRes, commonRes, rxOrdersRes, alertsRes] = await Promise.all([
           patientAPI.getProfile(),
           patientAPI.getCommonMedicines(),
-          patientAPI.getPrescriptionOrders()
+          patientAPI.getPrescriptionOrders(),
+          patientAPI.getChronicAlerts()
         ]);
         if (mounted) {
           setProfile(profileRes.data);
           setCommonMedicines(commonRes.data);
           setRxOrders(rxOrdersRes.data || []);
+          setChronicAlerts(alertsRes.data?.alerts || []);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -142,6 +145,48 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
   return (
     <Container maxWidth="xl" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
       
+      {/* 0.0 CHRONIC RUN-OUT ALERT BANNER */}
+      {chronicAlerts.map((alert, idx) => (
+        <Alert 
+          key={idx}
+          severity={alert.type === 'error' ? 'error' : 'warning'} 
+          icon={<NotificationsActive />}
+          action={
+            <Button 
+              color="inherit" 
+              variant="outlined"
+              size="small" 
+              onClick={() => onNavigate?.(1)} // Redirect to upload prescription tab
+              sx={{ 
+                fontWeight: 800, 
+                textTransform: 'none', 
+                borderRadius: 2,
+                px: 2
+              }}
+            >
+              Upload Prescription
+            </Button>
+          }
+          sx={{ 
+            mb: 3, 
+            borderRadius: 4, 
+            alignItems: 'center',
+            '& .MuiAlert-message': { width: '100%' },
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.05)'
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+            {alert.type === 'error' ? 'Medicine Supply Expired' : 'Medicine Supply Running Out'}
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: '0.82rem', mt: 0.2 }}>
+            {alert.message}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5, fontWeight: 700, opacity: 0.8 }}>
+            Medicines: {alert.medicines}
+          </Typography>
+        </Alert>
+      ))}
+
       {/* 0. ACTION REQUIRED ALERT BANNER */}
       {billsReadyToConfirm.length > 0 && (
         <Alert 

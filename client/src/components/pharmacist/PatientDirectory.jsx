@@ -17,15 +17,29 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Switch,
+  FormControlLabel,
+  Button
 } from '@mui/material';
-import { Search, History, ContactPage } from '@mui/icons-material';
+import { Search, History, ContactPage, HealthAndSafety, Edit } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
 
-const PatientDirectory = () => {
+const PatientDirectory = ({ onSelectPatient }) => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Chronic care dialog states
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPatientForChronic, setSelectedPatientForChronic] = useState(null);
+  const [isChronic, setIsChronic] = useState(false);
+  const [conditionsText, setConditionsText] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const COLORS = {
     green1: '#ECF4E8',
@@ -52,6 +66,33 @@ const PatientDirectory = () => {
       setError('Failed to load patient records');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenChronicDialog = (patient) => {
+    setSelectedPatientForChronic(patient);
+    setIsChronic(patient.flaggedAsChronic || false);
+    setConditionsText(patient.chronicConditions ? patient.chronicConditions.join(', ') : '');
+    setDialogOpen(true);
+  };
+
+  const handleSaveChronic = async () => {
+    if (!selectedPatientForChronic) return;
+    try {
+      setSaving(true);
+      const conditions = conditionsText
+        .split(',')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+      
+      await pharmacistAPI.flagChronicPatient(selectedPatientForChronic._id, conditions, isChronic);
+      setDialogOpen(false);
+      fetchPatients();
+    } catch (err) {
+      console.error('Error saving chronic settings:', err);
+      setError('Failed to update chronic care settings');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -136,7 +177,14 @@ const PatientDirectory = () => {
                     </TableCell>
                     <TableCell>
                       {patient.flaggedAsChronic ? (
-                        <Chip label="CHRONIC CARE" size="small" sx={{ bgcolor: '#fff1f2', color: '#f43f5e', fontWeight: 800, borderRadius: 2 }} />
+                        <Box>
+                          <Chip label="CHRONIC CARE" size="small" sx={{ bgcolor: '#fff1f2', color: '#f43f5e', fontWeight: 800, borderRadius: 2, mb: 0.5 }} />
+                          {patient.chronicConditions && patient.chronicConditions.length > 0 && (
+                            <Typography variant="caption" sx={{ display: 'block', color: COLORS.subtext, fontSize: '0.7rem', fontWeight: 650 }}>
+                              {patient.chronicConditions.join(', ')}
+                            </Typography>
+                          )}
+                        </Box>
                       ) : (
                         <Chip label="STANDARD" size="small" sx={{ bgcolor: COLORS.green1, color: '#059669', fontWeight: 800, borderRadius: 2 }} />
                       )}
@@ -146,10 +194,28 @@ const PatientDirectory = () => {
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <IconButton size="small" sx={{ color: COLORS.blue2, bgcolor: '#f1f5f9' }} title="View History">
+                        <IconButton 
+                          size="small" 
+                          sx={{ color: '#f43f5e', bgcolor: '#fff1f2', '&:hover': { bgcolor: '#ffe4e6' } }} 
+                          onClick={() => handleOpenChronicDialog(patient)}
+                          title="Manage Chronic Care"
+                        >
+                          <HealthAndSafety fontSize="small" />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          sx={{ color: COLORS.blue2, bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }} 
+                          onClick={() => onSelectPatient && onSelectPatient(patient)}
+                          title="View History"
+                        >
                           <History fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" sx={{ color: COLORS.blue2, bgcolor: '#f1f5f9' }} title="Patient Records">
+                        <IconButton 
+                          size="small" 
+                          sx={{ color: COLORS.blue2, bgcolor: '#f1f5f9', '&:hover': { bgcolor: '#e2e8f0' } }} 
+                          onClick={() => onSelectPatient && onSelectPatient(patient)}
+                          title="Patient Records"
+                        >
                           <ContactPage fontSize="small" />
                         </IconButton>
                       </Stack>
@@ -168,6 +234,77 @@ const PatientDirectory = () => {
           </Table>
         </TableContainer>
       </Paper>
+
+      <Dialog 
+        open={dialogOpen} 
+        onClose={() => setDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: COLORS.text }}>
+          Manage Chronic Care Settings
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: COLORS.subtext, mb: 3 }}>
+            Configure chronic patient status and record recurring medical conditions for <strong>{selectedPatientForChronic?.name}</strong>.
+          </Typography>
+          
+          <Stack spacing={3.5}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isChronic}
+                  onChange={(e) => setIsChronic(e.target.checked)}
+                  color="error"
+                />
+              }
+              label={
+                <Typography sx={{ fontWeight: 700, color: COLORS.text }}>
+                  Mark as Chronic Patient
+                </Typography>
+              }
+            />
+            
+            {isChronic && (
+              <TextField
+                fullWidth
+                label="Chronic Conditions"
+                placeholder="Diabetes, Hypertension, Asthma..."
+                helperText="Separate conditions with commas"
+                value={conditionsText}
+                onChange={(e) => setConditionsText(e.target.value)}
+                variant="outlined"
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3 } }}
+              />
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button 
+            onClick={() => setDialogOpen(false)} 
+            sx={{ fontWeight: 700, color: COLORS.subtext, textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveChronic} 
+            variant="contained" 
+            disabled={saving}
+            sx={{ 
+              bgcolor: COLORS.blue2, 
+              color: 'white', 
+              fontWeight: 700, 
+              borderRadius: 3, 
+              textTransform: 'none',
+              px: 3,
+              '&:hover': { bgcolor: COLORS.blue1 } 
+            }}
+          >
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

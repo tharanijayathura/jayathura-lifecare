@@ -25,11 +25,11 @@ const DailyReport = () => {
         <Stack spacing={2}>
           <Box>
             <Typography variant="body2" color="text.secondary">Average Processing Time</Typography>
-            <Typography variant="h6">8.5 min (Target: &lt;10 min) ✅</Typography>
+            <Typography variant="h6">8.5 min (Target: &lt;10 min)</Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">Customer Satisfaction</Typography>
-            <Typography variant="h6">4.7/5 (Target: &gt;4.5) ✅</Typography>
+            <Typography variant="h6">4.7/5 (Target: &gt;4.5)</Typography>
           </Box>
         </Stack>
       </Paper>

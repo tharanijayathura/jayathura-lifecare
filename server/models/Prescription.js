@@ -11,6 +11,7 @@ const prescriptionSchema = new mongoose.Schema({
   fileName: { type: String },
   mimeType: { type: String },
   notes: { type: String },
+  supplyDuration: { type: Number, default: 7 },
   status: { 
     type: String, 
     enum: ['pending', 'verified', 'rejected'], 

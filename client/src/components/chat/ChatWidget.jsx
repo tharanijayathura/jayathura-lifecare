@@ -40,9 +40,9 @@ const ChatWidget = () => {
 
   const GUEST_WELCOME = {
     id: 'welcome',
-    senderRole: 'bot',
-    senderName: 'Jayathura Bot',
-    message: "👋 Welcome to Jayathura LifeCare! I'm your virtual assistant. How can I help you today? Please select a question below.",
+    senderRole: 'staff',
+    senderName: 'Support Team',
+    message: "Welcome to Jayathura LifeCare! Please sign in or register an account to chat with our pharmacist team.",
     timestamp: new Date(),
     isBot: true,
   };
@@ -119,11 +119,8 @@ const ChatWidget = () => {
     }
   };
 
-  // Determine if chips should be shown:
-  // - Show if user is a guest
-  // - Show if user is logged in as a patient AND no pharmacist has sent a message yet
-  // - Or just show them always for patients to make it easier
-  const showChips = !user || (user.role === 'patient');
+  // Disable chatbot FAQ suggestions
+  const showChips = false;
 
   return (
     <>
@@ -174,7 +171,7 @@ const ChatWidget = () => {
                   LIFECARE SUPPORT
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#546E7A', display: 'block' }}>
-                  {chatData?.pharmacistId ? 'Pharmacist is Online' : 'Automated Assistant'}
+                  Pharmacist Live Support
                 </Typography>
               </Box>
             </Stack>
@@ -197,6 +194,11 @@ const ChatWidget = () => {
                     border: msg.senderRole === 'patient' ? 'none' : '1px solid #e2e8f0',
                   }}
                 >
+                  {msg.senderRole !== 'patient' && (
+                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5, color: '#546E7A' }}>
+                      {msg.senderName}
+                    </Typography>
+                  )}
                   <Typography variant="body2" sx={{ lineHeight: 1.6 }}>{msg.message}</Typography>
                   
                   {/* CTA Buttons for Bot messages */}
@@ -230,7 +232,7 @@ const ChatWidget = () => {
                       {/* For logged in users, the pharmacist will respond via server bot logic */}
                       {user && msg.message.includes('Contact our pharmacist') && (
                         <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600, fontStyle: 'italic', display: 'block', mt: 1 }}>
-                          ℹ️ One of our pharmacists has been notified and will join this chat shortly.
+                          One of our pharmacists has been notified and will join this chat shortly.
                         </Typography>
                       )}
                     </Stack>

@@ -50,6 +50,7 @@ router.put('/order/:orderId/status', authMiddleware, deliveryMiddleware, async (
       order.status = status;
       if (status === 'delivered') {
         order.paymentStatus = 'paid';
+        order.deliveredAt = new Date();
         // Also update invoice status if it exists
         try {
           await Invoice.findOneAndUpdate(
@@ -60,6 +61,7 @@ router.put('/order/:orderId/status', authMiddleware, deliveryMiddleware, async (
           console.error('Failed to update invoice payment status:', invoiceErr);
         }
       }
+    }
     if (message) {
       order.deliveryStatus = message;
     } else {

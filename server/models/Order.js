@@ -65,6 +65,9 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'RefillPlan' 
   },
+  supplyDuration: { type: Number, default: 7 },
+  deliveredAt: Date,
+  lastNotifiedAt: Date,
   audioInstructions: {
     url: String,
     requested: { type: Boolean, default: false },

@@ -281,7 +281,7 @@ const DeliveryDashboard = () => {
                                 textTransform: 'none'
                               }}
                             >
-                              📞 Call
+                              Call
                             </Button>
                             <Button
                               variant="outlined"
@@ -299,7 +299,7 @@ const DeliveryDashboard = () => {
                                 '&:hover': { bgcolor: '#f0fdf4', borderColor: '#16a34a' }
                               }}
                             >
-                              💬 WhatsApp
+                              WhatsApp
                             </Button>
                           </Stack>
                         )}
@@ -360,7 +360,7 @@ const DeliveryDashboard = () => {
                             </Typography>
                             {hist.location && hist.location !== 'In Transit' && hist.location !== 'Pharmacy Hub' && (
                               <Typography variant="caption" sx={{ color: COLORS.blue2, fontWeight: 700, display: 'block', mt: 0.3 }}>
-                                📍 {hist.location}
+                                {hist.location}
                               </Typography>
                             )}
                             <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 600, display: 'block', mt: 0.3 }}>

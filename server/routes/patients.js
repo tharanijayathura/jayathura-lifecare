@@ -223,8 +223,9 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
       return res.status(400).json({ message: 'Prescription image is required' });
     }
 
-    const { notes, requestAudioInstructions } = req.body;
+    const { notes, requestAudioInstructions, supplyDuration } = req.body;
     const requestAudio = requestAudioInstructions === 'true' || requestAudioInstructions === true;
+    const duration = parseInt(supplyDuration, 10) || 7;
     const imageUrl = `/uploads/prescriptions/${req.file.filename}`;
     const prescription = new Prescription({
       patientId: req.user._id,
@@ -233,6 +234,7 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
       fileName: req.file.filename,
       mimeType: req.file.mimetype,
       notes: notes,
+      supplyDuration: duration,
       status: 'pending',
       activities: [{
         type: 'uploaded',
@@ -252,6 +254,7 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
       type: 'prescription',
       status: 'draft',
       notes: notes,
+      supplyDuration: duration,
       items: [],
       audioInstructions: {
         requested: requestAudio,
@@ -1376,6 +1379,78 @@ router.get('/notifications/out-of-stock', authMiddleware, async (req, res) => {
   }
 });
 
+// New endpoint: GET /patients/notifications/chronic-alerts
+router.get('/notifications/chronic-alerts', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const patient = await User.findById(req.user._id);
+    if (!patient || !patient.flaggedAsChronic) {
+      return res.json({ flaggedAsChronic: false, alerts: [] });
+    }
+
+    // Find delivered prescription/mixed orders for this patient
+    const orders = await Order.find({
+      patientId: req.user._id,
+      status: 'delivered',
+      type: { $in: ['prescription', 'mixed'] }
+    }).sort({ deliveredAt: -1, updatedAt: -1 });
+
+    const alerts = [];
+    const now = new Date();
+
+    for (const order of orders) {
+      const duration = order.supplyDuration || 7;
+      const deliveryDate = order.deliveredAt || order.updatedAt || order.createdAt;
+      
+      const runOutDate = new Date(deliveryDate);
+      runOutDate.setDate(runOutDate.getDate() + duration);
+
+      // Time difference in days
+      const diffTime = runOutDate.getTime() - now.getTime();
+      const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // Alert if running out tomorrow (daysRemaining === 1) or has run out (daysRemaining <= 0)
+      // Limit to 14 days post-expiration so we don't show extremely old alerts
+      if (daysRemaining <= 1 && daysRemaining >= -14) {
+        const medsList = (order.items || []).map(i => i.medicineName).join(', ');
+        
+        let message = '';
+        let alertType = ''; // 'warning' or 'error'
+        
+        if (daysRemaining === 1) {
+          message = `Reminder: Your medicine supply for order #${order.orderId || order._id.toString().slice(-6).toUpperCase()} runs out tomorrow. Please upload a new prescription or request a refill!`;
+          alertType = 'warning';
+        } else {
+          message = `Alert: Your medicine supply for order #${order.orderId || order._id.toString().slice(-6).toUpperCase()} has run out. You have to take medicines again, please place a new order!`;
+          alertType = 'error';
+        }
+
+        alerts.push({
+          orderId: order._id,
+          orderNo: order.orderId || order._id.toString().slice(-6).toUpperCase(),
+          medicines: medsList,
+          daysRemaining: daysRemaining,
+          runOutDate: runOutDate,
+          message: message,
+          type: alertType
+        });
+      }
+    }
+
+    res.json({
+      flaggedAsChronic: true,
+      chronicConditions: patient.chronicConditions,
+      alerts: alerts
+    });
+  } catch (error) {
+    console.error('Get chronic alerts error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // 23. viewOrdersHistory() - View past orders
 router.get('/orders/history', authMiddleware, async (req, res) => {
   try {
@@ -1648,6 +1723,7 @@ router.put('/order/:orderId/edit-details', authMiddleware, async (req, res) => {
     console.error('Edit order error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
+});
 // Delete order - Patient delete from history (delivered/cancelled)
 router.delete('/order/:orderId', authMiddleware, async (req, res) => {
   try {

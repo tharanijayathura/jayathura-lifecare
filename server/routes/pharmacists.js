@@ -104,7 +104,7 @@ router.get('/prescriptions/pending', authMiddleware, pharmacistMiddleware, async
 router.get('/prescription/:prescriptionId', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.prescriptionId)
-      .populate('patientId', 'name email phone address')
+      .populate('patientId', 'name email phone address flaggedAsChronic chronicConditions')
       .populate('items.medicineId', 'name price stock');
 
     if (!prescription) {
@@ -128,7 +128,7 @@ router.get('/prescription/:prescriptionId', authMiddleware, pharmacistMiddleware
       status: { $in: ['draft', 'pending'] }
     })
       .populate('items.medicineId', 'name price stock')
-      .populate('patientId', 'name email phone address');
+      .populate('patientId', 'name email phone address flaggedAsChronic chronicConditions');
 
     res.json({
       prescription: prescription,
@@ -751,14 +751,14 @@ router.post('/order/:orderId/audio', authMiddleware, pharmacistMiddleware, audio
 // 38. flagChronicPatient(patientId) - Mark chronic patient
 router.put('/patient/:patientId/flag-chronic', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
-    const { conditions } = req.body; // Array of chronic conditions
+    const { conditions, flaggedAsChronic } = req.body; // Array of chronic conditions, toggle flag
     const patient = await User.findById(req.params.patientId);
 
     if (!patient || patient.role !== 'patient') {
       return res.status(404).json({ message: 'Patient not found' });
     }
 
-    patient.flaggedAsChronic = true;
+    patient.flaggedAsChronic = flaggedAsChronic !== undefined ? flaggedAsChronic : true;
     if (conditions && Array.isArray(conditions)) {
       patient.chronicConditions = conditions;
     }
@@ -776,6 +776,138 @@ router.put('/patient/:patientId/flag-chronic', authMiddleware, pharmacistMiddlew
     });
   } catch (error) {
     console.error('Flag chronic patient error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// New endpoint: GET /pharmacists/chronic-alerts
+router.get('/chronic-alerts', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    // Find all flagged chronic patients
+    const chronicPatients = await User.find({ flaggedAsChronic: true, role: 'patient' });
+    
+    const alerts = [];
+    const now = new Date();
+
+    for (const patient of chronicPatients) {
+      // Find delivered prescription/mixed orders for this patient
+      const orders = await Order.find({
+        patientId: patient._id,
+        status: 'delivered',
+        type: { $in: ['prescription', 'mixed'] }
+      }).sort({ deliveredAt: -1, updatedAt: -1 });
+
+      for (const order of orders) {
+        const duration = order.supplyDuration || 7;
+        const deliveryDate = order.deliveredAt || order.updatedAt || order.createdAt;
+        
+        const runOutDate = new Date(deliveryDate);
+        runOutDate.setDate(runOutDate.getDate() + duration);
+
+        const diffTime = runOutDate.getTime() - now.getTime();
+        const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Alert if running out tomorrow (daysRemaining === 1) or has run out (daysRemaining <= 0)
+        // Only return if it expired within the last 14 days
+        if (daysRemaining <= 1 && daysRemaining >= -14) {
+          const medsList = (order.items || []).map(i => i.medicineName).join(', ');
+          
+          let alertStatus = '';
+          if (daysRemaining === 1) {
+            alertStatus = 'Running out tomorrow';
+          } else if (daysRemaining === 0) {
+            alertStatus = 'Runs out today';
+          } else {
+            alertStatus = `Expired ${Math.abs(daysRemaining)} days ago`;
+          }
+
+          alerts.push({
+            patientId: patient._id,
+            patientName: patient.name,
+            patientPhone: patient.phone || 'No phone',
+            chronicConditions: patient.chronicConditions,
+            orderId: order._id,
+            orderNo: order.orderId || order._id.toString().slice(-6).toUpperCase(),
+            medicines: medsList,
+            daysRemaining: daysRemaining,
+            runOutDate: runOutDate,
+            alertStatus: alertStatus,
+            lastNotifiedAt: order.lastNotifiedAt
+          });
+        }
+      }
+    }
+
+    res.json(alerts);
+  } catch (error) {
+    console.error('Get chronic alerts error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// New endpoint: POST /pharmacists/patient/:patientId/notify-runout
+router.post('/patient/:patientId/notify-runout', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { orderId } = req.body;
+
+    const patient = await User.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const duration = order.supplyDuration || 7;
+    const deliveryDate = order.deliveredAt || order.updatedAt || order.createdAt;
+    
+    const runOutDate = new Date(deliveryDate);
+    runOutDate.setDate(runOutDate.getDate() + duration);
+
+    const diffTime = runOutDate.getTime() - new Date().getTime();
+    const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let alertMsg = '';
+    if (daysRemaining === 1) {
+      alertMsg = `Reminder: Your medicine supply for order #${order.orderId || order._id.toString().slice(-6).toUpperCase()} runs out tomorrow. Please upload a new prescription or request a refill!`;
+    } else {
+      alertMsg = `Alert: Your medicine supply for order #${order.orderId || order._id.toString().slice(-6).toUpperCase()} has run out. You have to take medicines again, please place a new order!`;
+    }
+
+    // Find or create chat conversation
+    let chat = await Chat.findOne({ patientId: patient._id });
+    if (!chat) {
+      chat = new Chat({
+        patientId: patient._id,
+        messages: [],
+        status: 'active'
+      });
+    }
+
+    // Append pharmacist automated alert message
+    chat.messages.push({
+      senderId: req.user._id,
+      senderName: 'Jayathura LifeCare (Auto)',
+      senderRole: 'pharmacist',
+      message: alertMsg,
+      isBot: false,
+      timestamp: new Date()
+    });
+
+    chat.lastMessageAt = new Date();
+    chat.unreadCount.patient += 1;
+    await chat.save();
+
+    // Update order lastNotifiedAt
+    order.lastNotifiedAt = new Date();
+    await order.save();
+
+    res.json({ success: true, message: 'Refill notification sent to patient chat.' });
+  } catch (error) {
+    console.error('Notify runout error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -939,6 +1071,19 @@ router.get('/patients', authMiddleware, pharmacistMiddleware, async (req, res) =
   }
 });
 
+// New endpoint: GET /pharmacists/patient/:patientId/orders - Get order history for a patient
+router.get('/patient/:patientId/orders', authMiddleware, pharmacistMiddleware, async (req, res) => {
+  try {
+    const orders = await Order.find({ patientId: req.params.patientId })
+      .populate('items.medicineId', 'name price')
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error('Get patient orders error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // 45. getDashboardStats() - Real metrics
 router.get('/dashboard-stats', authMiddleware, pharmacistMiddleware, async (req, res) => {
   try {
@@ -1071,6 +1216,10 @@ router.put('/order/:orderId/status', authMiddleware, async (req, res) => {
     }
 
     order.status = status;
+    if (status === 'delivered') {
+      order.deliveredAt = new Date();
+      order.paymentStatus = 'paid';
+    }
     order.trackingHistory.push({
       status: status,
       message: message || `Order status updated to ${status}`,

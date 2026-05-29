@@ -15,7 +15,8 @@ import {
   CircularProgress,
   TextField,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  MenuItem
 } from '@mui/material';
 import { 
   CloudUpload, 
@@ -46,6 +47,8 @@ const PrescriptionUpload = ({ onUploaded }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [notes, setNotes] = useState('');
   const [requestAudioInstructions, setRequestAudioInstructions] = useState(false);
+  const [supplyDuration, setSupplyDuration] = useState(30); // Default to 30 days (1 Month)
+  const [customDays, setCustomDays] = useState('');
 
   const handleFileSelect = (event) => {
     const file = event.target.files?.[0] || null;
@@ -73,6 +76,14 @@ const PrescriptionUpload = ({ onUploaded }) => {
       return;
     }
 
+    if (supplyDuration === 'custom') {
+      const days = Number(customDays);
+      if (!customDays || isNaN(days) || days <= 0) {
+        setMessage('Please enter a valid number of days for custom supply duration');
+        return;
+      }
+    }
+
     setUploading(true);
     setMessage('');
 
@@ -82,6 +93,7 @@ const PrescriptionUpload = ({ onUploaded }) => {
       formData.append('notes', notes);
     }
     formData.append('requestAudioInstructions', requestAudioInstructions);
+    formData.append('supplyDuration', supplyDuration === 'custom' ? Number(customDays) : supplyDuration);
 
     try {
       const response = await prescriptionAPI.upload(formData);
@@ -370,6 +382,46 @@ const PrescriptionUpload = ({ onUploaded }) => {
 
                 {selectedFile && (
                   <Stack spacing={2} sx={{ mt: 3, mb: 1, textAlign: 'left' }}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Requested Medicine Supply Duration"
+                      value={supplyDuration}
+                      onChange={(e) => setSupplyDuration(e.target.value)}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                          bgcolor: 'white',
+                        }
+                      }}
+                    >
+                      <MenuItem value={7}>1 Week (7 Days)</MenuItem>
+                      <MenuItem value={14}>2 Weeks (14 Days)</MenuItem>
+                      <MenuItem value={21}>3 Weeks (21 Days)</MenuItem>
+                      <MenuItem value={30}>1 Month (30 Days)</MenuItem>
+                      <MenuItem value="custom">Other (Enter custom days)</MenuItem>
+                    </TextField>
+
+                    {supplyDuration === 'custom' && (
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Specify Days"
+                        placeholder="e.g. 45"
+                        value={customDays}
+                        onChange={(e) => setCustomDays(e.target.value)}
+                        variant="outlined"
+                        InputProps={{ inputProps: { min: 1 } }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                            bgcolor: 'white',
+                          }
+                        }}
+                      />
+                    )}
+
                     <TextField
                       fullWidth
                       multiline

@@ -450,7 +450,7 @@ const Chat = () => {
               {!user && (
                 <Box sx={{ mb: 1, p: 1.5, bgcolor: 'info.light', borderRadius: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography variant="body2" sx={{ flex: 1, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                    💡 <strong>Guest Mode:</strong> Sign in to chat with our pharmacists and get personalized support.
+                    <strong>Guest Mode:</strong> Sign in to chat with our pharmacists and get personalized support.
                   </Typography>
                   <Button
                     size="small"

@@ -121,7 +121,7 @@ const ManualOrderPlacement = () => {
         items: orderItems,
         paymentMethod: 'cod'
       });
-      setSuccess('Order placed successfully! ✨');
+      setSuccess('Order placed successfully!');
       setOrderItems([]);
       setSelectedPatient(null);
       setTimeout(() => setSuccess(''), 3000);

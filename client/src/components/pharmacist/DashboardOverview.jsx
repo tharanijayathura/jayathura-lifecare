@@ -30,11 +30,27 @@ import { LinearProgress } from '@mui/material';
 import { useAuth } from '../../contexts/useAuth';
 import { pharmacistAPI } from '../../services/api';
 
-const DashboardOverview = ({ onNavigate }) => {
+const DashboardOverview = ({ onNavigate, onSelectPrescription }) => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [chronicAlerts, setChronicAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleProcessPrescription = async (prescriptionId) => {
+    try {
+      setLoading(true);
+      const res = await pharmacistAPI.getPrescriptionDetails(prescriptionId);
+      if (res.data) {
+        onSelectPrescription?.(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to load prescription detail:', err);
+      alert('Failed to load prescription details.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -63,8 +79,12 @@ const DashboardOverview = ({ onNavigate }) => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await pharmacistAPI.getDashboardStats();
-      setStats(response.data);
+      const [statsRes, alertsRes] = await Promise.all([
+        pharmacistAPI.getDashboardStats(),
+        pharmacistAPI.getChronicAlerts()
+      ]);
+      setStats(statsRes.data);
+      setChronicAlerts(alertsRes.data || []);
     } catch (err) {
       console.error('Error fetching dashboard stats:', err);
       setError('Failed to load dashboard metrics');
@@ -73,8 +93,22 @@ const DashboardOverview = ({ onNavigate }) => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, delay }) => (
+  const handleNotifyPatient = async (patientId, orderId) => {
+    try {
+      await pharmacistAPI.notifyPatientRunout(patientId, orderId);
+      // Reload alerts to update lastNotifiedAt status
+      const alertsRes = await pharmacistAPI.getChronicAlerts();
+      setChronicAlerts(alertsRes.data || []);
+      alert('Notification sent to patient chat!');
+    } catch (err) {
+      console.error('Error sending runout notification:', err);
+      alert('Failed to send notification.');
+    }
+  };
+
+  const StatCard = ({ title, value, icon: Icon, color, delay, onClick }) => (
     <Paper
+      onClick={onClick}
       elevation={0}
       sx={{
         p: 3,
@@ -88,6 +122,7 @@ const DashboardOverview = ({ onNavigate }) => {
         justifyContent: 'space-between',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         animation: `slideUp 0.6s ease-out ${delay}s both`,
+        cursor: onClick ? 'pointer' : 'default',
         '@keyframes slideUp': {
           from: { opacity: 0, transform: 'translateY(20px)' },
           to: { opacity: 1, transform: 'translateY(0)' }
@@ -138,7 +173,7 @@ const DashboardOverview = ({ onNavigate }) => {
       <Box sx={{ mb: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 900, color: COLORS.text, mb: 1, letterSpacing: '-0.5px' }}>
-            Welcome, {user?.name?.split(' ')[0] || 'Pharmacist'} ✨
+            Welcome, {user?.name?.split(' ')[0] || 'Pharmacist'}
           </Typography>
           <Typography sx={{ color: COLORS.subtext, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
             <NotificationsActive sx={{ fontSize: 18, color: COLORS.blue2 }} />
@@ -203,16 +238,16 @@ const DashboardOverview = ({ onNavigate }) => {
       {/* Stats Grid */}
       <Grid container spacing={3} sx={{ mb: 6 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Pending Rx" value={stats?.pendingPrescriptions || 0} icon={Assignment} color="#7AA8B0" delay={0.1} />
+          <StatCard title="Pending Rx" value={stats?.pendingPrescriptions || 0} icon={Assignment} color="#7AA8B0" delay={0.1} onClick={() => onNavigate?.(1)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Active Orders" value={stats?.activeOrders || 0} icon={ShoppingCart} color="#ABE7B2" delay={0.2} />
+          <StatCard title="Active Orders" value={stats?.activeOrders || 0} icon={ShoppingCart} color="#ABE7B2" delay={0.2} onClick={() => onNavigate?.(2)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Low Stock" value={stats?.lowStockAlerts || 0} icon={Warning} color="#f43f5e" delay={0.3} />
+          <StatCard title="Low Stock" value={stats?.lowStockAlerts || 0} icon={Warning} color="#f43f5e" delay={0.3} onClick={() => onNavigate?.(3)} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatCard title="Deliveries" value={stats?.todaysDeliveries || 0} icon={LocalShipping} color="#93BFC7" delay={0.4} />
+          <StatCard title="Deliveries" value={stats?.todaysDeliveries || 0} icon={LocalShipping} color="#93BFC7" delay={0.4} onClick={() => onNavigate?.(5)} />
         </Grid>
       </Grid>
 
@@ -265,7 +300,7 @@ const DashboardOverview = ({ onNavigate }) => {
                     <Button 
                       variant="outlined" 
                       size="small" 
-                      onClick={() => onNavigate?.(1)}
+                      onClick={() => handleProcessPrescription(rx.id)}
                       sx={{ 
                         borderRadius: 3, 
                         fontWeight: 700, 
@@ -286,6 +321,97 @@ const DashboardOverview = ({ onNavigate }) => {
               )}
             </Stack>
           </Paper>
+
+          {/* Chronic Patient Alerts */}
+          <Paper elevation={0} sx={{ p: 4, mt: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, color: COLORS.text }}>
+                Chronic Care Medicine Alerts
+              </Typography>
+              <Chip 
+                label={`${chronicAlerts.length} Active`} 
+                size="small" 
+                sx={{ 
+                  bgcolor: chronicAlerts.length > 0 ? '#fff1f2' : COLORS.green1, 
+                  color: chronicAlerts.length > 0 ? '#f43f5e' : COLORS.blue2, 
+                  fontWeight: 800 
+                }} 
+              />
+            </Stack>
+
+            <Stack spacing={2}>
+              {chronicAlerts.length > 0 ? (
+                chronicAlerts.map((alert, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 4,
+                      border: '1px solid #f1f5f9',
+                      bgcolor: alert.daysRemaining <= 0 ? '#fff1f2' : '#fffbeb',
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      justifyContent: 'space-between',
+                      alignItems: { xs: 'flex-start', sm: 'center' },
+                      gap: 2,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'scale(1.005)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                      }
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'left' }}>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                        <Typography sx={{ color: COLORS.text, fontWeight: 800, fontSize: '0.95rem' }}>
+                          {alert.patientName}
+                        </Typography>
+                        <Chip 
+                          label={alert.alertStatus} 
+                          size="small" 
+                          color={alert.daysRemaining <= 0 ? 'error' : 'warning'} 
+                          sx={{ height: 20, fontSize: '0.65rem', fontWeight: 800, borderRadius: 1.5 }} 
+                        />
+                      </Stack>
+                      <Typography variant="caption" sx={{ color: COLORS.subtext, display: 'block', mb: 0.5 }}>
+                        Conditions: <strong>{alert.chronicConditions ? alert.chronicConditions.join(', ') : 'None'}</strong>
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#0f172a', fontWeight: 500, display: 'block' }}>
+                        Meds: {alert.medicines}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: COLORS.subtext, display: 'block', mt: 0.5 }}>
+                        Run-out: {new Date(alert.runOutDate).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                    
+                    <Button 
+                      variant="contained" 
+                      size="small" 
+                      onClick={() => handleNotifyPatient(alert.patientId, alert.orderId)}
+                      disabled={!!alert.lastNotifiedAt}
+                      sx={{ 
+                        borderRadius: 3, 
+                        fontWeight: 800, 
+                        textTransform: 'none',
+                        bgcolor: alert.lastNotifiedAt ? '#94a3b8' : '#10b981',
+                        color: 'white',
+                        px: 2,
+                        py: 1,
+                        '&:hover': { bgcolor: '#059669' }
+                      }}
+                    >
+                      {alert.lastNotifiedAt ? 'Notified ✓' : 'Notify Patient'}
+                    </Button>
+                  </Box>
+                ))
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 6 }}>
+                  <NotificationsActive sx={{ fontSize: 48, color: '#e2e8f0', mb: 2 }} />
+                  <Typography color="text.secondary">No active medicine run-out alerts for chronic patients.</Typography>
+                </Box>
+              )}
+            </Stack>
+          </Paper>
         </Grid>
 
         {/* Quick Actions / System Health */}
@@ -294,14 +420,14 @@ const DashboardOverview = ({ onNavigate }) => {
             <Paper elevation={0} sx={{ p: 4, borderRadius: 6, bgcolor: COLORS.blue2, color: 'white' }}>
               <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>System Health</Typography>
               <Stack spacing={3}>
-                <Box>
+                <Box onClick={() => onNavigate?.(3)} sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="caption" sx={{ fontWeight: 600 }}>INVENTORY STATUS</Typography>
                     <Typography variant="caption" sx={{ fontWeight: 600 }}>94%</Typography>
                   </Box>
                   <LinearProgress variant="determinate" value={94} sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.2)', '& .MuiLinearProgress-bar': { bgcolor: 'white' } }} />
                 </Box>
-                <Box>
+                <Box onClick={() => onNavigate?.(5)} sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 } }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="caption" sx={{ fontWeight: 600 }}>DELIVERY PERFORMANCE</Typography>
                     <Typography variant="caption" sx={{ fontWeight: 600 }}>88%</Typography>
@@ -320,12 +446,13 @@ const DashboardOverview = ({ onNavigate }) => {
               <Typography variant="subtitle2" sx={{ fontWeight: 800, color: COLORS.text, mb: 3 }}>Quick Links</Typography>
               <Stack spacing={1.5}>
                 {[
-                  { label: 'Generate Daily Report', icon: <DailyReportIcon /> },
-                  { label: 'Manage Delivery Staff', icon: <LocalShipping /> },
-                  { label: 'Broadcast Inventory Alert', icon: <Warning /> }
+                  { label: 'Generate Daily Report', icon: <DailyReportIcon />, tab: 8 },
+                  { label: 'Manage Delivery Staff', icon: <LocalShipping />, tab: 5 },
+                  { label: 'Broadcast Inventory Alert', icon: <Warning />, tab: 3 }
                 ].map((action, i) => (
                   <Box 
                     key={i}
+                    onClick={() => onNavigate?.(action.tab)}
                     sx={{ 
                       p: 2, 
                       borderRadius: 4, 

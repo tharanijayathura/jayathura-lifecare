@@ -127,7 +127,9 @@ const ChatDashboard = () => {
                       primary={<Typography sx={{ fontWeight: 700 }}>{chat.patientId?.name || 'Patient'}</Typography>}
                       secondary={
                         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
-                          {chat.messages?.[chat.messages.length - 1]?.message.substring(0, 30) || 'New conversation'}...
+                          {chat.messages && chat.messages.length > 0 ? (
+                            `${chat.messages[chat.messages.length - 1].senderName}: ${chat.messages[chat.messages.length - 1].message.substring(0, 30)}...`
+                          ) : 'New conversation'}
                         </Typography>
                       }
                     />
@@ -137,7 +139,7 @@ const ChatDashboard = () => {
             </List>
           </Paper>
         </Grid>
-
+ 
         {/* Chat Window */}
         <Grid item xs={12} md={8} sx={{ height: '100%' }}>
           <Paper elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid rgba(147, 191, 199, 0.25)', borderRadius: 4, overflow: 'hidden' }}>
@@ -167,6 +169,9 @@ const ChatDashboard = () => {
                           color: msg.senderRole === 'pharmacist' ? 'white' : '#1e293b',
                         }}
                       >
+                        <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mb: 0.5, color: msg.senderRole === 'pharmacist' ? '#eef2f3' : '#475569' }}>
+                          {msg.senderName} ({msg.senderRole})
+                        </Typography>
                         <Typography variant="body2">{msg.message}</Typography>
                         <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.8, textAlign: 'right', fontSize: '0.65rem' }}>
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

@@ -169,6 +169,7 @@ export const patientAPI = {
   submitFeedback: (orderId, rating, comments) => API.post(`/patients/order/${orderId}/feedback`, { rating, comments }),
   handleUnavailableMedicine: (orderId, medicineId, action) => API.put(`/patients/order/${orderId}/unavailable/${medicineId}`, { action }),
   getOutOfStockNotifications: () => API.get('/patients/notifications/out-of-stock'),
+  getChronicAlerts: () => API.get('/patients/notifications/chronic-alerts'),
   logout: () => API.post('/patients/logout'),
 };
 
@@ -196,7 +197,9 @@ export const pharmacistAPI = {
   suggestAlternativeMedicine: (originalId, alternativeId, orderId) => API.post(`/pharmacists/medicine/${originalId}/suggest-alternative`, { alternativeId, orderId }),
   
   // Patients
-  flagChronicPatient: (patientId, conditions) => API.put(`/pharmacists/patient/${patientId}/flag-chronic`, { conditions }),
+  flagChronicPatient: (patientId, conditions, flaggedAsChronic) => API.put(`/pharmacists/patient/${patientId}/flag-chronic`, { conditions, flaggedAsChronic }),
+  getChronicAlerts: () => API.get('/pharmacists/chronic-alerts'),
+  notifyPatientRunout: (patientId, orderId) => API.post(`/pharmacists/patient/${patientId}/notify-runout`, { orderId }),
   
   // Refill Plans
   createRefillPlan: (patientId, medicineId, quantity, intervalDays) => API.post('/pharmacists/refill-plan/create', { patientId, medicineId, quantity, intervalDays }),
@@ -206,6 +209,7 @@ export const pharmacistAPI = {
   getActiveOrders: () => API.get('/pharmacists/orders/active'),
   getInventory: () => API.get('/pharmacists/inventory'),
   getPatients: () => API.get('/pharmacists/patients'),
+  getPatientOrders: (patientId) => API.get(`/pharmacists/patient/${patientId}/orders`),
   getDashboardStats: () => API.get('/pharmacists/dashboard-stats'),
   getProfile: () => API.get('/pharmacists/profile'),
   updateProfile: (data) => API.put('/pharmacists/profile', data),

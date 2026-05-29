@@ -130,22 +130,6 @@ router.post('/message', authMiddleware, async (req, res) => {
 
     await chat.save();
 
-    // Auto-respond with bot if patient sends message
-    if (userRole === 'patient') {
-      const botResponse = getBotResponse(message);
-      const botMessage = {
-        senderId: null,
-        senderName: 'Jayathura Bot',
-        senderRole: 'bot',
-        message: botResponse,
-        isBot: true,
-        timestamp: new Date(),
-      };
-
-      chat.messages.push(botMessage);
-      chat.lastMessageAt = new Date();
-      await chat.save();
-    }
 
     res.json({ success: true, chat });
   } catch (error) {
