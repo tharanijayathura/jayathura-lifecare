@@ -140,6 +140,7 @@ export const patientAPI = {
   getOrdersHistory: () => API.get('/patients/orders/history'),
   cancelOrder: (orderId) => API.put(`/patients/order/${orderId}/cancel`),
   editOrderDetails: (orderId, data) => API.put(`/patients/order/${orderId}/edit-details`, data),
+  deleteOrder: (orderId) => API.delete(`/patients/order/${orderId}`),
   
   // Cart
   addToCart: (data) => API.post('/patients/cart/add', data),

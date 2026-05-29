@@ -1648,6 +1648,33 @@ router.put('/order/:orderId/edit-details', authMiddleware, async (req, res) => {
     console.error('Edit order error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
+// Delete order - Patient delete from history (delivered/cancelled)
+router.delete('/order/:orderId', authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Verify ownership
+    if (order.patientId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this order' });
+    }
+
+    // Only allow deletion if order is delivered or cancelled (past history)
+    if (order.status !== 'delivered' && order.status !== 'cancelled') {
+      return res.status(400).json({ message: 'Only delivered or cancelled orders can be removed from history.' });
+    }
+
+    await Order.findByIdAndDelete(orderId);
+
+    res.json({ message: 'Order removed from history successfully' });
+  } catch (error) {
+    console.error('Delete order error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 });
 
 module.exports = router;

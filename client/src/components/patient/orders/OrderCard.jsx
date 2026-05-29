@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Chip, Stack, Button, Divider, Grid, Avatar, Paper, IconButton } from '@mui/material';
-import { Visibility, Download, LocalShipping, ShoppingBag, Description, ReceiptLong, ConfirmationNumber } from '@mui/icons-material';
+import { Visibility, Download, LocalShipping, ShoppingBag, Description, ReceiptLong, ConfirmationNumber, Delete as DeleteIcon } from '@mui/icons-material';
 
-const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery, onCancel }) => {
+const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery, onCancel, onDelete }) => {
   const items = order.items || [];
   const totalItems = items.length;
   const isPrescriptionOrder = !!order.prescriptionId;
@@ -122,6 +122,16 @@ const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery, o
             >
               <ReceiptLong fontSize="small" />
             </IconButton>
+
+            {['delivered', 'cancelled'].includes(order.status) && onDelete && (
+              <IconButton 
+                onClick={onDelete}
+                sx={{ bgcolor: '#fff5f5', color: '#dc2626', '&:hover': { bgcolor: '#ffebeb' } }}
+                title="Remove from History"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
             
             {order.status === 'pending' ? (
               <Button

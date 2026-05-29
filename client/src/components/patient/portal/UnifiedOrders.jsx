@@ -25,7 +25,8 @@ import {
   Visibility, 
   CheckCircleOutline,
   ShoppingBag,
-  ArrowForward
+  ArrowForward,
+  Delete
 } from '@mui/icons-material';
 import { patientAPI } from '../../../services/api';
 import OrderCard from '../orders/OrderCard';
@@ -84,6 +85,20 @@ const UnifiedOrders = ({ onViewBill, onCancel, setActiveTab }) => {
     } catch (error) {
       console.error('Error cancelling order:', error);
       alert(error.response?.data?.message || 'Failed to cancel order.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to remove this order from your history? This action cannot be undone.")) return;
+    try {
+      setLoading(true);
+      await patientAPI.deleteOrder(orderId);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert(error.response?.data?.message || 'Failed to remove order from history.');
     } finally {
       setLoading(false);
     }
@@ -298,7 +313,7 @@ Thank you for shopping with us!
                   <Button 
                     variant="contained" 
                     onClick={() => setActiveTab(1)}
-                    sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 700, bgcolor: COLORS.text, '&:hover': { bgcolor: '#000' } }}
+                    sx={{ borderRadius: 3, textTransform: 'none', fontWeight: 700, bgcolor: COLORS.text, color: 'white', '&:hover': { bgcolor: '#000' } }}
                   >
                     Upload a Prescription
                   </Button>
@@ -446,14 +461,25 @@ Thank you for shopping with us!
 
                           {/* Case 5: View past details */}
                           {['delivered', 'cancelled'].includes(order.status) && (
-                            <Button 
-                              variant="outlined"
-                              startIcon={<Visibility />}
-                              onClick={() => handleViewDetails(order._id || order.orderId)}
-                              sx={{ borderRadius: 3.5, textTransform: 'none', fontWeight: 700, borderColor: COLORS.border, color: COLORS.text }}
-                            >
-                              View Details
-                            </Button>
+                            <Stack direction="row" spacing={1}>
+                              <Button 
+                                variant="outlined"
+                                startIcon={<Visibility />}
+                                onClick={() => handleViewDetails(order._id || order.orderId)}
+                                sx={{ borderRadius: 3.5, textTransform: 'none', fontWeight: 700, borderColor: COLORS.border, color: COLORS.text }}
+                              >
+                                View Details
+                              </Button>
+                              <Button 
+                                variant="outlined"
+                                color="error"
+                                startIcon={<Delete />}
+                                onClick={() => handleDeleteOrder(order._id || order.orderId)}
+                                sx={{ borderRadius: 3.5, textTransform: 'none', fontWeight: 700 }}
+                              >
+                                Delete History
+                              </Button>
+                            </Stack>
                           )}
 
                           {/* Case 6: Download Invoice for confirmed & completed orders */}

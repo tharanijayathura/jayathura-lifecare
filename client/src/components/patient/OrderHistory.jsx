@@ -126,6 +126,21 @@ Thank you for shopping with us!
     }
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to remove this order from your history? This action cannot be undone.")) return;
+    try {
+      setLoading(true);
+      await patientAPI.deleteOrder(orderId);
+      alert("Order removed from history successfully.");
+      fetchOrders();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert(error.response?.data?.message || 'Failed to remove order from history.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -180,6 +195,7 @@ Thank you for shopping with us!
                   onViewDetails={() => handleViewDetails(order._id || order.orderId)}
                   onDownloadInvoice={() => handleDownloadInvoice(order._id || order.orderId)}
                   onCancel={() => handleCancelOrder(order._id || order.orderId)}
+                  onDelete={() => handleDeleteOrder(order._id || order.orderId)}
                 />
               ))}
             </Box>
