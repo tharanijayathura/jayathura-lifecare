@@ -23,7 +23,8 @@ import {
   CheckCircle,
   BarChart as DailyReportIcon,
   Error as ErrorIcon,
-  Person
+  Person,
+  ArrowForward
 } from '@mui/icons-material';
 import { LinearProgress } from '@mui/material';
 import { useAuth } from '../../contexts/useAuth';
@@ -153,6 +154,7 @@ const DashboardOverview = ({ onNavigate }) => {
             px: 3, 
             py: 1.2, 
             bgcolor: COLORS.blue2, 
+            color: 'white',
             fontWeight: 700,
             boxShadow: '0 8px 20px rgba(122, 168, 176, 0.25)',
             '&:hover': { bgcolor: COLORS.blue1 }
@@ -163,6 +165,40 @@ const DashboardOverview = ({ onNavigate }) => {
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 4 }}>{error}</Alert>}
+
+      {stats?.awaitingDispatch > 0 && (
+        <Alert 
+          severity="info" 
+          icon={<LocalShipping sx={{ color: '#0284c7' }} />}
+          action={
+            <Button 
+              color="primary" 
+              size="small" 
+              onClick={() => onNavigate?.(5)}
+              endIcon={<ArrowForward />}
+              sx={{ fontWeight: 800, textTransform: 'none', px: 2 }}
+            >
+              Assign Riders
+            </Button>
+          }
+          sx={{ 
+            mb: 4, 
+            borderRadius: 4, 
+            bgcolor: '#f0f9ff', 
+            border: '1px solid #bae6fd', 
+            '& .MuiAlert-message': { display: 'flex', alignItems: 'center', width: '100%' }
+          }}
+        >
+          <Box sx={{ textAlign: 'left' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0369a1' }}>
+              Dispatch Action Required
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 500 }}>
+              There are <strong>{stats.awaitingDispatch}</strong> fully packed order{stats.awaitingDispatch > 1 ? 's' : ''} awaiting delivery personnel assignment.
+            </Typography>
+          </Box>
+        </Alert>
+      )}
 
       {/* Stats Grid */}
       <Grid container spacing={3} sx={{ mb: 6 }}>

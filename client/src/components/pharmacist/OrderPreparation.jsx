@@ -16,11 +16,13 @@ import {
   Checkbox, 
   Divider,
   CircularProgress,
-  Grid
+  Grid,
+  Avatar
 } from '@mui/material';
 import { ArrowBack, CheckCircle, Print, LocalShipping, FactCheck, Person, LocationOn } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
 import OrderTrackingStepper from '../patient/orders/OrderTrackingStepper';
+import AudioInstructionRecorder from './audio/AudioInstructionRecorder';
 
 const OrderPreparation = ({ order: initialOrder, onBack }) => {
   const [order, setOrder] = useState(initialOrder);
@@ -90,8 +92,8 @@ const OrderPreparation = ({ order: initialOrder, onBack }) => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} lg={8}>
-          <Paper elevation={0} sx={{ borderRadius: 6, border: `1px solid ${COLORS.border}`, overflow: 'hidden', mb: 4 }}>
-            <Box sx={{ p: 3, bgcolor: '#f8fafc', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Paper elevation={0} sx={{ borderRadius: 3, border: `1px solid ${COLORS.border}`, overflow: 'hidden', mb: 4 }}>
+            <Box sx={{ px: 4, py: 2.5, bgcolor: '#f8fafc', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography sx={{ fontWeight: 800, color: COLORS.text }}>Inventory Picking List</Typography>
               <Chip 
                 label={`${Object.values(pickedItems).filter(Boolean).length}/${order.items?.length || 0} Items Picked`} 
@@ -100,9 +102,12 @@ const OrderPreparation = ({ order: initialOrder, onBack }) => {
               />
             </Box>
             <TableContainer>
-              <Table>
+              <Table sx={{
+                '& th:first-of-type, & td:first-of-type': { pl: 4 },
+                '& th:last-of-type, & td:last-of-type': { pr: 4 }
+              }}>
                 <TableHead>
-                  <TableRow sx={{ '& th': { borderBottom: `2px solid #f1f5f9`, color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' } }}>
+                  <TableRow sx={{ '& th': { borderBottom: `2px solid #f1f5f9`, color: COLORS.subtext, fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', py: 2 } }}>
                     <TableCell>Medicine Name</TableCell>
                     <TableCell align="center">Quantity</TableCell>
                     <TableCell align="right">Confirmation</TableCell>
@@ -136,9 +141,9 @@ const OrderPreparation = ({ order: initialOrder, onBack }) => {
               </Table>
             </TableContainer>
           </Paper>
-
+ 
           {order.status !== 'draft' && order.status !== 'pending' && (
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
               <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 3, textTransform: 'uppercase', letterSpacing: 1 }}>
                 Fulfillment Status
               </Typography>
@@ -146,10 +151,17 @@ const OrderPreparation = ({ order: initialOrder, onBack }) => {
             </Paper>
           )}
         </Grid>
-
+ 
         <Grid item xs={12} lg={4}>
           <Stack spacing={4} sx={{ position: 'sticky', top: 24 }}>
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
+            {order.audioInstructions?.requested && (
+              <AudioInstructionRecorder 
+                order={order} 
+                onUploadSuccess={(updatedOrder) => setOrder(updatedOrder)} 
+              />
+            )}
+ 
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
               <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 3, textTransform: 'uppercase', letterSpacing: 1 }}>
                 Shipment Destination
               </Typography>

@@ -29,7 +29,7 @@ import {
   Switch,
   Grid,
 } from '@mui/material';
-import { Search, Refresh, Inventory, Edit, Delete, Add, ShoppingBag } from '@mui/icons-material';
+import { Search, Refresh, Inventory, Edit, Delete, Add, ShoppingBag, Warning, ErrorOutline, LocalPharmacy } from '@mui/icons-material';
 import { pharmacistAPI, medicineAPI } from '../../services/api';
 import { MEDICINE_CATEGORIES, BASE_UNITS, PACKAGING_TYPES } from '../../admin/constants';
 
@@ -39,6 +39,9 @@ const InventoryManagement = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStockStatus, setFilterStockStatus] = useState('all');
+  const [filterPrescription, setFilterPrescription] = useState('all');
 
   // Dialog & Form State
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -197,11 +200,44 @@ const InventoryManagement = () => {
     }
   };
 
-  const filteredInventory = inventory.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.brand && item.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (item.category && item.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredInventory = inventory.filter(item => {
+    // 1. Search term filter
+    const matchesSearch = 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.brand && item.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.category && item.category.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    // 2. Category filter
+    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+    
+    // 3. Stock status filter
+    const isLow = item.stock?.units <= item.minStockUnits;
+    const isOut = item.stock?.units <= 0;
+    let matchesStock = true;
+    if (filterStockStatus === 'available') {
+      matchesStock = !isOut && !isLow;
+    } else if (filterStockStatus === 'low') {
+      matchesStock = isLow && !isOut;
+    } else if (filterStockStatus === 'out') {
+      matchesStock = isOut;
+    }
+    
+    // 4. Prescription filter
+    let matchesRx = true;
+    if (filterPrescription === 'rx') {
+      matchesRx = item.requiresPrescription === true;
+    } else if (filterPrescription === 'otc') {
+      matchesRx = item.requiresPrescription === false;
+    }
+    
+    return matchesSearch && matchesCategory && matchesStock && matchesRx;
+  });
+
+  // Calculate statistics
+  const totalMeds = inventory.length;
+  const lowStockCount = inventory.filter(item => item.stock?.units <= item.minStockUnits && item.stock?.units > 0).length;
+  const outOfStockCount = inventory.filter(item => item.stock?.units <= 0).length;
+  const rxCount = inventory.filter(item => item.requiresPrescription).length;
 
   if (loading && inventory.length === 0) return (
     <Box display="flex" justifyContent="center" alignItems="center" height="400px">
@@ -229,6 +265,7 @@ const InventoryManagement = () => {
               borderRadius: 3,
               fontWeight: 700,
               bgcolor: COLORS.blue2,
+              color: 'white',
               '&:hover': { bgcolor: COLORS.blue1 }
             }}
           >
@@ -247,22 +284,166 @@ const InventoryManagement = () => {
 
       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 4 }}>{error}</Alert>}
 
+      {/* Stock Summary Stats */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 4, border: `1px solid ${COLORS.border}`, bgcolor: 'white', display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: '#f1f5f9', color: COLORS.blue2, display: 'flex' }}>
+              <Inventory />
+            </Box>
+            <Box>
+              <Typography sx={{ color: COLORS.subtext, fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Total Items</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.text }}>{totalMeds}</Typography>
+            </Box>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper 
+            elevation={0} 
+            onClick={() => { setFilterStockStatus(filterStockStatus === 'low' ? 'all' : 'low'); }}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 4, 
+              border: `1px solid ${filterStockStatus === 'low' ? '#f97316' : COLORS.border}`, 
+              bgcolor: filterStockStatus === 'low' ? '#fff7ed' : 'white', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2, 
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': { borderColor: '#f97316' }
+            }}
+          >
+            <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: '#fff7ed', color: '#f97316', display: 'flex' }}>
+              <Warning />
+            </Box>
+            <Box>
+              <Typography sx={{ color: COLORS.subtext, fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Low Stock</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: '#f97316' }}>{lowStockCount}</Typography>
+            </Box>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper 
+            elevation={0} 
+            onClick={() => { setFilterStockStatus(filterStockStatus === 'out' ? 'all' : 'out'); }}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 4, 
+              border: `1px solid ${filterStockStatus === 'out' ? '#f43f5e' : COLORS.border}`, 
+              bgcolor: filterStockStatus === 'out' ? '#fff1f2' : 'white', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2, 
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': { borderColor: '#f43f5e' }
+            }}
+          >
+            <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: '#fff1f2', color: '#f43f5e', display: 'flex' }}>
+              <ErrorOutline />
+            </Box>
+            <Box>
+              <Typography sx={{ color: COLORS.subtext, fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Out of Stock</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: '#f43f5e' }}>{outOfStockCount}</Typography>
+            </Box>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper 
+            elevation={0} 
+            onClick={() => { setFilterPrescription(filterPrescription === 'rx' ? 'all' : 'rx'); }}
+            sx={{ 
+              p: 2.5, 
+              borderRadius: 4, 
+              border: `1px solid ${filterPrescription === 'rx' ? COLORS.blue2 : COLORS.border}`, 
+              bgcolor: filterPrescription === 'rx' ? 'rgba(122, 168, 176, 0.08)' : 'white', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2, 
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': { borderColor: COLORS.blue2 }
+            }}
+          >
+            <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(122, 168, 176, 0.1)', color: COLORS.blue2, display: 'flex' }}>
+              <LocalPharmacy />
+            </Box>
+            <Box>
+              <Typography sx={{ color: COLORS.subtext, fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Prescriptions (Rx)</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: COLORS.blue2 }}>{rxCount}</Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
       <Paper elevation={0} sx={{ mb: 4, borderRadius: 5, border: `1px solid ${COLORS.border}`, bgcolor: 'white', overflow: 'hidden' }}>
         <Box sx={{ p: 2.5, bgcolor: '#f8fafc', borderBottom: `1px solid ${COLORS.border}` }}>
-          <TextField
-            fullWidth
-            placeholder="Search by medicine name, brand, or category..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search sx={{ color: COLORS.blue2 }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 4, bgcolor: 'white' } }}
-          />
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={5}>
+              <TextField
+                fullWidth
+                placeholder="Search by medicine name, brand, or category..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search sx={{ color: COLORS.blue2 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 4, bgcolor: 'white' } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4} md={2.5}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={filterCategory}
+                  label="Category"
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  sx={{ borderRadius: 4, bgcolor: 'white' }}
+                >
+                  <MenuItem value="all">All Categories</MenuItem>
+                  {MEDICINE_CATEGORIES.map(cat => (
+                    <MenuItem key={cat.value} value={cat.value}>{cat.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={4} md={2.5}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Stock Status</InputLabel>
+                <Select
+                  value={filterStockStatus}
+                  label="Stock Status"
+                  onChange={(e) => setFilterStockStatus(e.target.value)}
+                  sx={{ borderRadius: 4, bgcolor: 'white' }}
+                >
+                  <MenuItem value="all">All Statuses</MenuItem>
+                  <MenuItem value="available">Available</MenuItem>
+                  <MenuItem value="low">Low Stock</MenuItem>
+                  <MenuItem value="out">Out of Stock</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={4} md={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Prescription (Rx)</InputLabel>
+                <Select
+                  value={filterPrescription}
+                  label="Prescription (Rx)"
+                  onChange={(e) => setFilterPrescription(e.target.value)}
+                  sx={{ borderRadius: 4, bgcolor: 'white' }}
+                >
+                  <MenuItem value="all">All Rx/OTC</MenuItem>
+                  <MenuItem value="rx">Requires Rx</MenuItem>
+                  <MenuItem value="otc">No Rx Required</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
         </Box>
 
         <TableContainer sx={{ overflowX: 'auto' }}>
@@ -519,7 +700,7 @@ const InventoryManagement = () => {
               type="submit"
               variant="contained"
               disabled={submitLoading}
-              sx={{ bgcolor: COLORS.blue2, '&:hover': { bgcolor: COLORS.blue1 } }}
+              sx={{ bgcolor: COLORS.blue2, color: 'white', '&:hover': { bgcolor: COLORS.blue1 } }}
             >
               {submitLoading ? <CircularProgress size={20} color="inherit" /> : 'Save Medicine'}
             </Button>

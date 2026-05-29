@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, Typography, Box, Chip, Stack, Button, Divider, Grid, Avatar, Paper, IconButton } from '@mui/material';
 import { Visibility, Download, LocalShipping, ShoppingBag, Description, ReceiptLong, ConfirmationNumber } from '@mui/icons-material';
 
-const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery }) => {
+const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery, onCancel }) => {
   const items = order.items || [];
   const totalItems = items.length;
   const isPrescriptionOrder = !!order.prescriptionId;
@@ -66,7 +66,7 @@ const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery })
             </Avatar>
             <Box>
               <Typography sx={{ fontWeight: 900, color: COLORS.text, fontSize: '1.1rem' }}>
-                #{order.orderId || order._id?.slice(-6).toUpperCase()}
+                #{order.orderId || order._id?.slice(-6).toUpperCase()}{order.patientId?.name ? ` - ${order.patientId.name}` : ''}
               </Typography>
               <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 600 }}>
                 {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -103,7 +103,18 @@ const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery })
 
         {/* Actions */}
         <Grid item xs={12} md={4}>
-          <Stack direction="row" spacing={1} justifyContent={{ xs: 'flex-start', sm: 'flex-start', md: 'flex-end' }}>
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent={{ xs: 'flex-start', sm: 'flex-start', md: 'flex-end' }}>
+            {['draft', 'pending', 'confirmed'].includes(order.status) && (
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={onCancel}
+                sx={{ borderRadius: 4, fontWeight: 700, px: 2, textTransform: 'none' }}
+              >
+                Cancel
+              </Button>
+            )}
             <IconButton 
               onClick={onDownloadInvoice}
               sx={{ bgcolor: '#f8fafc', color: COLORS.blue2, '&:hover': { bgcolor: COLORS.green1 } }}
@@ -120,6 +131,7 @@ const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery })
                   borderRadius: 4, 
                   px: 3, 
                   bgcolor: COLORS.blue2, 
+                  color: 'white',
                   fontWeight: 800,
                   textTransform: 'none',
                   '&:hover': { bgcolor: COLORS.blue1 }
@@ -136,6 +148,7 @@ const OrderCard = ({ order, onViewDetails, onDownloadInvoice, onTrackDelivery })
                   borderRadius: 4, 
                   px: 3, 
                   bgcolor: COLORS.text, 
+                  color: 'white',
                   fontWeight: 800,
                   textTransform: 'none',
                   '&:hover': { bgcolor: '#000' }

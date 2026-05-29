@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Invoice = require('../models/Invoice');
 const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to ensure user is a delivery person
@@ -47,6 +48,22 @@ router.put('/order/:orderId/status', authMiddleware, deliveryMiddleware, async (
     // Update main status if it matches specific progression
     if (status === 'out_for_delivery' || status === 'delivered') {
       order.status = status;
+      if (status === 'delivered') {
+        order.paymentStatus = 'paid';
+        // Also update invoice status if it exists
+        try {
+          await Invoice.findOneAndUpdate(
+            { orderId: order._id },
+            { paymentStatus: 'paid', paidAt: new Date() }
+          );
+        } catch (invoiceErr) {
+          console.error('Failed to update invoice payment status:', invoiceErr);
+        }
+      }
+    if (message) {
+      order.deliveryStatus = message;
+    } else {
+      order.deliveryStatus = status;
     }
 
     // Add to tracking history

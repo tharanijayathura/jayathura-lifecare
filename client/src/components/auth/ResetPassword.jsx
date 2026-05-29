@@ -236,6 +236,7 @@ const ResetPassword = () => {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               disabled={loading || codeVerified || success}
               sx={{ ...FIELD_SX, mb: 3 }}
+              autoComplete="one-time-code"
               inputProps={{ 
                 maxLength: 6, 
                 style: { textAlign: 'center', letterSpacing: '8px', fontSize: '24px', fontWeight: 900, color: COLORS.primary } 
@@ -268,7 +269,7 @@ const ResetPassword = () => {
                     Verification successful.
                   </Alert>
                   
-                  <TextField
+                   <TextField
                     fullWidth
                     required
                     label="New Access Code"
@@ -277,6 +278,7 @@ const ResetPassword = () => {
                     onChange={(e) => setNewPassword(e.target.value)}
                     disabled={loading || success}
                     sx={FIELD_SX}
+                    autoComplete="new-password"
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -302,6 +304,7 @@ const ResetPassword = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={loading || success}
                     sx={FIELD_SX}
+                    autoComplete="new-password"
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">

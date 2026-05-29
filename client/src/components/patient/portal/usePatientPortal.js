@@ -170,16 +170,27 @@ export const usePatientPortal = () => {
     const orderId = prescriptionMeta.orderId || prescriptionMeta.id;
     if (orderId) {
       setCurrentOrderId(orderId);
-      setSnackbar({ 
-        open: true, 
-        message: 'Prescription uploaded! We are directing you to the shop to add optional items.', 
-        severity: 'success' 
-      });
-      fetchPrescriptionOrders();
-      // Redirect to Shop Pharmacy tab (index 2)
-      setTimeout(() => {
-        setActiveTab(2);
-      }, 1500);
+      if (prescriptionMeta.sendDirectly) {
+        setSnackbar({ 
+          open: true, 
+          message: 'Prescription submitted directly to pharmacist successfully!', 
+          severity: 'success' 
+        });
+        fetchPrescriptionOrders();
+        setTimeout(() => {
+          setActiveTab(3); // Redirect to Prescription Orders tab (Prescription Orders)
+        }, 1500);
+      } else {
+        setSnackbar({ 
+          open: true, 
+          message: 'Prescription uploaded! We are directing you to the shop to add optional items.', 
+          severity: 'success' 
+        });
+        fetchPrescriptionOrders();
+        setTimeout(() => {
+          setActiveTab(2); // Redirect to Shop Pharmacy tab
+        }, 1500);
+      }
     }
   };
 
@@ -206,6 +217,21 @@ export const usePatientPortal = () => {
     fetchPrescriptionOrders();
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this prescription/order request?")) return;
+    try {
+      setLoading(true);
+      await patientAPI.cancelOrder(orderId);
+      setSnackbar({ open: true, message: 'Order request cancelled successfully.', severity: 'success' });
+      fetchPrescriptionOrders();
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      setSnackbar({ open: true, message: error.response?.data?.message || 'Failed to cancel order request.', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchActiveCart = async () => {
       try {
@@ -225,6 +251,10 @@ export const usePatientPortal = () => {
     };
     fetchActiveCart();
   }, []);
+
+  useEffect(() => {
+    fetchPrescriptionOrders();
+  }, [activeTab]);
 
   useEffect(() => {
     const loadCartFromOrder = async () => {
@@ -307,5 +337,6 @@ export const usePatientPortal = () => {
     fetchPrescriptionOrders,
     handleViewBill,
     handleBillConfirmed,
+    handleCancelOrder,
   };
 };

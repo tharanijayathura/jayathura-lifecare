@@ -56,9 +56,73 @@ const OrderHistory = () => {
   const handleDownloadInvoice = async (orderId) => {
     try {
       const response = await patientAPI.viewBill(orderId);
-      alert(`Invoice ID: ${response.data.invoiceId || response.data.orderId}\nTotal: Rs. ${response.data.totalAmount || 0}`);
+      const invoice = response.data.invoice;
+      const order = response.data.order;
+      
+      if (!order) {
+        alert("Order details not found.");
+        return;
+      }
+
+      const invId = invoice?.invoiceId || `INV-${order.orderId || orderId}`;
+      const invDate = new Date(order.createdAt).toLocaleDateString();
+      const itemsText = (order.items || []).map(item => 
+        `- ${item.medicineName || 'Item'}: ${item.quantity} x Rs. ${item.price} = Rs. ${(item.price * item.quantity).toFixed(2)}`
+      ).join('\n');
+      
+      const subtotal = order.totalAmount || invoice?.subtotal || 0;
+      const deliveryFee = order.deliveryFee || invoice?.deliveryFee || 0;
+      const total = order.finalAmount || invoice?.totalAmount || 0;
+      const paymentMethod = order.paymentMethod?.toUpperCase() || 'COD';
+      const patientName = order.patientId?.name || 'Customer';
+
+      const invoiceContent = `
+========================================
+         JAYATHURA LIFECARE
+========================================
+INVOICE: ${invId}
+DATE:    ${invDate}
+CUSTOMER: ${patientName}
+----------------------------------------
+ITEMS:
+${itemsText}
+----------------------------------------
+SUBTOTAL:     Rs. ${subtotal.toFixed(2)}
+DELIVERY FEE: Rs. ${deliveryFee.toFixed(2)}
+TOTAL AMOUNT: Rs. ${total.toFixed(2)}
+PAYMENT:      ${paymentMethod}
+========================================
+Thank you for shopping with us!
+      `.trim();
+
+      // Create a blob and download it
+      const blob = new Blob([invoiceContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice_${invId}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error fetching invoice:', error);
+      alert('Failed to download invoice. Please try again.');
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      setLoading(true);
+      await patientAPI.cancelOrder(orderId);
+      alert("Order cancelled successfully.");
+      fetchOrders();
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert(error.response?.data?.message || 'Failed to cancel order.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,34 +165,46 @@ const OrderHistory = () => {
 
       {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 4 }}>{error}</Alert>}
 
-      {orders.length > 0 ? (
-        <Box>
-          {orders.map((order) => (
-            <OrderCard
-              key={order._id || order.orderId}
-              order={order}
-              onViewDetails={() => handleViewDetails(order._id || order.orderId)}
-              onDownloadInvoice={() => handleDownloadInvoice(order._id || order.orderId)}
-            />
-          ))}
-        </Box>
-      ) : (
-        <Paper elevation={0} sx={{ py: 12, textAlign: 'center', borderRadius: 8, border: `2px dashed ${COLORS.border}`, bgcolor: 'white' }}>
-          <Box sx={{ p: 3, borderRadius: '50%', bgcolor: COLORS.green1, display: 'inline-flex', mb: 3 }}>
-            <History sx={{ fontSize: 48, color: COLORS.blue2 }} />
-          </Box>
-          <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 800 }}>No Orders Found</Typography>
-          <Typography sx={{ color: COLORS.subtext, maxWidth: 400, mx: 'auto', mt: 1 }}>
-            You haven't placed any orders yet. Visit our shop or upload a prescription to get started.
-          </Typography>
-        </Paper>
-      )}
+      {(() => {
+        const confirmedAndCompletedOrders = orders.filter(
+          order => order.status !== 'draft' && order.status !== 'pending'
+        );
+
+        if (confirmedAndCompletedOrders.length > 0) {
+          return (
+            <Box>
+              {confirmedAndCompletedOrders.map((order) => (
+                <OrderCard
+                  key={order._id || order.orderId}
+                  order={order}
+                  onViewDetails={() => handleViewDetails(order._id || order.orderId)}
+                  onDownloadInvoice={() => handleDownloadInvoice(order._id || order.orderId)}
+                  onCancel={() => handleCancelOrder(order._id || order.orderId)}
+                />
+              ))}
+            </Box>
+          );
+        }
+
+        return (
+          <Paper elevation={0} sx={{ py: 12, textAlign: 'center', borderRadius: 8, border: `2px dashed ${COLORS.border}`, bgcolor: 'white' }}>
+            <Box sx={{ p: 3, borderRadius: '50%', bgcolor: COLORS.green1, display: 'inline-flex', mb: 3 }}>
+              <History sx={{ fontSize: 48, color: COLORS.blue2 }} />
+            </Box>
+            <Typography variant="h6" sx={{ color: COLORS.text, fontWeight: 800 }}>No Orders Found</Typography>
+            <Typography sx={{ color: COLORS.subtext, maxWidth: 400, mx: 'auto', mt: 1 }}>
+              You haven't placed any confirmed orders yet. Visit our shop or upload a prescription to get started.
+            </Typography>
+          </Paper>
+        );
+      })()}
 
       <OrderDetailsDialog
         open={detailsDialogOpen}
         order={selectedOrder}
         onClose={() => setDetailsDialogOpen(false)}
         onDownloadInvoice={() => selectedOrder && handleDownloadInvoice(selectedOrder._id || selectedOrder.orderId)}
+        onOrderUpdated={fetchOrders}
       />
     </Box>
   );

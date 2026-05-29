@@ -23,8 +23,10 @@ import {
   Divider,
   useTheme,
   useMediaQuery,
+  Tabs,
+  Tab,
 } from '@mui/material';
-import { Refresh, Visibility, Search, Payment, Assignment } from '@mui/icons-material';
+import { Refresh, Visibility, Search, Payment, Assignment, LocalPharmacy, ShoppingBag } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
 
 const ActiveOrders = ({ onSelectOrder }) => {
@@ -33,6 +35,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -80,11 +83,25 @@ const ActiveOrders = ({ onSelectOrder }) => {
 
   const filteredOrders = orders.filter(order => {
     const matchesStatus = statusFilter === 'all' || order.status.toLowerCase() === statusFilter.toLowerCase();
+    
+    // Type Filter (all, prescription, otc)
+    let matchesType = true;
+    if (typeFilter === 'prescription') {
+      matchesType = order.type === 'prescription';
+    } else if (typeFilter === 'otc') {
+      matchesType = order.type !== 'prescription'; // non-prescription or otc
+    }
+
     const matchesSearch = 
       (order.orderId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.patientId?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+      (order.patientId?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.type || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+    return matchesStatus && matchesType && matchesSearch;
   });
+
+  const prescriptionOrdersCount = orders.filter(o => o.type === 'prescription').length;
+  const otcOrdersCount = orders.filter(o => o.type !== 'prescription').length;
 
   if (loading) return (
     <Box display="flex" justifyContent="center" alignItems="center" height="400px">
@@ -116,6 +133,62 @@ const ActiveOrders = ({ onSelectOrder }) => {
       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 4 }}>{error}</Alert>}
 
       <Paper elevation={0} sx={{ mb: 4, borderRadius: 5, border: `1px solid ${COLORS.border}`, bgcolor: 'white', overflow: 'hidden' }}>
+        {/* Sub-tabs to filter by prescription vs direct shop orders */}
+        <Box sx={{ borderBottom: `1px solid ${COLORS.border}`, px: 2.5, pt: 1, bgcolor: '#ffffff' }}>
+          <Tabs
+            value={typeFilter === 'all' ? 0 : typeFilter === 'prescription' ? 1 : 2}
+            onChange={(e, val) => {
+              const types = ['all', 'prescription', 'otc'];
+              setTypeFilter(types[val]);
+            }}
+            TabIndicatorProps={{ sx: { bgcolor: COLORS.blue2 } }}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                minWidth: 'auto',
+                px: 3,
+                color: COLORS.subtext,
+                '&.Mui-selected': { color: COLORS.blue2 }
+              }
+            }}
+          >
+            <Tab 
+              label={
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <span>All Active Orders</span>
+                  <Chip label={orders.length} size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 800, bgcolor: '#f1f5f9' }} />
+                </Stack>
+              } 
+            />
+            <Tab 
+              icon={<LocalPharmacy sx={{ fontSize: 16 }} />}
+              iconPosition="start"
+              label={
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <span>Prescription Orders (Rx)</span>
+                  {prescriptionOrdersCount > 0 && (
+                    <Chip label={prescriptionOrdersCount} size="small" color="primary" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 800, bgcolor: COLORS.blue2 }} />
+                  )}
+                </Stack>
+              } 
+            />
+            <Tab 
+              icon={<ShoppingBag sx={{ fontSize: 16 }} />}
+              iconPosition="start"
+              label={
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <span>Direct Shop Orders (OTC)</span>
+                  {otcOrdersCount > 0 && (
+                    <Chip label={otcOrdersCount} size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 800, bgcolor: '#f1f5f9', color: COLORS.text }} />
+                  )}
+                </Stack>
+              } 
+            />
+          </Tabs>
+        </Box>
+
         <Box sx={{ p: 2.5, bgcolor: '#f8fafc', borderBottom: `1px solid ${COLORS.border}` }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
@@ -170,7 +243,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
                       <TableRow key={order._id} hover sx={{ '& td': { borderBottom: '1px solid #f1f5f9', py: 2.5 } }}>
                         <TableCell>
                           <Typography sx={{ fontWeight: 800, color: COLORS.text }}>
-                            #{order.orderId || order._id.slice(-6).toUpperCase()}
+                            #{order.orderId || order._id.slice(-6).toUpperCase()}{order.patientId?.name ? ` - ${order.patientId.name}` : ''}
                           </Typography>
                           <Typography variant="caption" sx={{ color: COLORS.subtext }}>
                             {new Date(order.createdAt).toLocaleDateString()}
@@ -188,11 +261,21 @@ const ActiveOrders = ({ onSelectOrder }) => {
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Chip 
-                            label={order.type?.toUpperCase() || 'OTC'} 
-                            size="small" 
-                            sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: COLORS.green1, color: COLORS.blue2 }} 
-                          />
+                          {order.type === 'prescription' ? (
+                            <Chip 
+                              icon={<LocalPharmacy sx={{ fontSize: '0.8rem !important', color: '#10b981 !important' }} />}
+                              label="PRESCRIPTION (RX)" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: '#ecfdf5', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.1)' }} 
+                            />
+                          ) : (
+                            <Chip 
+                              icon={<ShoppingBag sx={{ fontSize: '0.8rem !important', color: '#3b82f6 !important' }} />}
+                              label="DIRECT SHOP (OTC)" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: '#eff6ff', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.1)' }} 
+                            />
+                          )}
                         </TableCell>
                         <TableCell>
                           <Typography sx={{ fontWeight: 800 }}>Rs. {order.finalAmount?.toFixed(2)}</Typography>
@@ -216,6 +299,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
                             sx={{ 
                               borderRadius: 3, 
                               bgcolor: COLORS.blue2, 
+                              color: 'white',
                               fontWeight: 800,
                               boxShadow: '0 4px 12px rgba(122, 168, 176, 0.2)',
                               '&:hover': { bgcolor: COLORS.blue1 }
@@ -259,7 +343,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
                       <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                         <Box>
                           <Typography sx={{ fontWeight: 800, color: COLORS.text }}>
-                            #{order.orderId || order._id.slice(-6).toUpperCase()}
+                            #{order.orderId || order._id.slice(-6).toUpperCase()}{order.patientId?.name ? ` - ${order.patientId.name}` : ''}
                           </Typography>
                           <Typography variant="caption" sx={{ color: COLORS.subtext }}>
                             Placed: {new Date(order.createdAt).toLocaleDateString()}
@@ -286,11 +370,21 @@ const ActiveOrders = ({ onSelectOrder }) => {
 
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Box>
-                          <Chip 
-                            label={order.type?.toUpperCase() || 'OTC'} 
-                            size="small" 
-                            sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: COLORS.green1, color: COLORS.blue2, mr: 1 }} 
-                          />
+                          {order.type === 'prescription' ? (
+                            <Chip 
+                              icon={<LocalPharmacy sx={{ fontSize: '0.8rem !important', color: '#10b981 !important' }} />}
+                              label="RX" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: '#ecfdf5', color: '#10b981', mr: 1 }} 
+                            />
+                          ) : (
+                            <Chip 
+                              icon={<ShoppingBag sx={{ fontSize: '0.8rem !important', color: '#3b82f6 !important' }} />}
+                              label="OTC" 
+                              size="small" 
+                              sx={{ borderRadius: 2, fontSize: '0.65rem', fontWeight: 800, bgcolor: '#eff6ff', color: '#3b82f6', mr: 1 }} 
+                            />
+                          )}
                           <Typography variant="caption" sx={{ color: COLORS.subtext }}>
                             COD
                           </Typography>
@@ -307,6 +401,7 @@ const ActiveOrders = ({ onSelectOrder }) => {
                           borderRadius: 3, 
                           py: 1,
                           bgcolor: COLORS.blue2, 
+                          color: 'white',
                           fontWeight: 800,
                           '&:hover': { bgcolor: COLORS.blue1 }
                         }}

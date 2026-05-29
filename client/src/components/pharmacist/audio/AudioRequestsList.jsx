@@ -70,6 +70,7 @@ const AudioRequestsList = ({ orders, onProvide }) => {
                 borderRadius: 4, 
                 py: 1.5, 
                 bgcolor: COLORS.blue2, 
+                color: 'white',
                 fontWeight: 800,
                 boxShadow: '0 8px 20px rgba(122, 168, 176, 0.2)',
                 '&:hover': { bgcolor: COLORS.blue1 }

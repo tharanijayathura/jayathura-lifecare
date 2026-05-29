@@ -181,7 +181,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
               </Typography>
             </Stack>
             <Typography sx={{ color: COLORS.subtext, fontWeight: 500, fontSize: '0.9rem' }}>
-              Order #{prescription._id?.slice(-6).toUpperCase()} • Patient: {prescription.patientId?.name}
+              Order #${order?.orderId || order?._id?.slice(-6).toUpperCase() || prescription._id?.slice(-6).toUpperCase()} • Patient: {prescription.patientId?.name || order?.patientId?.name}
             </Typography>
           </Box>
           <IconButton onClick={onClose} sx={{ bgcolor: '#f1f5f9' }}><Close /></IconButton>
@@ -200,6 +200,17 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
           {/* Pharmacist Actions */}
           <Grid item xs={12} md={7}>
             <Stack spacing={4}>
+              {prescription.notes && (
+                <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: `1px solid ${COLORS.border}`, bgcolor: 'rgba(147, 191, 199, 0.08)' }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 1, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Patient Instructions / Notes
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 500, fontStyle: 'italic', lineHeight: 1.5 }}>
+                    "{prescription.notes}"
+                  </Typography>
+                </Paper>
+              )}
+
               <Box>
                 <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>
                   Verification Form
@@ -260,6 +271,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
               px: 4, 
               py: 1.5,
               bgcolor: COLORS.blue2, 
+              color: 'white',
               fontWeight: 800,
               boxShadow: '0 8px 20px rgba(122, 168, 176, 0.2)',
               '&:hover': { bgcolor: COLORS.blue1 }

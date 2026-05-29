@@ -10,6 +10,7 @@ const prescriptionSchema = new mongoose.Schema({
   originalName: { type: String },
   fileName: { type: String },
   mimeType: { type: String },
+  notes: { type: String },
   status: { 
     type: String, 
     enum: ['pending', 'verified', 'rejected'], 

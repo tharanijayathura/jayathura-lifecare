@@ -134,6 +134,7 @@ const MedicineAddForm = ({
               py: 2, 
               borderRadius: 4, 
               bgcolor: COLORS.blue2, 
+              color: 'white',
               fontWeight: 800,
               boxShadow: '0 8px 20px rgba(122, 168, 176, 0.25)',
               '&:hover': { bgcolor: COLORS.blue1 } 

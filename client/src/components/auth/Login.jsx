@@ -127,7 +127,7 @@ const Login = () => {
           )}
 
           <Box component="form" onSubmit={handleSubmit}>
-            <Stack spacing={3}>
+             <Stack spacing={3}>
               <TextField
                 fullWidth
                 required
@@ -137,6 +137,7 @@ const Login = () => {
                 variant="outlined"
                 value={formData.email}
                 onChange={handleChange}
+                autoComplete="email"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -163,6 +164,7 @@ const Login = () => {
                   variant="outlined"
                   value={formData.password}
                   onChange={handleChange}
+                  autoComplete="current-password"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

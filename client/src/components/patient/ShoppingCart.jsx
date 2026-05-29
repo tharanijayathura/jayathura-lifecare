@@ -342,7 +342,7 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
           <Button 
             variant="contained" 
             onClick={handleConfirmOrder}
-            sx={{ borderRadius: 4, px: 4, py: 1.5, bgcolor: COLORS.text, fontWeight: 900, '&:hover': { bgcolor: '#000' } }}
+            sx={{ borderRadius: 4, px: 4, py: 1.5, bgcolor: COLORS.text, color: 'white', fontWeight: 900, '&:hover': { bgcolor: '#000' } }}
           >
             Confirm & Pay
           </Button>

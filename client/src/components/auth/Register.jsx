@@ -154,6 +154,7 @@ const Register = () => {
                 <TextField
                   fullWidth required label="First Name" name="firstName"
                   value={formData.firstName} onChange={handleChange}
+                  autoComplete="given-name"
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 />
               </Grid>
@@ -161,6 +162,7 @@ const Register = () => {
                 <TextField
                   fullWidth required label="Last Name" name="lastName"
                   value={formData.lastName} onChange={handleChange}
+                  autoComplete="family-name"
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 />
               </Grid>
@@ -168,6 +170,7 @@ const Register = () => {
                 <TextField
                   fullWidth required label="Email Address" name="email" type="email"
                   value={formData.email} onChange={handleChange}
+                  autoComplete="email"
                   InputProps={{ startAdornment: (<InputAdornment position="start"><EmailOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>) }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 />
@@ -176,6 +179,7 @@ const Register = () => {
                 <TextField
                   fullWidth required label="Password" name="password" type={showPassword ? 'text' : 'password'}
                   value={formData.password} onChange={handleChange}
+                  autoComplete="new-password"
                   InputProps={{
                     startAdornment: (<InputAdornment position="start"><LockOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>),
                     endAdornment: (<InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end"><Visibility fontSize="small" /></IconButton></InputAdornment>)
@@ -187,6 +191,7 @@ const Register = () => {
                 <TextField
                   fullWidth required label="Confirm Password" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword} onChange={handleChange}
+                  autoComplete="new-password"
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 />
               </Grid>
@@ -194,6 +199,7 @@ const Register = () => {
                 <TextField
                   fullWidth required label="Phone Number" name="phone"
                   value={formData.phone} onChange={handleChange}
+                  autoComplete="tel"
                   InputProps={{ startAdornment: (<InputAdornment position="start"><PhoneOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>) }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 />

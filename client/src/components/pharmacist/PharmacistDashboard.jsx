@@ -88,7 +88,6 @@ const PharmacistDashboard = forwardRef((props, ref) => {
     { label: 'Patients', value: 4, icon: <Person /> },
     { label: 'Delivery', value: 5, icon: <LocalShipping /> },
     { label: 'Chat', value: 6, icon: <Chat /> },
-    { label: 'Audio Guides', value: 7, icon: <AudioFile /> },
     { label: 'Analytics', value: 8, icon: <AnalyticsIcon /> },
     { label: 'New Order', value: 10, icon: <PointOfSale /> },
   ];
@@ -115,7 +114,10 @@ const PharmacistDashboard = forwardRef((props, ref) => {
             prescription={selectedPrescription}
             open={!!selectedPrescription}
             onClose={() => setSelectedPrescription(null)}
-            onUpdate={() => setSelectedPrescription(null)}
+            onUpdate={() => {
+              // We do not close the detail view on updates (like adding/removing items).
+              // Remounting PendingPrescriptions when selectedPrescription becomes null will auto-refresh the queue.
+            }}
           />
         </Box>
       );

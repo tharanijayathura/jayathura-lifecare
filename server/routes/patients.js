@@ -36,7 +36,14 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const fileName = (file.originalname || '').toLowerCase();
-    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf' || fileName.endsWith('.pdf')) {
+    const isImageExt = fileName.endsWith('.jpg') || 
+                       fileName.endsWith('.jpeg') || 
+                       fileName.endsWith('.png') || 
+                       fileName.endsWith('.jfif') ||
+                       fileName.endsWith('.webp') ||
+                       fileName.endsWith('.gif') ||
+                       fileName.endsWith('.bmp');
+    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf' || fileName.endsWith('.pdf') || isImageExt) {
       cb(null, true);
     } else {
       cb(new Error('Only image and PDF files are allowed'));
@@ -216,6 +223,8 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
       return res.status(400).json({ message: 'Prescription image is required' });
     }
 
+    const { notes, requestAudioInstructions } = req.body;
+    const requestAudio = requestAudioInstructions === 'true' || requestAudioInstructions === true;
     const imageUrl = `/uploads/prescriptions/${req.file.filename}`;
     const prescription = new Prescription({
       patientId: req.user._id,
@@ -223,6 +232,7 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
       originalName: req.file.originalname,
       fileName: req.file.filename,
       mimeType: req.file.mimetype,
+      notes: notes,
       status: 'pending',
       activities: [{
         type: 'uploaded',
@@ -241,7 +251,12 @@ router.post('/prescription/upload', authMiddleware, upload.single('imageFile'), 
       prescriptionId: prescription._id,
       type: 'prescription',
       status: 'draft',
-      items: []
+      notes: notes,
+      items: [],
+      audioInstructions: {
+        requested: requestAudio,
+        requestedAt: requestAudio ? new Date() : undefined
+      }
     });
 
     await order.save();
@@ -268,6 +283,7 @@ router.get('/prescription-orders', authMiddleware, async (req, res) => {
       patientId: req.user._id,
       prescriptionId: { $exists: true, $ne: null }
     })
+      .populate('patientId', 'name')
       .populate('prescriptionId', 'status imageUrl originalName mimeType verifiedAt activities')
       .populate('items.medicineId', 'name price stock')
       .sort({ createdAt: -1 });
@@ -290,6 +306,7 @@ router.get('/order/:orderId/status', authMiddleware, async (req, res) => {
       _id: req.params.orderId, 
       patientId: req.user._id 
     })
+      .populate('patientId', 'name')
       .populate('items.medicineId', 'name price stock')
       .populate('assignedTo', 'name phone')
       .populate('prescriptionId', 'status imageUrl originalName mimeType verifiedAt verifiedBy activities');
@@ -1367,6 +1384,7 @@ router.get('/orders/history', authMiddleware, async (req, res) => {
     }
 
     const orders = await Order.find({ patientId: req.user._id })
+      .populate('patientId', 'name')
       .populate({
         path: 'items.medicineId',
         select: 'name price image',
@@ -1494,6 +1512,141 @@ router.get('/profile/detailed', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Get detailed profile error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Cancel order - Patient cancel
+router.put('/order/:orderId/cancel', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const order = await Order.findOne({ 
+      _id: req.params.orderId, 
+      patientId: req.user._id 
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Only allow cancellation if order is draft, pending, or confirmed
+    if (order.status !== 'draft' && order.status !== 'pending' && order.status !== 'confirmed') {
+      return res.status(400).json({ 
+        message: `Order cannot be cancelled in its current status: ${order.status}` 
+      });
+    }
+
+    const originalStatus = order.status;
+    order.status = 'cancelled';
+
+    // If order was confirmed, we need to restore the stock!
+    if (originalStatus === 'confirmed') {
+      for (let item of order.items) {
+        const medicineId = item.medicineId?._id || item.medicineId;
+        if (!medicineId) continue;
+        
+        const medicine = await Medicine.findById(medicineId);
+        if (medicine) {
+          if (!medicine.stock) {
+            medicine.stock = { units: 0, packs: 0 };
+          }
+          medicine.stock.units += item.quantity;
+          if (medicine.packaging && medicine.packaging.qtyPerPack > 0) {
+            medicine.stock.packs = Math.floor(medicine.stock.units / medicine.packaging.qtyPerPack);
+          }
+          await medicine.save();
+        }
+      }
+    }
+
+    // Push tracking history
+    order.trackingHistory.push({
+      status: 'cancelled',
+      message: 'Order cancelled by patient',
+      timestamp: new Date()
+    });
+
+    await order.save();
+
+    res.json({
+      message: 'Order cancelled successfully',
+      order: order
+    });
+  } catch (error) {
+    console.error('Cancel order error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Edit order details (delivery details)
+router.put('/order/:orderId/edit-details', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'patient' && req.user.role !== 'admin' && req.user.role !== 'pharmacist') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const { deliveryAddress, paymentMethod } = req.body;
+    const order = await Order.findOne({ 
+      _id: req.params.orderId, 
+      patientId: req.user._id 
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Only allow editing if order is pending or confirmed
+    if (order.status !== 'pending' && order.status !== 'confirmed') {
+      return res.status(400).json({ 
+        message: `Order details cannot be edited in its current status: ${order.status}` 
+      });
+    }
+
+    if (deliveryAddress) {
+      if (!deliveryAddress.street || !deliveryAddress.street.trim()) {
+        return res.status(400).json({ message: 'Street address is required' });
+      }
+      if (!deliveryAddress.city || !deliveryAddress.city.trim()) {
+        return res.status(400).json({ message: 'City is required' });
+      }
+      order.deliveryAddress = {
+        street: deliveryAddress.street.trim(),
+        city: deliveryAddress.city.trim(),
+        postalCode: deliveryAddress.postalCode?.trim() || ''
+      };
+    }
+
+    if (paymentMethod) {
+      order.paymentMethod = paymentMethod;
+    }
+
+    // Update invoice if it exists
+    const invoice = await Invoice.findOne({ orderId: order._id });
+    if (invoice) {
+      if (paymentMethod) {
+        invoice.paymentMethod = paymentMethod;
+      }
+      await invoice.save();
+    }
+
+    // Add tracking history for the edit
+    order.trackingHistory.push({
+      status: order.status,
+      message: 'Order delivery details updated by patient',
+      timestamp: new Date()
+    });
+
+    await order.save();
+
+    res.json({
+      message: 'Order updated successfully',
+      order: order
+    });
+  } catch (error) {
+    console.error('Edit order error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

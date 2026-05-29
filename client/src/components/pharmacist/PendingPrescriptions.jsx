@@ -184,6 +184,7 @@ const PendingPrescriptions = ({ onSelectPrescription }) => {
                     borderRadius: 4, 
                     py: 1.5, 
                     bgcolor: COLORS.blue2, 
+                    color: 'white',
                     fontWeight: 800,
                     '&:hover': { bgcolor: COLORS.blue1 }
                   }}

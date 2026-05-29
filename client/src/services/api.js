@@ -29,7 +29,7 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       // Only redirect if not already on login page
       const currentPath = window.location.pathname;
       if (currentPath !== '/login' && currentPath !== '/register') {
@@ -138,6 +138,8 @@ export const patientAPI = {
   confirmOrder: (orderId, data) => API.put(`/patients/order/${orderId}/confirm`, data),
   trackDelivery: (orderId) => API.get(`/patients/order/${orderId}/track`),
   getOrdersHistory: () => API.get('/patients/orders/history'),
+  cancelOrder: (orderId) => API.put(`/patients/order/${orderId}/cancel`),
+  editOrderDetails: (orderId, data) => API.put(`/patients/order/${orderId}/edit-details`, data),
   
   // Cart
   addToCart: (data) => API.post('/patients/cart/add', data),

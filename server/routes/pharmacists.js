@@ -963,11 +963,14 @@ router.get('/dashboard-stats', authMiddleware, pharmacistMiddleware, async (req,
       .sort({ createdAt: -1 })
       .limit(5);
 
+    const awaitingDispatch = await Order.countDocuments({ status: 'ready' });
+
     res.json({
       pendingPrescriptions,
       activeOrders,
       lowStockAlerts,
       todaysDeliveries,
+      awaitingDispatch,
       recentPrescriptionsList: recentPrescriptionsList.map(p => ({
         id: p._id,
         patient: p.patientId?.name || 'Unknown',

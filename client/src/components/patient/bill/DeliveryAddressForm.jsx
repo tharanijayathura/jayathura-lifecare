@@ -35,6 +35,7 @@ const DeliveryAddressForm = ({ address, setAddress, orderStatus }) => {
             sx={inputSx}
             error={!address.street && orderStatus !== 'draft'}
             helperText={!address.street && orderStatus !== 'draft' ? 'Street address is required' : ''}
+            autoComplete="street-address"
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -48,6 +49,7 @@ const DeliveryAddressForm = ({ address, setAddress, orderStatus }) => {
             sx={inputSx}
             error={!address.city && orderStatus !== 'draft'}
             helperText={!address.city && orderStatus !== 'draft' ? 'City is required' : ''}
+            autoComplete="address-level2"
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -58,6 +60,7 @@ const DeliveryAddressForm = ({ address, setAddress, orderStatus }) => {
             value={address.postalCode}
             onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
             sx={inputSx}
+            autoComplete="postal-code"
           />
         </Grid>
       </Grid>

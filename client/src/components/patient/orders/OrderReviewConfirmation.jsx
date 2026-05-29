@@ -227,6 +227,7 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
                 mt: 4, 
                 borderRadius: 3, 
                 bgcolor: COLORS.blue2, 
+                color: 'white',
                 fontWeight: 700,
                 py: 1.5,
                 '&:hover': { bgcolor: COLORS.blue1 }

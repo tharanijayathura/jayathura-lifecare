@@ -48,6 +48,7 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [commonMedicines, setCommonMedicines] = useState([]);
+  const [rxOrders, setRxOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantities, setQuantities] = useState({});
 
@@ -70,13 +71,15 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
     const fetchDashboardData = async (showLoading = true) => {
       if (showLoading) setLoading(true);
       try {
-        const [profileRes, commonRes] = await Promise.all([
+        const [profileRes, commonRes, rxOrdersRes] = await Promise.all([
           patientAPI.getProfile(),
-          patientAPI.getCommonMedicines()
+          patientAPI.getCommonMedicines(),
+          patientAPI.getPrescriptionOrders()
         ]);
         if (mounted) {
           setProfile(profileRes.data);
           setCommonMedicines(commonRes.data);
+          setRxOrders(rxOrdersRes.data || []);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -134,9 +137,53 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
     );
   }
 
+  const billsReadyToConfirm = rxOrders.filter(order => order.status === 'pending' && order.finalAmount > 0);
+
   return (
     <Container maxWidth="xl" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
       
+      {/* 0. ACTION REQUIRED ALERT BANNER */}
+      {billsReadyToConfirm.length > 0 && (
+        <Alert 
+          severity="info" 
+          icon={<NotificationsActive sx={{ color: '#0284c7' }} />}
+          action={
+            <Button 
+              color="info" 
+              variant="contained"
+              size="small" 
+              onClick={() => onNavigate?.(3)} // Redirect to Prescriptions & Bills tab
+              sx={{ 
+                fontWeight: 800, 
+                textTransform: 'none', 
+                bgcolor: '#0284c7', 
+                color: 'white',
+                '&:hover': { bgcolor: '#0369a1' },
+                borderRadius: 2,
+                px: 2
+              }}
+            >
+              Review Bill
+            </Button>
+          }
+          sx={{ 
+            mb: 4, 
+            borderRadius: 4, 
+            border: '1px solid #bae6fd', 
+            bgcolor: '#f0f9ff',
+            color: '#0369a1',
+            alignItems: 'center',
+            '& .MuiAlert-message': { width: '100%' },
+            boxShadow: '0 4px 12px rgba(2, 132, 199, 0.05)'
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Action Required: Bill Ready for Review</Typography>
+          <Typography variant="body2" sx={{ fontSize: '0.82rem', mt: 0.2 }}>
+            A pharmacist has calculated the bill for your prescription upload. Please review it, add your delivery address, and complete the order.
+          </Typography>
+        </Alert>
+      )}
+
       {/* 1. HERO BANNER SECTION */}
       <Box sx={{
         position: 'relative',

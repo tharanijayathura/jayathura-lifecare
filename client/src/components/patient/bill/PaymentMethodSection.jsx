@@ -1,6 +1,6 @@
 import React from 'react';
-import { Typography, Stack, Button, FormControlLabel, Checkbox, Box, Paper } from '@mui/material';
-import { VolumeUp, Payment } from '@mui/icons-material';
+import { Stack, Button } from '@mui/material';
+import { Payment } from '@mui/icons-material';
 
 const COLORS = {
   green1: '#ECF4E8',
@@ -13,7 +13,7 @@ const COLORS = {
   border: 'rgba(147, 191, 199, 0.35)',
 };
 
-const PaymentMethodSection = ({ paymentMethod, setPaymentMethod, requestAudioInstructions, setRequestAudioInstructions }) => {
+const PaymentMethodSection = ({ paymentMethod, setPaymentMethod }) => {
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={2}>
@@ -56,37 +56,6 @@ const PaymentMethodSection = ({ paymentMethod, setPaymentMethod, requestAudioIns
           Cash on Delivery
         </Button>
       </Stack>
-
-      <Paper 
-        variant="outlined" 
-        sx={{ 
-          p: 2, 
-          borderRadius: 3, 
-          bgcolor: requestAudioInstructions ? COLORS.green1 : 'transparent',
-          borderColor: requestAudioInstructions ? COLORS.green3 : COLORS.border,
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={requestAudioInstructions}
-              onChange={(e) => setRequestAudioInstructions(e.target.checked)}
-              sx={{ color: COLORS.blue2, '&.Mui-checked': { color: COLORS.blue2 } }}
-            />
-          }
-          label={
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <VolumeUp fontSize="small" sx={{ color: COLORS.blue2 }} /> Request Audio Instructions
-              </Typography>
-              <Typography variant="caption" sx={{ color: COLORS.subtext }}>
-                Our pharmacist will provide a personalized voice guide for your medicines.
-              </Typography>
-            </Box>
-          }
-        />
-      </Paper>
     </Stack>
   );
 };

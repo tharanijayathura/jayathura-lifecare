@@ -33,7 +33,6 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
     postalCode: ''
   });
   const [paymentMethod, setPaymentMethod] = useState('cod');
-  const [requestAudioInstructions, setRequestAudioInstructions] = useState(false);
 
   const COLORS = {
     green1: '#ECF4E8',
@@ -51,7 +50,6 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
       setOrder(null);
       setDeliveryAddress({ street: '', city: '', postalCode: '' });
       setPaymentMethod('cod');
-      setRequestAudioInstructions(false);
       fetchBill();
     }
   }, [open, orderId]);
@@ -98,8 +96,7 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
       setLoading(true);
       const response = await patientAPI.confirmOrder(orderId, {
         deliveryAddress,
-        paymentMethod,
-        requestAudioInstructions
+        paymentMethod
       });
       onConfirm?.(response.data);
       onClose();
@@ -132,7 +129,7 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
               </Typography>
             </Stack>
             <Typography sx={{ color: COLORS.subtext, fontWeight: 500, fontSize: '0.9rem' }}>
-              Order ID: #{order?.orderId || orderId} • Verified by Pharmacist
+              Order ID: #{order?.orderId || orderId}{order?.patientId?.name ? ` - ${order.patientId.name}` : ''} • Verified by Pharmacist
             </Typography>
           </Box>
           <IconButton onClick={onClose} sx={{ bgcolor: '#f1f5f9' }}><Close /></IconButton>
@@ -188,8 +185,6 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
                     <PaymentMethodSection
                       paymentMethod={paymentMethod}
                       setPaymentMethod={setPaymentMethod}
-                      requestAudioInstructions={requestAudioInstructions}
-                      setRequestAudioInstructions={setRequestAudioInstructions}
                     />
                   </Box>
                 </Stack>

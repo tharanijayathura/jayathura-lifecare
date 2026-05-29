@@ -228,6 +228,7 @@ const AddItemsToPrescription = ({ orderId, open, onClose, onSent }) => {
                 borderRadius: 2.5, 
                 px: 4, 
                 bgcolor: COLORS.blue2, 
+                color: 'white',
                 fontWeight: 700,
                 boxShadow: '0 4px 14px rgba(122, 168, 176, 0.4)',
                 '&:hover': { bgcolor: COLORS.blue1 }

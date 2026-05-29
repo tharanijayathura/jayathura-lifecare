@@ -141,6 +141,7 @@ const ForgotPassword = () => {
               fullWidth required label="Registered Email" size="small"
               value={email} onChange={(e) => setEmail(e.target.value)}
               disabled={loading || success} sx={FIELD_SX}
+              autoComplete="email"
               InputProps={{ startAdornment: (<InputAdornment position="start"><EmailOutlined sx={{ color: COLORS.subtext, fontSize: 18, ml: 1, mr: 1 }} /></InputAdornment>) }}
             />
 

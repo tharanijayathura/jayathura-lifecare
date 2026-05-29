@@ -3,25 +3,23 @@ import { Container, Typography, Box, Tabs, Tab, Paper, Alert, useTheme, useMedia
 import { useAuth } from '../contexts/useAuth';
 import PrescriptionUpload from '../components/patient/PrescriptionUpload';
 import ShoppingCart from '../components/patient/ShoppingCart';
-import OrderHistory from '../components/patient/OrderHistory';
 import ShopPharmacy from '../components/patient/portal/ShopPharmacy.jsx';
 import ChatWidget from '../components/chat/ChatWidget';
 import BillReview from '../components/patient/BillReview';
 import AddItemsToPrescription from '../components/patient/AddItemsToPrescription';
 import DashboardOverview from '../components/patient/portal/DashboardOverview.jsx';
 import PatientProfile from '../components/patient/portal/PatientProfile.jsx';
-import PrescriptionOrders from '../components/patient/portal/PrescriptionOrders.jsx';
+import UnifiedOrders from '../components/patient/portal/UnifiedOrders.jsx';
 import PortalHeader from '../components/common/PortalHeader';
 import { useNavigate } from 'react-router-dom';
 import { patientAPI } from '../services/api';
 import { usePatientPortal } from '../components/patient/portal/usePatientPortal.js';
 
 const PatientPortal = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const navigate = useNavigate();
-
   const [initialShopCategory, setInitialShopCategory] = useState('all');
 
   const {
@@ -45,7 +43,30 @@ const PatientPortal = () => {
     fetchPrescriptionOrders,
     handleViewBill,
     handleBillConfirmed,
+    handleCancelOrder,
   } = usePatientPortal();
+
+  React.useEffect(() => {
+    if (!authLoading && (!user || (user.role !== 'patient' && !user.isSuperAdmin))) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#eef7f2' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
+
+  if (!user || (user.role !== 'patient' && !user.isSuperAdmin)) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error">Access denied. Patient privileges required.</Alert>
+      </Container>
+    );
+  }
 
   const tabs = [
     {
@@ -75,7 +96,7 @@ const PatientPortal = () => {
       ),
     },
     {
-      label: 'Shop Pharmacy',
+      label: 'Shop (OTC)',
       component: (
         <ShopPharmacy
           shopTab={shopTab}
@@ -94,20 +115,15 @@ const PatientPortal = () => {
       ),
     },
     {
-      label: 'Prescription Orders',
+      label: 'My Orders & Bills',
       component: (
-        <PrescriptionOrders
-          orders={prescriptionOrders}
+        <UnifiedOrders
           onViewBill={(order) => handleViewBill(order)}
-          onAddItems={(order) => {
-            setActiveTab(2);
-            setCurrentOrderId(order._id);
-            setSnackbar({ open: true, message: 'You can now add non prescription items to this prescription order', severity: 'info' });
-          }}
+          onCancel={handleCancelOrder}
+          setActiveTab={setActiveTab}
         />
       ),
     },
-    { label: 'Order History', component: <OrderHistory /> },
     { label: 'Profile', component: <PatientProfile /> }
   ];
 
@@ -120,7 +136,7 @@ const PatientPortal = () => {
         subtitle="Manage health services and prescriptions"
         role="patient"
         onLogoClick={() => setActiveTab(0)}
-        onProfile={() => setActiveTab(5)}
+        onProfile={() => setActiveTab(4)}
       />
 
       {/* ── Main Content Card with Tabs ── */}
