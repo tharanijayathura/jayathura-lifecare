@@ -338,39 +338,38 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
                 InputProps={{ sx: { borderRadius: 4, bgcolor: '#f8fafc' } }}
               />
             </Stack>
-          </Box>
 
-            <Typography sx={{ fontWeight: 800, fontSize: '0.75rem', color: COLORS.blue2, mt: 5, mb: 2, textTransform: 'uppercase', letterSpacing: 1 }}>Additional Options</Typography>
             <Paper 
               elevation={0}
               onClick={() => setRequestAudio(!requestAudio)}
               sx={{ 
                 p: 2.5, 
+                mt: 4,
                 borderRadius: 4, 
                 cursor: 'pointer',
                 border: `2px solid ${requestAudio ? COLORS.blue2 : '#f1f5f9'}`,
                 bgcolor: requestAudio ? COLORS.green1 : 'white',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2
-              }}
+                transition: 'all 0.2s'
+              }} 
             >
-              <Checkbox 
-                checked={requestAudio} 
-                onChange={(e) => setRequestAudio(e.target.checked)}
-                size="small"
-                sx={{ p: 0, color: COLORS.blue2, '&.Mui-checked': { color: COLORS.blue2 } }}
-              />
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <VolumeUp sx={{ fontSize: 16, color: COLORS.blue2 }} /> Request Voice Guide
-                </Typography>
-                <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 500 }}>
-                  Ask the pharmacist to record audio instructions for your medicines
-                </Typography>
-              </Box>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Checkbox 
+                  checked={requestAudio} 
+                  onChange={(e) => setRequestAudio(e.target.checked)}
+                  size="small"
+                  sx={{ '&.Mui-checked': { color: COLORS.blue2 } }}
+                />
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <VolumeUp sx={{ fontSize: 16 }} /> Request Voice Guide
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: COLORS.subtext, fontWeight: 500 }}>
+                    Ask the pharmacist to provide audio instructions for your medicines
+                  </Typography>
+                </Box>
+              </Stack>
             </Paper>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 4, pt: 2 }}>
           <Button onClick={() => setPaymentDialogOpen(false)} sx={{ fontWeight: 700, color: COLORS.subtext }}>Dismiss</Button>

@@ -110,7 +110,7 @@ export const usePatientPortal = () => {
     }
   };
 
-  const handleOrderSubmit = async ({ attachPrescription, paymentMethod = 'online', deliveryAddress, requestAudioInstructions = false }) => {
+  const handleOrderSubmit = async ({ attachPrescription, paymentMethod = 'online', deliveryAddress, requestAudioInstructions }) => {
     if (cartItems.length === 0 || !currentOrderId) return;
     try {
       setLoading(true);
@@ -139,7 +139,7 @@ export const usePatientPortal = () => {
         await patientAPI.confirmOrder(currentOrderId, {
           deliveryAddress,
           paymentMethod,
-          requestAudioInstructions: requestAudioInstructions
+          requestAudioInstructions: requestAudioInstructions || false
         });
         
         setSnackbar({ 
