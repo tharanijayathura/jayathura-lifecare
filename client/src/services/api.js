@@ -94,6 +94,7 @@ export const adminAPI = {
   removeUser: (userId) => API.delete(`/admin/users/${userId}`),
   getProfile: () => API.get('/admin/profile'),
   updateProfile: (data) => API.put('/admin/profile', data),
+  getAnalytics: (timePeriod) => API.get(`/admin/analytics${timePeriod ? `?timePeriod=${timePeriod}` : ''}`),
 };
 
 export const groceryAPI = {

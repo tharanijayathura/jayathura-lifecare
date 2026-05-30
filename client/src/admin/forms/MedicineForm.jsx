@@ -12,7 +12,8 @@ import {
   FormControlLabel, 
   Switch, 
   Divider,
-  InputAdornment
+  InputAdornment,
+  Autocomplete
 } from '@mui/material';
 import { 
   Save, 
@@ -25,6 +26,7 @@ import {
   AddPhotoAlternate,
   InfoOutlined
 } from '@mui/icons-material';
+import { MEDICINE_TEMPLATES } from '../constants';
 
 const MedicineForm = ({
   medicineForm,
@@ -119,15 +121,52 @@ const MedicineForm = ({
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <TextField 
-              label="Medicine Name *" 
-              name="name" 
-              value={medicineForm.name} 
-              onChange={handleFormChange(setMedicineForm)} 
-              fullWidth 
-              required 
+            <Autocomplete
+              freeSolo
               size="small"
-              placeholder="e.g., Atorvastatin 20mg"
+              options={MEDICINE_TEMPLATES}
+              getOptionLabel={(option) => {
+                if (typeof option === 'string') return option;
+                return option.name || '';
+              }}
+              value={medicineForm.name}
+              onChange={(event, newValue) => {
+                if (newValue) {
+                  if (typeof newValue === 'string') {
+                    setMedicineForm(prev => ({ ...prev, name: newValue }));
+                  } else {
+                    setMedicineForm(prev => ({
+                      ...prev,
+                      name: newValue.name || '',
+                      brand: newValue.brand || prev.brand,
+                      category: newValue.category || prev.category,
+                      description: newValue.description || prev.description,
+                      baseUnit: newValue.baseUnit || prev.baseUnit,
+                      requiresPrescription: newValue.requiresPrescription !== undefined ? newValue.requiresPrescription : prev.requiresPrescription,
+                      imageUrl: newValue.imageUrl || prev.imageUrl,
+                      packaging: {
+                        ...prev.packaging,
+                        type: newValue.packagingType || prev.packaging.type,
+                        qtyPerPack: newValue.packagingQtyPerPack || prev.packaging.qtyPerPack
+                      }
+                    }));
+                  }
+                } else {
+                  setMedicineForm(prev => ({ ...prev, name: '' }));
+                }
+              }}
+              onInputChange={(event, newInputValue) => {
+                setMedicineForm(prev => ({ ...prev, name: newInputValue }));
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required
+                  label="Medicine Name *"
+                  placeholder="e.g., Panadol 500mg"
+                  helperText="Autocomplete pre-fills specifications"
+                />
+              )}
             />
           </Grid>
           <Grid item xs={12} sm={6}>

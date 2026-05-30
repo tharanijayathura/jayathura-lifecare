@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
+import { useNotification } from '../contexts/NotificationContext';
 import { groceryAPI } from '../services/api';
 import { fullGroceryList } from '../data/groceriesData';
 import GroceryImportForm from './bulk/grocery/GroceryImportForm';
@@ -9,6 +10,7 @@ import { parseGroceries } from './bulk/grocery/parser';
 import { groceryExampleFormat, groceryFormatHelp } from './bulk/grocery/formatHelp';
 
 const BulkGroceryImport = ({ onImportComplete }) => {
+  const { showNotification } = useNotification();
   const [inputText, setInputText] = useState('');
   const [parsedGroceries, setParsedGroceries] = useState([]);
   const [errors, setErrors] = useState([]);
@@ -31,7 +33,7 @@ const BulkGroceryImport = ({ onImportComplete }) => {
     }
 
     if (errors.length > 0) {
-      alert('Please fix the errors before importing.');
+      showNotification('Please fix the errors before importing.', { type: 'warning' });
       return;
     }
 
@@ -68,7 +70,7 @@ const BulkGroceryImport = ({ onImportComplete }) => {
       }
     } catch (error) {
       console.error('Import error:', error);
-      alert('Failed to import groceries. Please try again.');
+      showNotification('Failed to import groceries. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }

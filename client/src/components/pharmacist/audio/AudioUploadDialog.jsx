@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Typography, IconButton, Stack, Box, Alert, Button, LinearProgress, Divider } from '@mui/material';
 import { Close, RecordVoiceOver, Stop, PlayArrow, Pause, Upload, CheckCircle } from '@mui/icons-material';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 const AudioUploadDialog = ({ open, order, onClose, onUpload }) => {
+  const { showNotification } = useNotification();
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -31,7 +33,7 @@ const AudioUploadDialog = ({ open, order, onClose, onUpload }) => {
       setRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
-      alert('Error accessing microphone. Please check permissions.');
+      showNotification('Error accessing microphone. Please check permissions.', { type: 'error' });
     }
   };
 
@@ -47,7 +49,7 @@ const AudioUploadDialog = ({ open, order, onClose, onUpload }) => {
       setAudioUrl(url);
       setAudioBlob(file);
     } else {
-      alert('Please select an audio file');
+      showNotification('Please select an audio file', { type: 'warning' });
     }
   };
 
@@ -56,7 +58,7 @@ const AudioUploadDialog = ({ open, order, onClose, onUpload }) => {
     let fileToUpload = null;
     if (audioBlob instanceof File) fileToUpload = audioBlob;
     else if (audioBlob instanceof Blob) fileToUpload = new File([audioBlob], 'audio-recording.webm', { type: 'audio/webm' });
-    else { alert('Please record or select an audio file'); return; }
+    else { showNotification('Please record or select an audio file', { type: 'warning' }); return; }
     setUploading(true);
     try {
       await onUpload(fileToUpload);

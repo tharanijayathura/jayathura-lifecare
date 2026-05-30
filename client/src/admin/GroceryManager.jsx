@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Grid, Paper, Tabs, Tab, CircularProgress } from '@mui/material';
+import { useNotification } from '../contexts/NotificationContext';
 import { groceryAPI } from '../services/api';
 import BulkGroceryImport from './BulkGroceryImport';
 import { initialGroceryForm } from './constants';
@@ -7,6 +8,7 @@ import GroceryForm from './forms/GroceryForm';
 import GroceryList from './lists/GroceryList';
 
 const GroceryManager = () => {
+  const { showNotification, confirmAction } = useNotification();
   const [groceries, setGroceries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [groceryForm, setGroceryForm] = useState(initialGroceryForm);
@@ -20,7 +22,7 @@ const GroceryManager = () => {
       setGroceries(response.data);
     } catch (error) {
       console.error('Error fetching groceries:', error);
-      alert('Failed to load groceries.');
+      showNotification('Failed to load groceries.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -53,7 +55,7 @@ const GroceryManager = () => {
   const handleGrocerySubmit = async (event) => {
     event.preventDefault();
     if (!groceryForm.name || !groceryForm.price) {
-      alert('Please fill in required fields (Name and Price)');
+      showNotification('Please fill in required fields (Name and Price)', { type: 'warning' });
       return;
     }
     setLoading(true);
@@ -73,10 +75,10 @@ const GroceryManager = () => {
       await fetchGroceries();
       setGroceryForm(initialGroceryForm);
       setEditingGroceryId(null);
-      alert('Grocery saved successfully!');
+      showNotification('Grocery saved successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error saving grocery:', error);
-      alert('Failed to save grocery. Please try again.');
+      showNotification('Failed to save grocery. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -97,15 +99,19 @@ const GroceryManager = () => {
   };
 
   const handleDeleteGrocery = async (id) => {
-    if (!window.confirm('Delete this grocery item?')) return;
+    const confirmed = await confirmAction('Are you sure you want to delete this grocery item?', {
+      title: 'Delete Grocery Item',
+      danger: true
+    });
+    if (!confirmed) return;
     setLoading(true);
     try {
       await groceryAPI.delete(id);
       await fetchGroceries();
-      alert('Grocery deleted successfully!');
+      showNotification('Grocery deleted successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error deleting grocery:', error);
-      alert('Failed to delete grocery. Please try again.');
+      showNotification('Failed to delete grocery. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -115,10 +121,10 @@ const GroceryManager = () => {
     try {
       await groceryAPI.clearAlert(id);
       await fetchGroceries();
-      alert('Alert cleared successfully!');
+      showNotification('Alert cleared successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error clearing alert:', error);
-      alert('Failed to clear alert. Please try again.');
+      showNotification('Failed to clear alert. Please try again.', { type: 'error' });
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Paper, Tabs, Tab, Typography, CircularProgress } from '@mui/material';
+import { useNotification } from '../contexts/NotificationContext';
 import { medicineAPI } from '../services/api';
 import BulkMedicineImport from './BulkMedicineImport';
 import { MEDICINE_CATEGORIES, BASE_UNITS, PACKAGING_TYPES, initialMedicineForm } from './constants';
@@ -7,6 +8,7 @@ import MedicineForm from './forms/MedicineForm';
 import MedicineList from './lists/MedicineList';
 
 const MedicineManager = () => {
+  const { showNotification, confirmAction } = useNotification();
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(false);
   const [medicineForm, setMedicineForm] = useState(initialMedicineForm);
@@ -22,7 +24,7 @@ const MedicineManager = () => {
       setMedicines(response.data);
     } catch (error) {
       console.error('Error fetching medicines:', error);
-      alert('Failed to load medicines.');
+      showNotification('Failed to load medicines.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -68,11 +70,11 @@ const MedicineManager = () => {
   const handleMedicineSubmit = async (event) => {
     event.preventDefault();
     if (!medicineForm.name || !medicineForm.price.perPack) {
-      alert('Please fill in required fields (Name and Price per Pack)');
+      showNotification('Please fill in required fields (Name and Price per Pack)', { type: 'warning' });
       return;
     }
     if (!medicineForm.packaging.qtyPerPack || medicineForm.packaging.qtyPerPack < 1) {
-      alert('Quantity per pack must be at least 1');
+      showNotification('Quantity per pack must be at least 1', { type: 'warning' });
       return;
     }
     setLoading(true);
@@ -105,10 +107,10 @@ const MedicineManager = () => {
       await fetchMedicines();
       setMedicineForm(initialMedicineForm);
       setEditingMedicineId(null);
-      alert('Medicine saved successfully!');
+      showNotification('Medicine saved successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error saving medicine:', error);
-      alert('Failed to save medicine. Please try again.');
+      showNotification('Failed to save medicine. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -137,15 +139,19 @@ const MedicineManager = () => {
   };
 
   const handleDeleteMedicine = async (id) => {
-    if (!window.confirm('Delete this medicine?')) return;
+    const confirmed = await confirmAction('Are you sure you want to delete this medicine?', {
+      title: 'Delete Medicine',
+      danger: true
+    });
+    if (!confirmed) return;
     setLoading(true);
     try {
       await medicineAPI.delete(id);
       await fetchMedicines();
-      alert('Medicine deleted successfully!');
+      showNotification('Medicine deleted successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error deleting medicine:', error);
-      alert('Failed to delete medicine. Please try again.');
+      showNotification('Failed to delete medicine. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -155,10 +161,10 @@ const MedicineManager = () => {
     try {
       await medicineAPI.clearAlert(id);
       await fetchMedicines();
-      alert('Alert cleared successfully!');
+      showNotification('Alert cleared successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error clearing alert:', error);
-      alert('Failed to clear alert. Please try again.');
+      showNotification('Failed to clear alert. Please try again.', { type: 'error' });
     }
   };
 

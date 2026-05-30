@@ -3,6 +3,7 @@ import { Container, Box, Tabs, Tab, Paper, useTheme, useMediaQuery } from '@mui/
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import PortalHeader from '../components/common/PortalHeader';
+import { useNotification } from '../contexts/NotificationContext';
 import AdminAnalytics from './AdminAnalytics';
 import MedicineManager from './MedicineManager';
 import UserApprovals from './UserApprovals';
@@ -15,6 +16,7 @@ const TAB_USERS       = 2;
 const TAB_PROFILE     = 3;
 
 const AdminPortal = () => {
+  const { showNotification } = useNotification();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -25,7 +27,7 @@ const AdminPortal = () => {
     if (authLoading) return;
     if (!user) { navigate('/login'); return; }
     if (user.role !== 'admin' && !user.isSuperAdmin) {
-      alert('Access denied. Admin privileges required.');
+      showNotification('Access denied. Admin privileges required.', { type: 'error' });
       navigate('/');
     }
   }, [user, authLoading, navigate]);

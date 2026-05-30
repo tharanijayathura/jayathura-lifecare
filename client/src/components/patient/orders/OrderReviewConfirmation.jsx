@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { Delete, CheckCircle, LocationOn, LocalPharmacy } from '@mui/icons-material';
 import { patientAPI } from '../../../services/api';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 const COLORS = {
   green1: '#ECF4E8',
@@ -36,6 +37,7 @@ const COLORS = {
 };
 
 const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
+  const { showNotification } = useNotification();
   const [order, setOrder] = useState(initialOrder);
   const [items, setItems] = useState(initialOrder.items || []);
   const [address, setAddress] = useState(initialOrder.deliveryAddress || {
@@ -74,7 +76,7 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
       onConfirmed();
     } catch (err) {
       console.error('Confirmation error:', err);
-      alert('Failed to confirm order. Please try again.');
+      showNotification('Failed to confirm order. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }

@@ -29,8 +29,10 @@ import {
 import { LinearProgress } from '@mui/material';
 import { useAuth } from '../../contexts/useAuth';
 import { pharmacistAPI } from '../../services/api';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const DashboardOverview = ({ onNavigate, onSelectPrescription }) => {
+  const { showNotification } = useNotification();
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [chronicAlerts, setChronicAlerts] = useState([]);
@@ -46,7 +48,7 @@ const DashboardOverview = ({ onNavigate, onSelectPrescription }) => {
       }
     } catch (err) {
       console.error('Failed to load prescription detail:', err);
-      alert('Failed to load prescription details.');
+      showNotification('Failed to load prescription details.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -99,10 +101,10 @@ const DashboardOverview = ({ onNavigate, onSelectPrescription }) => {
       // Reload alerts to update lastNotifiedAt status
       const alertsRes = await pharmacistAPI.getChronicAlerts();
       setChronicAlerts(alertsRes.data || []);
-      alert('Notification sent to patient chat!');
+      showNotification('Notification sent to patient chat!', { type: 'success' });
     } catch (err) {
       console.error('Error sending runout notification:', err);
-      alert('Failed to send notification.');
+      showNotification('Failed to send notification.', { type: 'error' });
     }
   };
 

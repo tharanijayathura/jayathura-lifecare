@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { lifecareTheme } from './themes/index';
 import { CatalogProvider } from './contexts/CatalogContext';
 import Home from './pages/Home';
@@ -26,29 +27,31 @@ function App() {
   return (
     <ThemeProvider theme={lifecareTheme}>
       <CssBaseline />
-      <AuthProvider>
-        <CatalogProvider>
-          <Router>
-            <div className="App">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/patient" element={<ErrorBoundary><PatientPortal /></ErrorBoundary>} />
-                <Route path="/pharmacist" element={<PharmacistPortal />} />
-                <Route path="/admin" element={<AdminPortal />} />
-                <Route path="/delivery" element={<DeliveryPortal />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/chat" element={<Chat />} />
-              </Routes>
-            </div>
-          </Router>
-        </CatalogProvider>
-      </AuthProvider>
+      <NotificationProvider>
+        <AuthProvider>
+          <CatalogProvider>
+            <Router>
+              <div className="App">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/patient" element={<ErrorBoundary><PatientPortal /></ErrorBoundary>} />
+                  <Route path="/pharmacist" element={<PharmacistPortal />} />
+                  <Route path="/admin" element={<AdminPortal />} />
+                  <Route path="/delivery" element={<DeliveryPortal />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/support" element={<Support />} />
+                  <Route path="/chat" element={<Chat />} />
+                </Routes>
+              </div>
+            </Router>
+          </CatalogProvider>
+        </AuthProvider>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }

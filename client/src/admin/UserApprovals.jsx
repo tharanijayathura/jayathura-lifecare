@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Paper, Typography, Grid, Card, CardContent, Stack, Button, CircularProgress } from '@mui/material';
+import { useNotification } from '../contexts/NotificationContext';
 import { adminAPI } from '../services/api';
 
 const UserApprovals = () => {
+  const { showNotification, confirmAction } = useNotification();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -24,22 +26,26 @@ const UserApprovals = () => {
     try {
       await adminAPI.approveUser(userId);
       await fetchPendingUsers();
-      alert('User approved successfully!');
+      showNotification('User approved successfully!', { type: 'success' });
     } catch (error) {
       console.error('Error approving user:', error);
-      alert('Failed to approve user. Please try again.');
+      showNotification('Failed to approve user. Please try again.', { type: 'error' });
     }
   };
 
   const handleRejectUser = async (userId) => {
-    if (!window.confirm('Reject this user?')) return;
+    const confirmed = await confirmAction('Are you sure you want to reject this user registration?', {
+      title: 'Reject User Registration',
+      danger: true
+    });
+    if (!confirmed) return;
     try {
       await adminAPI.rejectUser(userId);
       await fetchPendingUsers();
-      alert('User rejected successfully!');
+      showNotification('User rejected successfully!', { type: 'warning' });
     } catch (error) {
       console.error('Error rejecting user:', error);
-      alert('Failed to reject user. Please try again.');
+      showNotification('Failed to reject user. Please try again.', { type: 'error' });
     }
   };
 

@@ -16,9 +16,11 @@ import {
 } from '@mui/material';
 import { Check, Close, Visibility, Refresh } from '@mui/icons-material';
 import { pharmacistAPI } from '../../services/api';
+import { useNotification } from '../../contexts/NotificationContext';
 import PrescriptionDetail from './PrescriptionDetail';
 
 const PrescriptionVerification = () => {
+  const { showNotification } = useNotification();
   const [prescriptions, setPrescriptions] = useState([]);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -51,10 +53,10 @@ const PrescriptionVerification = () => {
       setRejectionReason('');
       setSelectedPrescription(null);
       fetchPendingPrescriptions();
-      alert('Prescription rejected successfully');
+      showNotification('Prescription rejected successfully', { type: 'success' });
     } catch (error) {
       console.error('Rejection failed:', error);
-      alert('Failed to reject prescription');
+      showNotification('Failed to reject prescription', { type: 'error' });
     }
   };
 

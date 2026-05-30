@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { patientAPI } from '../../../services/api';
 import API from '../../../services/api';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 export const usePatientPortal = () => {
+  const { confirmAction } = useNotification();
   const [activeTab, setActiveTab] = useState(0);
   const [cartItems, setCartItems] = useState([]);
   const [shopTab, setShopTab] = useState(0);
@@ -218,7 +220,11 @@ export const usePatientPortal = () => {
   };
 
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this prescription/order request?")) return;
+    const confirmed = await confirmAction("Are you sure you want to cancel this prescription/order request?", {
+      title: "Cancel Prescription/Order Request",
+      danger: true
+    });
+    if (!confirmed) return;
     try {
       setLoading(true);
       await patientAPI.cancelOrder(orderId);

@@ -34,8 +34,10 @@ import {
   Checkbox
 } from '@mui/material';
 import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer, LocalPharmacy, VolumeUp } from '@mui/icons-material';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading, orderId }) => {
+  const { showNotification } = useNotification();
   const [attachPrescription, setAttachPrescription] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('online');
@@ -76,7 +78,7 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
 
   const handleConfirmOrder = () => {
     if (!deliveryAddress.street || !deliveryAddress.city) {
-      alert('Please provide a delivery address');
+      showNotification('Please provide a delivery address', { type: 'warning' });
       return;
     }
     setPaymentDialogOpen(false);

@@ -32,8 +32,10 @@ import {
 import { Search, Refresh, Inventory, Edit, Delete, Add, ShoppingBag, Warning, ErrorOutline, LocalPharmacy } from '@mui/icons-material';
 import { pharmacistAPI, medicineAPI } from '../../services/api';
 import { MEDICINE_CATEGORIES, BASE_UNITS, PACKAGING_TYPES } from '../../admin/constants';
+import { useNotification } from '../../contexts/NotificationContext';
 
 const InventoryManagement = () => {
+  const { showNotification, confirmAction } = useNotification();
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -122,7 +124,11 @@ const InventoryManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to remove this medicine from inventory?')) return;
+    const confirmed = await confirmAction('Are you sure you want to remove this medicine from inventory?', {
+      title: 'Remove Medicine',
+      danger: true
+    });
+    if (!confirmed) return;
     try {
       setLoading(true);
       await medicineAPI.delete(id);
@@ -156,7 +162,7 @@ const InventoryManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formState.name || !formState.pricePerPack) {
-      alert('Name and Price per Pack are required.');
+      showNotification('Name and Price per Pack are required.', { type: 'warning' });
       return;
     }
     
@@ -194,7 +200,7 @@ const InventoryManagement = () => {
       await fetchInventory();
     } catch (err) {
       console.error('Error saving medicine:', err);
-      alert('Failed to save medicine. Please try again.');
+      showNotification('Failed to save medicine. Please try again.', { type: 'error' });
     } finally {
       setSubmitLoading(false);
     }

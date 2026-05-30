@@ -29,6 +29,7 @@ import {
   Delete
 } from '@mui/icons-material';
 import { patientAPI } from '../../../services/api';
+import { useNotification } from '../../../contexts/NotificationContext';
 import OrderCard from '../orders/OrderCard';
 import OrderDetailsDialog from '../orders/OrderDetailsDialog';
 
@@ -44,6 +45,7 @@ const COLORS = {
 };
 
 const UnifiedOrders = ({ onViewBill, onCancel, setActiveTab }) => {
+  const { showNotification, confirmAction } = useNotification();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,31 +76,41 @@ const UnifiedOrders = ({ onViewBill, onCancel, setActiveTab }) => {
   };
 
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    const confirmed = await confirmAction("Are you sure you want to cancel this order?", {
+      title: "Cancel Order",
+      danger: true
+    });
+    if (!confirmed) return;
     try {
       setLoading(true);
       await patientAPI.cancelOrder(orderId);
+      showNotification("Order cancelled successfully.", { type: 'success' });
       fetchOrders();
       if (onCancel) {
         onCancel(orderId);
       }
     } catch (error) {
       console.error('Error cancelling order:', error);
-      alert(error.response?.data?.message || 'Failed to cancel order.');
+      showNotification(error.response?.data?.message || 'Failed to cancel order.', { type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to remove this order from your history? This action cannot be undone.")) return;
+    const confirmed = await confirmAction("Are you sure you want to remove this order from your history? This action cannot be undone.", {
+      title: "Delete Order History",
+      danger: true
+    });
+    if (!confirmed) return;
     try {
       setLoading(true);
       await patientAPI.deleteOrder(orderId);
+      showNotification("Order removed from history successfully.", { type: 'success' });
       fetchOrders();
     } catch (error) {
       console.error('Error deleting order:', error);
-      alert(error.response?.data?.message || 'Failed to remove order from history.');
+      showNotification(error.response?.data?.message || 'Failed to remove order from history.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -121,7 +133,7 @@ const UnifiedOrders = ({ onViewBill, onCancel, setActiveTab }) => {
       const order = response.data.order;
       
       if (!order) {
-        alert("Order details not found.");
+        showNotification("Order details not found.", { type: 'error' });
         return;
       }
 
@@ -167,7 +179,7 @@ Thank you for shopping with us!
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error fetching invoice:', error);
-      alert('Failed to download invoice. Please try again.');
+      showNotification('Failed to download invoice. Please try again.', { type: 'error' });
     }
   };
 

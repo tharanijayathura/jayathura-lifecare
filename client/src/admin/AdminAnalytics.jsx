@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+// client/src/admin/AdminAnalytics.jsx
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -8,6 +9,8 @@ import {
   Container,
   Stack,
   Divider,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   People,
@@ -18,6 +21,8 @@ import {
   PersonAddAlt1,
 } from '@mui/icons-material';
 
+import { adminAPI } from '../services/api';
+import { useNotification } from '../contexts/NotificationContext';
 import StatCard from '../components/common/analytics/StatCard.jsx';
 import SimpleBarChart from '../components/common/analytics/SimpleBarChart.jsx';
 import RevenueByCategory from './analytics/RevenueByCategory.jsx';
@@ -26,8 +31,11 @@ import TopSellingTable from './analytics/TopSellingTable.jsx';
 import HeaderControls from './analytics/HeaderControls.jsx';
 
 const AdminAnalytics = () => {
+  const { showNotification } = useNotification();
   const [timePeriod, setTimePeriod] = useState('month');
-  const [reportType, setReportType] = useState('sales');
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // ✅ Keep your exact palette
   const COLORS = {
@@ -63,100 +71,23 @@ const AdminAnalytics = () => {
     mb: 1.5,
   };
 
-  // Mock data - same as yours
-  const mockData = {
-    week: {
-      totalSales: 3850,
-      totalRevenue: 577500,
-      totalUsers: 1250,
-      activePharmacists: 8,
-      totalOrders: 320,
-      prescriptionsProcessed: 185,
-      topSelling: [
-        { name: 'Panadol 500mg', quantity: 450, revenue: 67500 },
-        { name: 'Siddhalepa Balm', quantity: 320, revenue: 48000 },
-        { name: 'ENO Antacid', quantity: 280, revenue: 42000 },
-        { name: 'Vicks Vaporub', quantity: 250, revenue: 37500 },
-        { name: 'Cetirizine 10mg', quantity: 220, revenue: 33000 },
-      ],
-      categoryBreakdown: [
-        { category: 'OTC', sales: 2000, revenue: 300000 },
-        { category: 'Prescription', sales: 1300, revenue: 195000 },
-        { category: 'Vitamins', sales: 550, revenue: 82500 },
-      ],
-      userGrowth: [
-        { period: 'Mon', newUsers: 25 },
-        { period: 'Tue', newUsers: 32 },
-        { period: 'Wed', newUsers: 28 },
-        { period: 'Thu', newUsers: 35 },
-        { period: 'Fri', newUsers: 30 },
-        { period: 'Sat', newUsers: 22 },
-        { period: 'Sun', newUsers: 18 },
-      ],
-      revenueByCategory: [
-        { category: 'Medicines', revenue: 450000, percentage: 78 },
-        { category: 'Groceries', revenue: 127500, percentage: 22 },
-      ],
-    },
-    month: {
-      totalSales: 15200,
-      totalRevenue: 2280000,
-      totalUsers: 4850,
-      activePharmacists: 12,
-      totalOrders: 1250,
-      prescriptionsProcessed: 720,
-      topSelling: [
-        { name: 'Panadol 500mg', quantity: 1850, revenue: 277500 },
-        { name: 'Siddhalepa Balm', quantity: 1320, revenue: 198000 },
-        { name: 'ENO Antacid', quantity: 1180, revenue: 177000 },
-        { name: 'Vicks Vaporub', quantity: 1050, revenue: 157500 },
-        { name: 'Cetirizine 10mg', quantity: 920, revenue: 138000 },
-      ],
-      categoryBreakdown: [
-        { category: 'OTC', sales: 7800, revenue: 1170000 },
-        { category: 'Prescription', sales: 5200, revenue: 780000 },
-        { category: 'Vitamins', sales: 2200, revenue: 330000 },
-      ],
-      userGrowth: Array.from({ length: 30 }, (_, i) => ({
-        period: `Day ${i + 1}`,
-        newUsers: Math.floor(Math.random() * 50) + 15,
-      })),
-      revenueByCategory: [
-        { category: 'Medicines', revenue: 1800000, percentage: 79 },
-        { category: 'Groceries', revenue: 480000, percentage: 21 },
-      ],
-    },
-    threeMonths: {
-      totalSales: 45200,
-      totalRevenue: 6780000,
-      totalUsers: 14200,
-      activePharmacists: 15,
-      totalOrders: 3850,
-      prescriptionsProcessed: 2150,
-      topSelling: [
-        { name: 'Panadol 500mg', quantity: 5420, revenue: 813000 },
-        { name: 'Siddhalepa Balm', quantity: 3850, revenue: 577500 },
-        { name: 'ENO Antacid', quantity: 3420, revenue: 513000 },
-        { name: 'Vicks Vaporub', quantity: 3050, revenue: 457500 },
-        { name: 'Cetirizine 10mg', quantity: 2680, revenue: 402000 },
-      ],
-      categoryBreakdown: [
-        { category: 'OTC', sales: 23100, revenue: 3465000 },
-        { category: 'Prescription', sales: 15400, revenue: 2310000 },
-        { category: 'Vitamins', sales: 6700, revenue: 1005000 },
-      ],
-      userGrowth: Array.from({ length: 90 }, (_, i) => ({
-        period: `Day ${i + 1}`,
-        newUsers: Math.floor(Math.random() * 50) + 15,
-      })),
-      revenueByCategory: [
-        { category: 'Medicines', revenue: 5350000, percentage: 79 },
-        { category: 'Groceries', revenue: 1430000, percentage: 21 },
-      ],
-    },
+  const fetchAnalytics = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await adminAPI.getAnalytics(timePeriod);
+      setAnalyticsData(response.data);
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+      setError('Failed to fetch live database analytics.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const currentData = mockData[timePeriod] || mockData.month;
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timePeriod]);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat('en-LK', {
@@ -166,11 +97,79 @@ const AdminAnalytics = () => {
     }).format(amount);
 
   const handleExportReport = () => {
-    alert('Report export functionality will be implemented with real data integration');
+    if (!analyticsData) {
+      showNotification('No analytics data available to export.', { type: 'error' });
+      return;
+    }
+
+    const reportContent = `
+======================================================
+           JAYATHURA LIFECARE ANALYTICS REPORT
+======================================================
+TIME PERIOD:  ${timePeriod.toUpperCase()}
+EXPORTED AT:  ${new Date().toLocaleString()}
+------------------------------------------------------
+EXECUTIVE SUMMARY:
+- Gross Revenue:         Rs. ${analyticsData.totalRevenue.toFixed(2)}
+- Total Orders Placed:   ${analyticsData.totalOrders}
+- Total Items Sold:      ${analyticsData.totalSales}
+- Registered Accounts:  ${analyticsData.totalUsers}
+- Active Pharmacists:    ${analyticsData.activePharmacists}
+- Prescriptions Filled:  ${analyticsData.prescriptionsProcessed}
+------------------------------------------------------
+TOP SELLING PRODUCTS:
+${analyticsData.topSelling.map((item, i) => `${i+1}. ${item.name} (${item.quantity} units) - Rs. ${item.revenue.toFixed(2)}`).join('\n')}
+------------------------------------------------------
+REVENUE BY CLASS:
+${analyticsData.revenueByCategory.map(item => `- ${item.category}: Rs. ${item.revenue.toFixed(2)} (${item.percentage}%)`).join('\n')}
+------------------------------------------------------
+ORDER TYPE SALES VOLUMES:
+${analyticsData.categoryBreakdown.map(item => `- ${item.category}: ${item.sales} orders (Rs. ${item.revenue.toFixed(2)})`).join('\n')}
+======================================================
+Prepared by Jayathura LifeCare Management Dashboard.
+    `.trim();
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `JLC_Analytics_Report_${timePeriod}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showNotification('Analytics report exported successfully!', { type: 'success' });
   };
 
-  // keep charts smaller for performance
-  const growthPreview = useMemo(() => currentData.userGrowth.slice(0, 14), [currentData]);
+  const growthPreview = useMemo(() => {
+    return analyticsData?.userGrowth || [];
+  }, [analyticsData]);
+
+  const revenuePreview = useMemo(() => {
+    return analyticsData?.revenueTrend || [];
+  }, [analyticsData]);
+
+  if (loading && !analyticsData) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', gap: 2 }}>
+        <CircularProgress size={40} sx={{ color: COLORS.blue2 }} />
+        <Typography sx={{ color: COLORS.subtext, fontWeight: 700 }}>Querying database statistics...</Typography>
+      </Box>
+    );
+  }
+
+  const currentData = analyticsData || {
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalSales: 0,
+    totalUsers: 0,
+    activePharmacists: 0,
+    prescriptionsProcessed: 0,
+    topSelling: [{ name: 'No sales', quantity: 0, revenue: 0 }],
+    categoryBreakdown: [{ category: 'OTC', sales: 0, revenue: 0 }],
+    revenueByCategory: [{ category: 'Medicines', revenue: 0, percentage: 100 }]
+  };
 
   return (
     <Box
@@ -182,6 +181,9 @@ const AdminAnalytics = () => {
       }}
     >
       <Container maxWidth="xl">
+        {/* Error alerting */}
+        {error && <Alert severity="error" sx={{ mb: 2, borderRadius: 3 }}>{error}</Alert>}
+
         {/* Header Controls (keep your component) */}
         <Box sx={{ mb: 2 }}>
           <HeaderControls
@@ -245,16 +247,15 @@ const AdminAnalytics = () => {
               <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
                   <TrendingUp sx={{ color: COLORS.blue2 }} />
-                  <Typography sx={sectionTitleSx}>Revenue Trend</Typography>
+                  <Typography sx={sectionTitleSx}>Revenue trend</Typography>
                 </Stack>
 
                 <Typography sx={sectionSubSx}>
-                  Daily revenue over the selected period
+                  Daily gross revenue over the selected period
                 </Typography>
 
                 <Box sx={{ mt: 1 }}>
-                  {/* keep your chart, just wrapped */}
-                  <SimpleBarChart data={growthPreview} height={260} dataKey="newUsers" />
+                  <SimpleBarChart data={revenuePreview} height={260} dataKey="revenue" />
                 </Box>
               </CardContent>
             </Card>
@@ -293,7 +294,7 @@ const AdminAnalytics = () => {
           <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
               <PersonAddAlt1 sx={{ color: COLORS.blue2 }} />
-              <Typography sx={sectionTitleSx}>User Growth</Typography>
+              <Typography sx={sectionTitleSx}>User Growth Summary</Typography>
             </Stack>
 
             <Typography sx={sectionSubSx}>

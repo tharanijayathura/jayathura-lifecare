@@ -23,6 +23,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { Download, Payment, VolumeUp, PlayArrow, Pause } from '@mui/icons-material';
+import { useNotification } from '../../../contexts/NotificationContext';
 import OrderItemsTable from './OrderItemsTable.jsx';
 import OrderTrackingStepper from './OrderTrackingStepper.jsx';
 import OrderReviewConfirmation from './OrderReviewConfirmation.jsx';
@@ -43,6 +44,7 @@ const getStatusColor = (status) => {
 };
 
 const OrderDetailsDialog = ({ open, order, onClose, onDownloadInvoice, onOrderUpdated }) => {
+  const { confirmAction } = useNotification();
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioRef = useRef(null);
 
@@ -91,7 +93,11 @@ const OrderDetailsDialog = ({ open, order, onClose, onDownloadInvoice, onOrderUp
   };
 
   const handleCancelOrder = async () => {
-    if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+    const confirmed = await confirmAction('Are you sure you want to cancel this order? This action cannot be undone.', {
+      title: 'Cancel Order',
+      danger: true
+    });
+    if (!confirmed) {
       return;
     }
     try {

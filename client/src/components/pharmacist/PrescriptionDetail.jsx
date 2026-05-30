@@ -17,11 +17,13 @@ import {
 } from '@mui/material';
 import { CheckCircle, Close, Assignment, Assessment, HealthAndSafety } from '@mui/icons-material';
 import { pharmacistAPI, medicineAPI } from '../../services/api';
+import { useNotification } from '../../contexts/NotificationContext';
 import PrescriptionImage from './prescription/PrescriptionImage';
 import MedicineAddForm from './prescription/MedicineAddForm';
 import OrderItems from './prescription/OrderItems';
 
 const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
+  const { showNotification } = useNotification();
   const [medicines, setMedicines] = useState([]);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -125,7 +127,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
       onUpdate?.();
     } catch (error) {
       console.error('Error adding medicine:', error);
-      alert(error.response?.data?.message || 'Failed to add medicine');
+      showNotification(error.response?.data?.message || 'Failed to add medicine', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -148,7 +150,7 @@ const PrescriptionDetail = ({ prescription, open, onClose, onUpdate }) => {
 
   const handleGenerateBill = async () => {
     if (!order || order.items.length === 0) {
-      alert('Please add medicines first');
+      showNotification('Please add medicines first', { type: 'warning' });
       return;
     }
     try {

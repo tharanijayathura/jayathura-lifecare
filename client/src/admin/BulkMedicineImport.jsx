@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box } from '@mui/material';
+import { useNotification } from '../contexts/NotificationContext';
 import { medicineAPI } from '../services/api';
 import { fullMedicineList } from '../data/medicinesData';
 import MedicineImportForm from './bulk/medicine/MedicineImportForm';
@@ -9,6 +10,7 @@ import { parseMedicines } from './bulk/medicine/parser';
 import { medicineExampleFormat, medicineFormatHelp } from './bulk/medicine/formatHelp';
 
 const BulkMedicineImport = ({ onImportComplete }) => {
+  const { showNotification } = useNotification();
   const [inputText, setInputText] = useState('');
   const [parsedMedicines, setParsedMedicines] = useState([]);
   const [errors, setErrors] = useState([]);
@@ -31,7 +33,7 @@ const BulkMedicineImport = ({ onImportComplete }) => {
     }
 
     if (errors.length > 0) {
-      alert('Please fix the errors before importing.');
+      showNotification('Please fix the errors before importing.', { type: 'warning' });
       return;
     }
 
@@ -60,7 +62,7 @@ const BulkMedicineImport = ({ onImportComplete }) => {
       }
     } catch (error) {
       console.error('Import error:', error);
-      alert('Failed to import medicines. Please try again.');
+      showNotification('Failed to import medicines. Please try again.', { type: 'error' });
     } finally {
       setLoading(false);
     }
