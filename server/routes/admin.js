@@ -179,6 +179,32 @@ router.get('/analytics', adminMiddleware, async (req, res) => {
 
     // 4. Total Users
     const totalUsers = await User.countDocuments();
+    const totalPatients = await User.countDocuments({ role: 'patient' });
+    const totalCouriers = await User.countDocuments({ role: 'delivery' });
+    const totalAdmins = await User.countDocuments({ role: 'admin' });
+    const totalMedicines = await Medicine.countDocuments();
+    
+    const Invoice = require('../models/Invoice');
+    const RefillPlan = require('../models/RefillPlan');
+    const totalInvoices = await Invoice.countDocuments();
+    const totalRefills = await RefillPlan.countDocuments();
+
+    const orderStatuses = await Order.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    const statusCounts = {
+      pending: 0,
+      processing: 0,
+      ready: 0,
+      out_for_delivery: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+    orderStatuses.forEach(s => {
+      if (s._id) {
+        statusCounts[s._id] = s.count;
+      }
+    });
 
     // 5. Active Pharmacists
     const activePharmacists = await User.countDocuments({
@@ -387,6 +413,13 @@ router.get('/analytics', adminMiddleware, async (req, res) => {
       totalSales,
       totalRevenue,
       totalUsers,
+      totalPatients,
+      totalCouriers,
+      totalAdmins,
+      totalMedicines,
+      totalInvoices,
+      totalRefills,
+      statusCounts,
       activePharmacists,
       totalOrders,
       prescriptionsProcessed,

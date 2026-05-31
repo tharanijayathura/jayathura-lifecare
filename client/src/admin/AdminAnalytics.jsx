@@ -19,6 +19,10 @@ import {
   ShoppingCart,
   TrendingUp,
   PersonAddAlt1,
+  LocalShipping,
+  AdminPanelSettings,
+  Receipt,
+  Autorenew
 } from '@mui/icons-material';
 
 import { adminAPI } from '../services/api';
@@ -235,6 +239,46 @@ Prepared by Jayathura LifeCare Management Dashboard.
               value={currentData.prescriptionsProcessed}
               subtitle="Processed this period"
               trend={6.2}
+              color="warning"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Secondary Stats Row */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<People sx={{ fontSize: 24 }} />}
+              title="Patients Registry"
+              value={(currentData.totalPatients || 0).toLocaleString()}
+              subtitle="Registered patients"
+              color="info"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<LocalShipping sx={{ fontSize: 24 }} />}
+              title="Delivery Couriers"
+              value={(currentData.totalCouriers || 0).toLocaleString()}
+              subtitle="Active agents"
+              color="primary"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<LocalPharmacy sx={{ fontSize: 24 }} />}
+              title="Medicines Catalog"
+              value={(currentData.totalMedicines || 0).toLocaleString()}
+              subtitle="Stock templates"
+              color="success"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={<Receipt sx={{ fontSize: 24 }} />}
+              title="Total Invoices"
+              value={(currentData.totalInvoices || 0).toLocaleString()}
+              subtitle="Billed accounts"
               color="warning"
             />
           </Grid>

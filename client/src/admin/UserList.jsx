@@ -35,7 +35,8 @@ import {
   LocalShipping,
   Person,
   VerifiedUser,
-  ReportProblem
+  ReportProblem,
+  LocationOn
 } from '@mui/icons-material';
 import { adminAPI } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
@@ -370,10 +371,45 @@ const UserList = () => {
                       </Typography>
                     </Stack>
 
+                    {/* Address Detail */}
+                    {u.address && (u.address.street || u.address.city) && (
+                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <LocationOn sx={{ color: COLORS.subtext, fontSize: 18, mt: 0.2 }} />
+                        <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.82rem' }}>
+                          Address: {u.address.street || ''}{u.address.city ? `, ${u.address.city}` : ''}{u.address.postalCode ? ` (${u.address.postalCode})` : ''}
+                        </Typography>
+                      </Stack>
+                    )}
+
+                    {/* Medical / Chronic conditions detail */}
+                    {u.role === 'patient' && (
+                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <LocalPharmacy sx={{ color: COLORS.subtext, fontSize: 18, mt: 0.2 }} />
+                        <Box>
+                          <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.82rem', fontWeight: u.flaggedAsChronic ? 800 : 500 }}>
+                            Chronic Check: {u.flaggedAsChronic ? 'Flagged as Chronic' : 'Standard Patient'}
+                          </Typography>
+                          {u.chronicConditions && u.chronicConditions.length > 0 && (
+                            <Typography variant="caption" sx={{ color: COLORS.subtext, display: 'block', mt: 0.3 }}>
+                              Conditions: {u.chronicConditions.join(', ')}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                    )}
+
                     <Stack direction="row" spacing={1.5} alignItems="center">
                       <CalendarMonth sx={{ color: COLORS.subtext, fontSize: 18 }} />
                       <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.82rem' }}>
                         Registered: {new Date(u.createdAt).toLocaleDateString()}
+                      </Typography>
+                    </Stack>
+
+                    {/* Account Active State */}
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <VerifiedUser sx={{ color: u.isActive ? '#059669' : '#ef4444', fontSize: 18 }} />
+                      <Typography variant="body2" sx={{ color: u.isActive ? '#059669' : '#ef4444', fontSize: '0.82rem', fontWeight: 800 }}>
+                        Account State: {u.isActive ? 'Active & Enabled' : 'Deactivated / Suspended'}
                       </Typography>
                     </Stack>
                   </Stack>
