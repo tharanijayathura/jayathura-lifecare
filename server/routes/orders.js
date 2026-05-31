@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const Medicine = require('../models/Medicine');
 const { authMiddleware } = require('../middleware/auth');
+const { calculateDeliveryFee } = require('../utils/deliveryFee');
 
 // Create OTC order - Function 18: createOrder
 router.post('/otc', authMiddleware, async (req, res) => {
@@ -44,15 +45,26 @@ router.post('/otc', authMiddleware, async (req, res) => {
 router.post('/:id/generate-bill', authMiddleware, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('items.medicineId');
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    
+    // Save delivery address if provided in request body
+    if (req.body.deliveryAddress) {
+      order.deliveryAddress = {
+        street: req.body.deliveryAddress.street?.trim() || '',
+        city: req.body.deliveryAddress.city?.trim() || '',
+        postalCode: req.body.deliveryAddress.postalCode?.trim() || ''
+      };
+    }
     
     let totalAmount = 0;
     order.items.forEach(item => {
       const price = item.price || (item.medicineId && item.medicineId.price?.perPack) || 0;
       totalAmount += price * item.quantity;
+      if (!item.price) item.price = price;
     });
     
-    // Apply delivery fee (simplified)
-    const deliveryFee = totalAmount > 1000 ? 0 : 200; // Free delivery above 1000
+    // Apply delivery fee (dynamic distance-based)
+    const deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
     const finalAmount = totalAmount + deliveryFee;
     
     order.totalAmount = totalAmount;

@@ -1,7 +1,8 @@
 const express = require('express');
-const router = express.Router();
+const router = require('express').Router();
 const Order = require('../models/Order');
 const Invoice = require('../models/Invoice');
+const User = require('../models/User');
 const { authMiddleware } = require('../middleware/auth');
 
 // Middleware to ensure user is a delivery person
@@ -80,6 +81,35 @@ router.put('/order/:orderId/status', authMiddleware, deliveryMiddleware, async (
     res.json({ message: 'Status updated successfully', order });
   } catch (error) {
     console.error('Update delivery status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get delivery person profile
+router.get('/profile', authMiddleware, deliveryMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json(user);
+  } catch (error) {
+    console.error('Get delivery profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update delivery person profile
+router.put('/profile', authMiddleware, deliveryMiddleware, async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    await user.save();
+    
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Update delivery profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

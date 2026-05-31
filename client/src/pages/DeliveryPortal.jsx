@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Container, Alert, Typography } from '@mui/material';
 import { useAuth } from '../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 import PortalHeader from '../components/common/PortalHeader';
 import DeliveryDashboard from '../components/delivery/DeliveryDashboard';
+import DeliveryProfile from '../components/delivery/DeliveryProfile';
 
 const DeliveryPortal = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [view, setView] = useState('dashboard');
 
   React.useEffect(() => {
     if (!authLoading && (!user || (user.role !== 'delivery' && !user.isSuperAdmin))) {
@@ -35,12 +37,13 @@ const DeliveryPortal = () => {
     <Box sx={{ bgcolor: '#f0fdf4', minHeight: '100vh', pb: 8 }}>
       <PortalHeader
         title="Delivery Portal"
-        subtitle="Track and manage your deliveries"
+        subtitle={view === 'dashboard' ? 'Track and manage your deliveries' : 'Manage your profile and credentials'}
         role="delivery"
-        onLogoClick={() => window.location.href = '/'}
+        onLogoClick={() => setView('dashboard')}
+        onProfile={() => setView('profile')}
       />
       <Box sx={{ px: { xs: 2, md: 4 }, mt: 2 }}>
-        <DeliveryDashboard />
+        {view === 'dashboard' ? <DeliveryDashboard /> : <DeliveryProfile />}
       </Box>
     </Box>
   );

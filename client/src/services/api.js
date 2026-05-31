@@ -155,6 +155,7 @@ export const patientAPI = {
   initiatePayment: (invoiceId) => API.post('/patients/payment/initiate', { invoiceId }),
   chooseCOD: (orderId) => API.put(`/patients/order/${orderId}/cod`),
   getInvoices: () => API.get('/patients/invoices'),
+  getPayHereParams: (orderId) => API.get(`/patients/order/${orderId}/payhere-params`),
   
   // Medicines
   browseOTC: () => API.get('/patients/medicines/otc'),
@@ -223,6 +224,8 @@ export const pharmacistAPI = {
 export const deliveryAPI = {
   getAssignedOrders: () => API.get('/delivery/orders'),
   updateOrderStatus: (orderId, data) => API.put(`/delivery/order/${orderId}/status`, data),
+  getProfile: () => API.get('/delivery/profile'),
+  updateProfile: (data) => API.put('/delivery/profile', data),
 };
 
 export default API;

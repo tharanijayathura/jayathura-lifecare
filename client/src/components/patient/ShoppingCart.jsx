@@ -35,6 +35,7 @@ import {
 } from '@mui/material';
 import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer, LocalPharmacy, VolumeUp } from '@mui/icons-material';
 import { useNotification } from '../../contexts/NotificationContext';
+import { calculateDeliveryFee } from '../../utils/deliveryFee';
 
 const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading, orderId }) => {
   const { showNotification } = useNotification();
@@ -56,7 +57,7 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
   };
 
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = totalAmount > 1000 ? 0 : 200;
+  const deliveryFee = calculateDeliveryFee(deliveryAddress.city);
   const finalAmount = totalAmount + deliveryFee;
 
   useEffect(() => {
@@ -195,20 +196,8 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="body2" sx={{ color: COLORS.subtext, fontWeight: 600 }}>Delivery Logistics</Typography>
-                  {deliveryFee === 0 ? (
-                    <Chip label="COMPLIMENTARY" size="small" sx={{ bgcolor: COLORS.green3, color: '#059669', fontWeight: 900, fontSize: '0.65rem' }} />
-                  ) : (
-                    <Typography variant="body2" sx={{ fontWeight: 800, color: COLORS.text }}>Rs. {deliveryFee.toFixed(2)}</Typography>
-                  )}
+                  <Typography variant="body2" sx={{ fontWeight: 800, color: COLORS.text }}>Rs. {deliveryFee.toFixed(2)}</Typography>
                 </Box>
-                {totalAmount < 1000 && (
-                  <Paper elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: COLORS.green1, display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                    <LocalOffer sx={{ color: '#059669', fontSize: 18 }} />
-                    <Typography variant="caption" sx={{ color: '#059669', fontWeight: 700 }}>
-                      Add Rs. {(1000 - totalAmount).toFixed(2)} for <strong>Free Express Delivery</strong>
-                    </Typography>
-                  </Paper>
-                )}
                 <Divider />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography sx={{ fontWeight: 900, fontSize: '1.1rem' }}>Final Total</Typography>

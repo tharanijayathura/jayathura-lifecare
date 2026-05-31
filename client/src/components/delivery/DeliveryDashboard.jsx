@@ -419,9 +419,9 @@ const DeliveryDashboard = () => {
                                 label="Choose Milestone"
                                 sx={{ bgcolor: 'white', borderRadius: 2 }}
                               >
-                                <MenuItem value="In transit to customer city">In Transit</MenuItem>
-                                <MenuItem value="Arrived at local hub / Near to your city">Near to your city</MenuItem>
-                                <MenuItem value="Out for delivery - Courier is nearby">Out for Delivery</MenuItem>
+                                <MenuItem value="Took the package from the pharmacy">Took the package from the pharmacy</MenuItem>
+                                <MenuItem value="Near to your city">Near to your city</MenuItem>
+                                <MenuItem value="Out for delivery">Out for delivery</MenuItem>
                               </Select>
                             </FormControl>
 
@@ -446,7 +446,8 @@ const DeliveryDashboard = () => {
                                 } else {
                                   fullMsg = `Transit location updated to ${transitLocation}`;
                                 }
-                                handleUpdateStatus(selectedOrder._id, 'out_for_delivery', fullMsg, transitLocation || 'In Transit');
+                                const defaultLoc = transitMilestone === 'Took the package from the pharmacy' ? 'Pharmacy Hub' : 'In Transit';
+                                handleUpdateStatus(selectedOrder._id, 'out_for_delivery', fullMsg, transitLocation || defaultLoc);
                                 setTransitMilestone('');
                                 setTransitLocation('');
                               }}

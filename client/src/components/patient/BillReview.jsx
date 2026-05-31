@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { ShoppingCart, Close, ReceiptLong, LocalShipping, Payment, ShoppingBag, LocalPharmacy, Verified } from '@mui/icons-material';
 import { patientAPI } from '../../services/api';
+import { calculateDeliveryFee } from '../../utils/deliveryFee';
 import PrescriptionItemsTable from './bill/PrescriptionItemsTable.jsx';
 import OtcItemsTable from './bill/OtcItemsTable.jsx';
 import BillSummary from './bill/BillSummary.jsx';
@@ -98,10 +99,53 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
         deliveryAddress,
         paymentMethod
       });
-      onConfirm?.(response.data);
-      onClose();
+      
+      const orderData = response.data.order || response.data;
+
+      if (paymentMethod === 'online') {
+        try {
+          const paramsRes = await patientAPI.getPayHereParams(orderId);
+          const paymentParams = paramsRes.data;
+          
+          if (window.payhere) {
+            window.payhere.onCompleted = function onCompleted(paymentOrderId) {
+              console.log("PayHere payment completed for order:", paymentOrderId);
+              onConfirm?.({ ...orderData, paymentStatus: 'paid' });
+              onClose();
+            };
+            window.payhere.onDismissed = function onDismissed() {
+              console.log("PayHere payment dismissed by user");
+              onConfirm?.(orderData);
+              onClose();
+            };
+            window.payhere.onError = function onError(error) {
+              console.error("PayHere error:", error);
+              alert("Payment gateway error: " + error);
+              onConfirm?.(orderData);
+              onClose();
+            };
+            
+            // Launch checkout
+            window.payhere.startPayment(paymentParams);
+          } else {
+            console.error("PayHere SDK not loaded");
+            alert("Payment gateway SDK not loaded. Proceeding with order placement. Please check payment status in history.");
+            onConfirm?.(orderData);
+            onClose();
+          }
+        } catch (err) {
+          console.error("Failed to generate PayHere parameters:", err);
+          alert("Order confirmed, but failed to load payment parameters. Please pay from your Order Details later.");
+          onConfirm?.(orderData);
+          onClose();
+        }
+      } else {
+        onConfirm?.(orderData);
+        onClose();
+      }
     } catch (error) {
       console.error('Error confirming order:', error);
+      alert(error.response?.data?.message || 'Error confirming order');
     } finally {
       setLoading(false);
     }
@@ -197,8 +241,8 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
                   <Paper elevation={0} sx={{ p: 4, borderRadius: 6, border: `1px solid ${COLORS.border}`, bgcolor: 'white' }}>
                     <BillSummary 
                       totalAmount={order.totalAmount} 
-                      deliveryFee={order.deliveryFee} 
-                      finalAmount={order.finalAmount} 
+                      deliveryFee={calculateDeliveryFee(deliveryAddress.city)} 
+                      finalAmount={order.totalAmount + calculateDeliveryFee(deliveryAddress.city)} 
                     />
                   </Paper>
                 </Box>

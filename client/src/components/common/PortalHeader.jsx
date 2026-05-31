@@ -27,6 +27,7 @@ const fetchProfileName = async (role) => {
     if (role === 'patient')    endpoint = '/patients/profile';
     if (role === 'pharmacist') endpoint = '/pharmacists/profile';
     if (role === 'admin')      endpoint = '/admin/profile';
+    if (role === 'delivery')   endpoint = '/delivery/profile';
     if (!endpoint) return null;
     const res = await API.get(endpoint);
     return res.data?.name || null;

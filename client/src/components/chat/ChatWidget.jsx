@@ -38,6 +38,12 @@ const ChatWidget = () => {
   const messagesEndRef = useRef(null);
   const pollIntervalRef = useRef(null);
 
+  useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener('open-chat-widget', handleOpenChat);
+    return () => window.removeEventListener('open-chat-widget', handleOpenChat);
+  }, []);
+
   const GUEST_WELCOME = {
     id: 'welcome',
     senderRole: 'staff',

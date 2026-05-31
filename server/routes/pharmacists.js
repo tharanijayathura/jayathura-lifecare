@@ -12,6 +12,7 @@ const Invoice = require('../models/Invoice');
 const RefillPlan = require('../models/RefillPlan');
 const Chat = require('../models/Chat');
 const { authMiddleware } = require('../middleware/auth');
+const { calculateDeliveryFee } = require('../utils/deliveryFee');
 
 // Configure multer for audio file uploads
 const audioStorage = multer.diskStorage({
@@ -252,7 +253,7 @@ router.post('/prescription/:prescriptionId/add-item', authMiddleware, pharmacist
         subtotal += price * item.quantity;
       });
       order.totalAmount = subtotal;
-      order.deliveryFee = subtotal > 1000 ? 0 : 200;
+      order.deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
       order.finalAmount = subtotal + order.deliveryFee;
     } else {
       order.totalAmount = 0;
@@ -322,7 +323,7 @@ router.put('/prescription/:prescriptionId/verify', authMiddleware, pharmacistMid
         subtotal += price * item.quantity;
       });
 
-      const deliveryFee = subtotal > 1000 ? 0 : 200;
+      const deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
       const finalAmount = subtotal + deliveryFee;
 
       order.totalAmount = subtotal;
@@ -482,7 +483,7 @@ router.delete('/order/:orderId/prescription-item/:itemId', authMiddleware, pharm
         subtotal += price * item.quantity;
       });
       order.totalAmount = subtotal;
-      order.deliveryFee = subtotal > 1000 ? 0 : 200;
+      order.deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
       order.finalAmount = subtotal + order.deliveryFee;
     } else {
       order.totalAmount = 0;
@@ -520,7 +521,7 @@ router.post('/order/:orderId/generate-bill', authMiddleware, pharmacistMiddlewar
       item.price = price;
     });
 
-    const deliveryFee = subtotal > 1000 ? 0 : 200; // Free delivery above 1000
+    const deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
     const totalAmount = subtotal + deliveryFee;
 
     order.totalAmount = subtotal;

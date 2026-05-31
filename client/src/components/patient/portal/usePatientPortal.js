@@ -134,24 +134,80 @@ export const usePatientPortal = () => {
       }
 
       // Generate bill
-      await API.post(`/orders/${currentOrderId}/generate-bill`);
+      await API.post(`/orders/${currentOrderId}/generate-bill`, { deliveryAddress });
 
       // If no prescription is involved, auto-confirm immediately with provided address/payment
       if (!order.prescriptionId && deliveryAddress) {
-        await patientAPI.confirmOrder(currentOrderId, {
+        const confirmRes = await patientAPI.confirmOrder(currentOrderId, {
           deliveryAddress,
           paymentMethod,
           requestAudioInstructions: requestAudioInstructions || false
         });
         
-        setSnackbar({ 
-          open: true, 
-          message: 'Order placed and confirmed successfully!', 
-          severity: 'success' 
-        });
-        setCartItems([]);
-        setCurrentOrderId(null);
-        fetchPrescriptionOrders();
+        const orderData = confirmRes.data?.order || confirmRes.data;
+
+        if (paymentMethod === 'online') {
+          try {
+            const paramsRes = await patientAPI.getPayHereParams(currentOrderId);
+            const paymentParams = paramsRes.data;
+            
+            if (window.payhere) {
+              window.payhere.onCompleted = function onCompleted(paymentOrderId) {
+                console.log("PayHere payment completed for OTC order:", paymentOrderId);
+                setSnackbar({ 
+                  open: true, 
+                  message: 'Order placed and paid successfully!', 
+                  severity: 'success' 
+                });
+                setCartItems([]);
+                setCurrentOrderId(null);
+                fetchPrescriptionOrders();
+              };
+              window.payhere.onDismissed = function onDismissed() {
+                console.log("PayHere payment dismissed for OTC order");
+                setSnackbar({ 
+                  open: true, 
+                  message: 'Order placed, but payment was dismissed. Please settle from order history.', 
+                  severity: 'warning' 
+                });
+                setCartItems([]);
+                setCurrentOrderId(null);
+                fetchPrescriptionOrders();
+              };
+              window.payhere.onError = function onError(error) {
+                console.error("PayHere error:", error);
+                alert("Payment gateway error: " + error);
+                setCartItems([]);
+                setCurrentOrderId(null);
+                fetchPrescriptionOrders();
+              };
+              
+              // Launch checkout
+              window.payhere.startPayment(paymentParams);
+            } else {
+              console.error("PayHere SDK not loaded");
+              alert("Payment gateway SDK not loaded. Proceeding with order placement. Please check payment status in history.");
+              setCartItems([]);
+              setCurrentOrderId(null);
+              fetchPrescriptionOrders();
+            }
+          } catch (err) {
+            console.error("Failed to generate PayHere parameters:", err);
+            alert("Order confirmed, but failed to load payment parameters. Please pay from your Order Details later.");
+            setCartItems([]);
+            setCurrentOrderId(null);
+            fetchPrescriptionOrders();
+          }
+        } else {
+          setSnackbar({ 
+            open: true, 
+            message: 'Order placed and confirmed successfully!', 
+            severity: 'success' 
+          });
+          setCartItems([]);
+          setCurrentOrderId(null);
+          fetchPrescriptionOrders();
+        }
       } else {
         // For prescription orders, still show bill review so they see what the pharmacist added
         setSelectedOrderForBill(currentOrderId);

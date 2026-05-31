@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { Delete, CheckCircle, LocationOn, LocalPharmacy } from '@mui/icons-material';
 import { patientAPI } from '../../../services/api';
+import { calculateDeliveryFee } from '../../../utils/deliveryFee';
 import { useNotification } from '../../../contexts/NotificationContext';
 
 const COLORS = {
@@ -60,7 +61,7 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
     try {
       setLoading(true);
       const subtotal = calculateSubtotal();
-      const deliveryFee = subtotal > 1000 ? 0 : 200;
+      const deliveryFee = calculateDeliveryFee(address?.city);
       
       const updateData = {
         items: items,
@@ -73,7 +74,42 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
       };
 
       await patientAPI.confirmOrder(order._id, updateData);
-      onConfirmed();
+      
+      if (paymentMethod === 'online') {
+        try {
+          const paramsRes = await patientAPI.getPayHereParams(order._id);
+          const paymentParams = paramsRes.data;
+          
+          if (window.payhere) {
+            window.payhere.onCompleted = function onCompleted(paymentOrderId) {
+              console.log("PayHere payment completed for order:", paymentOrderId);
+              onConfirmed();
+            };
+            window.payhere.onDismissed = function onDismissed() {
+              console.log("PayHere payment dismissed by user");
+              onConfirmed();
+            };
+            window.payhere.onError = function onError(error) {
+              console.error("PayHere error:", error);
+              showNotification("Payment error: " + error, { type: 'error' });
+              onConfirmed();
+            };
+            
+            // Launch checkout
+            window.payhere.startPayment(paymentParams);
+          } else {
+            console.error("PayHere SDK not loaded");
+            showNotification("Payment SDK not loaded. Order placed, check payment details in history.", { type: 'warning' });
+            onConfirmed();
+          }
+        } catch (err) {
+          console.error("Failed to generate PayHere parameters:", err);
+          showNotification("Order confirmed, but failed to load payment dialog.", { type: 'warning' });
+          onConfirmed();
+        }
+      } else {
+        onConfirmed();
+      }
     } catch (err) {
       console.error('Confirmation error:', err);
       showNotification('Failed to confirm order. Please try again.', { type: 'error' });
@@ -207,13 +243,13 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">Delivery Fee</Typography>
-                <Typography variant="body2" fontWeight={600}>Rs. {(calculateSubtotal() > 1000 ? 0 : 200).toFixed(2)}</Typography>
+                <Typography variant="body2" fontWeight={600}>Rs. {calculateDeliveryFee(address.city).toFixed(2)}</Typography>
               </Box>
               <Divider sx={{ my: 1 }} />
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="h6" fontWeight={800}>Final Amount</Typography>
                 <Typography variant="h6" fontWeight={800} color={COLORS.blue2}>
-                  Rs. {(calculateSubtotal() + (calculateSubtotal() > 1000 ? 0 : 200)).toFixed(2)}
+                  Rs. {(calculateSubtotal() + calculateDeliveryFee(address.city)).toFixed(2)}
                 </Typography>
               </Box>
             </Stack>

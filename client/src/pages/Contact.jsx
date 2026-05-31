@@ -423,7 +423,7 @@ const Contact = () => {
                     </Typography>
                     <Button
                       variant="contained"
-                      onClick={() => navigate('/chat')}
+                      onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget'))}
                       sx={{
                         fontWeight: 600,
                         borderRadius: 2,

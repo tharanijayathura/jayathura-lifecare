@@ -570,7 +570,7 @@ const Home = () => {
               <Button
                 variant="contained"
                 fullWidth
-                onClick={() => navigate('/chat')}
+                onClick={() => window.dispatchEvent(new CustomEvent('open-chat-widget'))}
                 sx={{
                   backgroundColor: '#2C3E50',
                   color: '#FFFFFF',
@@ -594,8 +594,8 @@ const Home = () => {
         size="small"
         sx={{
           position: 'fixed',
-          bottom: 90, // Moved up to avoid overlap with Chat button
-          right: 20,
+          bottom: 20,
+          left: 20,
           backgroundColor: '#ABE7B2',
           color: '#2C3E50',
           '&:hover': { backgroundColor: '#CBF3BB' },

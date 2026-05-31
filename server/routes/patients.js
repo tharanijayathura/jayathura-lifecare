@@ -13,6 +13,7 @@ const Invoice = require('../models/Invoice');
 const RefillPlan = require('../models/RefillPlan');
 const Chat = require('../models/Chat');
 const { authMiddleware } = require('../middleware/auth');
+const { calculateDeliveryFee } = require('../utils/deliveryFee');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -633,7 +634,7 @@ router.delete('/order/:orderId/item/:itemId', authMiddleware, async (req, res) =
         }
       });
       order.totalAmount = subtotal;
-      order.deliveryFee = subtotal > 1000 ? 0 : 200;
+      order.deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
       order.finalAmount = subtotal + order.deliveryFee;
     } else {
       order.totalAmount = 0;
@@ -702,12 +703,12 @@ router.get('/order/:orderId/bill', authMiddleware, async (req, res) => {
         subtotal += price * quantity;
       });
 
-      const deliveryFee = subtotal > 1000 ? 0 : 200;
-      const finalAmount = subtotal + deliveryFee;
-
-      order.totalAmount = subtotal;
-      order.deliveryFee = deliveryFee;
-      order.finalAmount = finalAmount;
+       const deliveryFee = calculateDeliveryFee(order.deliveryAddress?.city);
+       const finalAmount = subtotal + deliveryFee;
+ 
+       order.totalAmount = subtotal;
+       order.deliveryFee = deliveryFee;
+       order.finalAmount = finalAmount;
       await order.save();
     }
 
@@ -874,7 +875,7 @@ router.put('/order/:orderId/confirm', authMiddleware, async (req, res) => {
       subtotal += price * quantity;
     });
 
-    const deliveryFee = subtotal > 1000 ? 0 : 200;
+    const deliveryFee = calculateDeliveryFee(deliveryAddress?.city);
     const finalAmount = subtotal + deliveryFee;
 
     // Update order with cleaned address
@@ -1750,6 +1751,132 @@ router.delete('/order/:orderId', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Delete order error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// PayHere Hash Generation Endpoint
+router.get('/order/:orderId/payhere-params', authMiddleware, async (req, res) => {
+  try {
+    const crypto = require('crypto');
+    const order = await Order.findById(req.params.orderId).populate('patientId');
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Verify ownership
+    if (order.patientId._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to request parameters for this order' });
+    }
+
+    const merchantId = process.env.PAYHERE_MERCHANT_ID;
+    const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+    
+    if (!merchantId || !merchantSecret) {
+      return res.status(500).json({ message: 'PayHere credentials are not configured in environment variables' });
+    }
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    
+    const amount = (order.finalAmount || order.totalAmount || 0).toFixed(2);
+    const currency = 'LKR';
+    const orderId = order._id.toString();
+
+    // 1. Hash Merchant Secret to MD5 in uppercase
+    const hashedSecret = crypto
+      .createHash('md5')
+      .update(merchantSecret)
+      .digest('hex')
+      .toUpperCase();
+
+    // 2. Generate security hash signature
+    // Formula: MD5(MerchantID + OrderID + Amount + Currency + MD5(MerchantSecret).toUpperCase()).toUpperCase()
+    const hash = crypto
+      .createHash('md5')
+      .update(merchantId + orderId + amount + currency + hashedSecret)
+      .digest('hex')
+      .toUpperCase();
+
+    res.json({
+      sandbox: true, // Use false in production
+      merchant_id: merchantId,
+      return_url: `${clientUrl}/patient`,
+      cancel_url: `${clientUrl}/patient`,
+      notify_url: `${backendUrl}/api/patients/payhere-notify`,
+      order_id: orderId,
+      items: `Jayathura LifeCare Order #${order.orderId || orderId.slice(-6).toUpperCase()}`,
+      amount: amount,
+      currency: currency,
+      hash: hash,
+      first_name: order.patientId?.name || 'Customer',
+      last_name: 'Patient',
+      email: order.patientId?.email || 'customer@example.com',
+      phone: order.patientId?.phone || '0771234567',
+      address: order.deliveryAddress?.street || 'No 1, Main Street',
+      city: order.deliveryAddress?.city || 'Colombo',
+      country: 'Sri Lanka'
+    });
+  } catch (error) {
+    console.error('Error generating PayHere params:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// PayHere Webhook Listener (unauthenticated)
+router.post('/payhere-notify', async (req, res) => {
+  try {
+    const crypto = require('crypto');
+    const {
+      merchant_id,
+      order_id,
+      payment_id,
+      payhere_amount,
+      payhere_currency,
+      status_code,
+      md5sig
+    } = req.body;
+
+    const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+
+    // 1. Generate local verification signature
+    const hashedSecret = crypto
+      .createHash('md5')
+      .update(merchantSecret)
+      .digest('hex')
+      .toUpperCase();
+
+    // Verification signature formula:
+    // MD5(merchant_id + order_id + payhere_amount + payhere_currency + status_code + MD5(merchant_secret).toUpperCase()).toUpperCase()
+    const localSignature = crypto
+      .createHash('md5')
+      .update(merchant_id + order_id + payhere_amount + payhere_currency + status_code + hashedSecret)
+      .digest('hex')
+      .toUpperCase();
+
+    // 2. Cryptographic signature check
+    if (localSignature === md5sig) {
+      if (status_code === '2') {
+        const order = await Order.findById(order_id);
+        if (order) {
+          order.paymentStatus = 'paid';
+          order.paymentDetails = {
+            gateway: 'payhere',
+            paymentId: payment_id,
+            completedAt: new Date()
+          };
+          await order.save();
+          console.log(`✅ Order ${order_id} successfully paid via PayHere.`);
+        }
+      }
+      res.status(200).send('OK');
+    } else {
+      console.warn('Hash verification failed for PayHere notify callback:', {
+        receivedSig: md5sig,
+        computedSig: localSignature
+      });
+      res.status(400).send('Invalid signature');
+    }
+  } catch (error) {
+    console.error('PayHere webhook error:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
