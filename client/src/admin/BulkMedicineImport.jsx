@@ -46,7 +46,22 @@ const BulkMedicineImport = ({ onImportComplete }) => {
     try {
       for (const medicine of parsedMedicines) {
         try {
-          await medicineAPI.create(medicine);
+          const formData = new FormData();
+          formData.append('name', medicine.name);
+          if (medicine.brand) formData.append('brand', medicine.brand);
+          formData.append('category', medicine.category);
+          if (medicine.description) formData.append('description', medicine.description);
+          formData.append('baseUnit', medicine.baseUnit);
+          formData.append('requiresPrescription', medicine.requiresPrescription);
+          formData.append('packagingType', medicine.packaging.type);
+          formData.append('packagingQtyPerPack', medicine.packaging.qtyPerPack.toString());
+          if (medicine.packaging.packName) formData.append('packagingPackName', medicine.packaging.packName);
+          formData.append('pricePerPack', medicine.price.perPack.toString());
+          formData.append('stockPacks', (medicine.stock.packs || 0).toString());
+          formData.append('minStockUnits', medicine.minStockUnits.toString());
+          if (medicine.imageUrl) formData.append('image', medicine.imageUrl);
+
+          await medicineAPI.create(formData);
           results.success.push(medicine.name);
         } catch (error) {
           const errorMsg = error.response?.data?.message || error.message || 'Unknown error';

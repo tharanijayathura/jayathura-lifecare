@@ -108,28 +108,50 @@ const MedicineForm = ({
         borderBottom: `1px solid ${COLORS.border}`,
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
         gap: 2
       }}>
-        <Box sx={{
-          backgroundColor: '#ffffff',
-          borderRadius: '50%',
-          width: 40,
-          height: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
-        }}>
-          <LocalPharmacy sx={{ color: '#2C3E50' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{
+            backgroundColor: '#ffffff',
+            borderRadius: '50%',
+            width: 40,
+            height: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+          }}>
+            <LocalPharmacy sx={{ color: '#2C3E50' }} />
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: COLORS.primary, lineHeight: 1.2 }}>
+              {editingMedicineId ? 'Update Medication' : 'Add New Medication'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: COLORS.secondary }}>
+              {editingMedicineId ? 'Modify medicine catalog specifications' : 'Create a new catalog item with packaging & prices'}
+            </Typography>
+          </Box>
         </Box>
-        <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: COLORS.primary, lineHeight: 1.2 }}>
-            {editingMedicineId ? 'Update Medication' : 'Add New Medication'}
-          </Typography>
-          <Typography variant="caption" sx={{ color: COLORS.secondary }}>
-            {editingMedicineId ? 'Modify medicine catalog specifications' : 'Create a new catalog item with packaging & prices'}
-          </Typography>
-        </Box>
+
+        {editingMedicineId && (
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            onClick={onReset}
+            startIcon={<Close />}
+            sx={{ 
+              textTransform: 'none', 
+              borderRadius: 2,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              boxShadow: '0 2px 8px rgba(211, 47, 47, 0.2)'
+            }}
+          >
+            Cancel Update
+          </Button>
+        )}
       </Box>
 
       {/* Structured Tab Header */}
@@ -627,7 +649,7 @@ const MedicineForm = ({
                   </Button>
                 ) : (
                   <>
-                    {activeTab === 2 && (
+                    {activeTab === 2 && !editingMedicineId && (
                       <Button 
                         variant="outlined" 
                         startIcon={<RestartAlt />} 
