@@ -18,6 +18,8 @@ export const usePatientPortal = () => {
   const [selectedOrderForBill, setSelectedOrderForBill] = useState(null);
   const [addItemsDialogOpen, setAddItemsDialogOpen] = useState(false);
   const [selectedPrescriptionOrderId, setSelectedPrescriptionOrderId] = useState(null);
+  const [mockPaymentOpen, setMockPaymentOpen] = useState(false);
+  const [mockPaymentParams, setMockPaymentParams] = useState(null);
 
   const handleAddToCart = async (item) => {
     try {
@@ -150,6 +152,13 @@ export const usePatientPortal = () => {
           try {
             const paramsRes = await patientAPI.getPayHereParams(currentOrderId);
             const paymentParams = paramsRes.data;
+            
+            if (paymentParams.mock) {
+              setMockPaymentParams(paymentParams);
+              setMockPaymentOpen(true);
+              setLoading(false);
+              return;
+            }
             
             if (window.payhere) {
               window.payhere.onCompleted = function onCompleted(paymentOrderId) {
@@ -392,6 +401,10 @@ export const usePatientPortal = () => {
     setAddItemsDialogOpen,
     selectedPrescriptionOrderId,
     setSelectedPrescriptionOrderId,
+    mockPaymentOpen,
+    setMockPaymentOpen,
+    mockPaymentParams,
+    setMockPaymentParams,
     handleAddToCart,
     handleRemoveItem,
     handleOrderSubmit,

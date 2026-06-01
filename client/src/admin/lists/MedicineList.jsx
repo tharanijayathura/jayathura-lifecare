@@ -1,4 +1,5 @@
 import React from 'react';
+import { getPublicFileUrl } from '../../services/api';
 import { 
   Box, 
   Paper, 
@@ -29,7 +30,8 @@ import {
   FormControl,
   LinearProgress,
   ToggleButtonGroup,
-  ToggleButton
+  ToggleButton,
+  Divider
 } from '@mui/material';
 import { 
   Search, 
@@ -312,8 +314,23 @@ const MedicineList = ({
           sx={{ 
             borderRadius: 3, 
             border: `1px solid ${COLORS.border}`, 
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)'
+            overflowX: 'auto',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': {
+              height: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+              borderRadius: '3px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#c1c1c1',
+              borderRadius: '3px',
+              '&:hover': {
+                background: '#a8a8a8',
+              },
+            },
           }}
         >
           <Table sx={{ minWidth: 650 }}>
@@ -379,7 +396,7 @@ const MedicineList = ({
                           justifyContent: 'center'
                         }}>
                           {medicine.image ? (
-                            <Box component="img" src={medicine.image} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <Box component="img" src={getPublicFileUrl(medicine.image)} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <LocalPharmacy sx={{ color: '#b0bec5', fontSize: 20 }} />
                           )}
@@ -577,7 +594,7 @@ const MedicineList = ({
                     <CardMedia 
                       component="img" 
                       height="130" 
-                      image={medicine.image} 
+                      image={getPublicFileUrl(medicine.image)} 
                       alt={medicine.name} 
                       sx={{ objectFit: 'cover' }} 
                     />

@@ -25,6 +25,7 @@ import { Delete, CheckCircle, LocationOn, LocalPharmacy } from '@mui/icons-mater
 import { patientAPI } from '../../../services/api';
 import { calculateDeliveryFee } from '../../../utils/deliveryFee';
 import { useNotification } from '../../../contexts/NotificationContext';
+import MockPayHereDialog from '../bill/MockPayHereDialog.jsx';
 
 const COLORS = {
   green1: '#ECF4E8',
@@ -48,6 +49,8 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
   });
   const [paymentMethod, setPaymentMethod] = useState(initialOrder?.paymentMethod || 'cod');
   const [loading, setLoading] = useState(false);
+  const [mockPaymentOpen, setMockPaymentOpen] = useState(false);
+  const [mockPaymentParams, setMockPaymentParams] = useState(null);
 
   const handleRemoveItem = (itemId) => {
     setItems(items.filter(item => (item._id || item.id) !== itemId));
@@ -79,6 +82,13 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
         try {
           const paramsRes = await patientAPI.getPayHereParams(order._id);
           const paymentParams = paramsRes.data;
+          
+          if (paymentParams.mock) {
+            setMockPaymentParams(paymentParams);
+            setMockPaymentOpen(true);
+            setLoading(false);
+            return;
+          }
           
           if (window.payhere) {
             window.payhere.onCompleted = function onCompleted(paymentOrderId) {
@@ -276,6 +286,25 @@ const OrderReviewConfirmation = ({ order: initialOrder, onConfirmed }) => {
           </Paper>
         </Grid>
       </Grid>
+
+      <MockPayHereDialog
+        open={mockPaymentOpen}
+        onClose={() => {
+          setMockPaymentOpen(false);
+          onConfirmed();
+        }}
+        paymentParams={mockPaymentParams}
+        onCompleted={(orderId) => {
+          setMockPaymentOpen(false);
+          showNotification('Payment processed successfully!', { type: 'success' });
+          onConfirmed();
+        }}
+        onError={(err) => {
+          setMockPaymentOpen(false);
+          showNotification('Payment error: ' + err, { type: 'error' });
+          onConfirmed();
+        }}
+      />
     </Box>
   );
 };

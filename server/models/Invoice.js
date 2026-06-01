@@ -43,10 +43,31 @@ const invoiceSchema = new mongoose.Schema({
 invoiceSchema.pre('validate', async function(next) {
   if (!this.invoiceId) {
     try {
-      const count = await mongoose.model('Invoice').countDocuments();
-      this.invoiceId = `INV${String(count + 1).padStart(6, '0')}`;
+      // Find the invoice with the highest invoiceId
+      const lastInvoice = await mongoose.model('Invoice')
+        .findOne({ invoiceId: { $regex: /^INV\d+$/ } })
+        .sort({ invoiceId: -1 });
+
+      let nextNum = 1;
+      if (lastInvoice && lastInvoice.invoiceId) {
+        const lastNum = parseInt(lastInvoice.invoiceId.replace('INV', ''), 10);
+        if (!isNaN(lastNum)) {
+          nextNum = lastNum + 1;
+        }
+      }
+
+      // Safeguard loop to guarantee uniqueness
+      let uniqueId = `INV${String(nextNum).padStart(6, '0')}`;
+      let exists = await mongoose.model('Invoice').findOne({ invoiceId: uniqueId });
+      while (exists) {
+        nextNum++;
+        uniqueId = `INV${String(nextNum).padStart(6, '0')}`;
+        exists = await mongoose.model('Invoice').findOne({ invoiceId: uniqueId });
+      }
+
+      this.invoiceId = uniqueId;
     } catch (error) {
-      // Fallback: use timestamp-based ID if count fails
+      // Fallback: use timestamp-based ID if sequence fails
       this.invoiceId = `INV${Date.now().toString().slice(-8)}`;
     }
   }

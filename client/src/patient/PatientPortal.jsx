@@ -14,6 +14,7 @@ import PortalHeader from '../components/common/PortalHeader';
 import { useNavigate } from 'react-router-dom';
 import { patientAPI } from '../services/api';
 import { usePatientPortal } from '../components/patient/portal/usePatientPortal.js';
+import MockPayHereDialog from '../components/patient/bill/MockPayHereDialog.jsx';
 
 const PatientPortal = () => {
   const { user, logout, loading: authLoading } = useAuth();
@@ -36,6 +37,8 @@ const PatientPortal = () => {
     selectedOrderForBill, setSelectedOrderForBill,
     addItemsDialogOpen, setAddItemsDialogOpen,
     selectedPrescriptionOrderId, setSelectedPrescriptionOrderId,
+    mockPaymentOpen, setMockPaymentOpen,
+    mockPaymentParams,
     handleAddToCart,
     handleRemoveItem,
     handleOrderSubmit,
@@ -232,6 +235,44 @@ const PatientPortal = () => {
             message: 'Order sent to pharmacist successfully!',
             severity: 'success'
           });
+        }}
+      />
+
+      <MockPayHereDialog
+        open={mockPaymentOpen}
+        onClose={() => {
+          setMockPaymentOpen(false);
+          setSnackbar({
+            open: true,
+            message: 'Order placed, but payment was dismissed. Please settle from order history.',
+            severity: 'warning'
+          });
+          setCartItems([]);
+          setCurrentOrderId(null);
+          fetchPrescriptionOrders();
+        }}
+        paymentParams={mockPaymentParams}
+        onCompleted={(orderId) => {
+          setMockPaymentOpen(false);
+          setSnackbar({
+            open: true,
+            message: 'Order placed and paid successfully!',
+            severity: 'success'
+          });
+          setCartItems([]);
+          setCurrentOrderId(null);
+          fetchPrescriptionOrders();
+        }}
+        onError={(err) => {
+          setMockPaymentOpen(false);
+          setSnackbar({
+            open: true,
+            message: 'Mock payment failed: ' + err,
+            severity: 'error'
+          });
+          setCartItems([]);
+          setCurrentOrderId(null);
+          fetchPrescriptionOrders();
         }}
       />
     </Box>

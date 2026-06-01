@@ -41,7 +41,7 @@ import {
   StarBorder
 } from '@mui/icons-material';
 import { useAuth } from '../../../contexts/useAuth';
-import { patientAPI } from '../../../services/api';
+import { patientAPI, getPublicFileUrl } from '../../../services/api';
 import heroImage from '../../../assets/man_no_bg.png';
 
 const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => {
@@ -480,7 +480,7 @@ const DashboardOverview = ({ onNavigate, handleAddToCart, onSeeMoreCommon }) => 
                     }}>
                       <Box 
                         component="img"
-                        src={medicine.image || 'https://via.placeholder.com/150'}
+                        src={getPublicFileUrl(medicine.image) || 'https://via.placeholder.com/150'}
                         alt={medicine.name}
                         sx={{ 
                           maxHeight: '100%', 

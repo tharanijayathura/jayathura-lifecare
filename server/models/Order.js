@@ -92,10 +92,31 @@ const orderSchema = new mongoose.Schema({
 orderSchema.pre('save', async function(next) {
   if (!this.orderId) {
     try {
-      const count = await mongoose.model('Order').countDocuments();
-      this.orderId = `JLC${String(count + 1).padStart(6, '0')}`;
+      // Find the order with the highest orderId
+      const lastOrder = await mongoose.model('Order')
+        .findOne({ orderId: { $regex: /^JLC\d+$/ } })
+        .sort({ orderId: -1 });
+
+      let nextNum = 1;
+      if (lastOrder && lastOrder.orderId) {
+        const lastNum = parseInt(lastOrder.orderId.replace('JLC', ''), 10);
+        if (!isNaN(lastNum)) {
+          nextNum = lastNum + 1;
+        }
+      }
+
+      // Safeguard loop to guarantee uniqueness
+      let uniqueId = `JLC${String(nextNum).padStart(6, '0')}`;
+      let exists = await mongoose.model('Order').findOne({ orderId: uniqueId });
+      while (exists) {
+        nextNum++;
+        uniqueId = `JLC${String(nextNum).padStart(6, '0')}`;
+        exists = await mongoose.model('Order').findOne({ orderId: uniqueId });
+      }
+
+      this.orderId = uniqueId;
     } catch (error) {
-      // Fallback if countDocuments fails
+      // Fallback if sequence generation fails
       this.orderId = `JLC${String(Date.now()).slice(-6)}`;
     }
   }

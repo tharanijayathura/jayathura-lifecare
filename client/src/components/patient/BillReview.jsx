@@ -23,6 +23,7 @@ import OtcItemsTable from './bill/OtcItemsTable.jsx';
 import BillSummary from './bill/BillSummary.jsx';
 import DeliveryAddressForm from './bill/DeliveryAddressForm.jsx';
 import PaymentMethodSection from './bill/PaymentMethodSection.jsx';
+import MockPayHereDialog from './bill/MockPayHereDialog.jsx';
 
 const BillReview = ({ orderId, open, onClose, onConfirm }) => {
   const [order, setOrder] = useState(null);
@@ -34,6 +35,9 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
     postalCode: ''
   });
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [mockPaymentOpen, setMockPaymentOpen] = useState(false);
+  const [mockPaymentParams, setMockPaymentParams] = useState(null);
+  const [tempOrderData, setTempOrderData] = useState(null);
 
   const COLORS = {
     green1: '#ECF4E8',
@@ -106,6 +110,14 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
         try {
           const paramsRes = await patientAPI.getPayHereParams(orderId);
           const paymentParams = paramsRes.data;
+          
+          if (paymentParams.mock) {
+            setMockPaymentParams(paymentParams);
+            setTempOrderData(orderData);
+            setMockPaymentOpen(true);
+            setLoading(false);
+            return;
+          }
           
           if (window.payhere) {
             window.payhere.onCompleted = function onCompleted(paymentOrderId) {
@@ -283,6 +295,27 @@ const BillReview = ({ orderId, open, onClose, onConfirm }) => {
           )}
         </Button>
       </DialogActions>
+
+      <MockPayHereDialog
+        open={mockPaymentOpen}
+        onClose={() => {
+          setMockPaymentOpen(false);
+          onConfirm?.(tempOrderData);
+          onClose();
+        }}
+        paymentParams={mockPaymentParams}
+        onCompleted={(orderId) => {
+          setMockPaymentOpen(false);
+          onConfirm?.({ ...tempOrderData, paymentStatus: 'paid' });
+          onClose();
+        }}
+        onError={(err) => {
+          setMockPaymentOpen(false);
+          alert("Payment error: " + err);
+          onConfirm?.(tempOrderData);
+          onClose();
+        }}
+      />
     </Dialog>
   );
 };

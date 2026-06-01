@@ -9,8 +9,11 @@ const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/
 
 export const getPublicFileUrl = (filePath) => {
   if (!filePath) return '';
-  if (/^(https?:)?\/\//i.test(filePath) || filePath.startsWith('data:')) {
+  if (filePath.startsWith('data:')) {
     return filePath;
+  }
+  if (/^(https?:)?\/\//i.test(filePath)) {
+    return `${API_ORIGIN}/api/medicines/proxy-image?url=${encodeURIComponent(filePath)}`;
   }
 
   return new URL(filePath, `${API_ORIGIN}/`).toString();
@@ -156,6 +159,7 @@ export const patientAPI = {
   chooseCOD: (orderId) => API.put(`/patients/order/${orderId}/cod`),
   getInvoices: () => API.get('/patients/invoices'),
   getPayHereParams: (orderId) => API.get(`/patients/order/${orderId}/payhere-params`),
+  mockPay: (orderId) => API.post(`/patients/order/${orderId}/mock-pay`),
   
   // Medicines
   browseOTC: () => API.get('/patients/medicines/otc'),

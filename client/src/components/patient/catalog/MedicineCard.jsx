@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardActions, CardMedia, Typography, Box, Chip, Button, Stack } from '@mui/material';
 import { AddShoppingCart, InfoOutlined } from '@mui/icons-material';
 import medPlaceholder from '../../../assets/med.png';
+import { getPublicFileUrl } from '../../../services/api';
 
 const COLORS = {
   green1: '#f8fafc',
@@ -17,7 +18,7 @@ const COLORS = {
 const formatCategory = (value = '') => value.split('-').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
 
 const MedicineCard = ({ medicine, onAdd }) => {
-  const image = medicine.image || medPlaceholder;
+  const image = medicine.image ? getPublicFileUrl(medicine.image) : medPlaceholder;
   const unit = medicine.unit || medicine.doseUnit || 'unit';
   const inStock = (medicine.stock || 0) > 0;
   const isLowStock = medicine.stock > 0 && medicine.stock <= 10;

@@ -36,6 +36,8 @@ import {
   CheckCircle
 } from '@mui/icons-material';
 import { MEDICINE_TEMPLATES } from '../constants';
+import { getPublicFileUrl } from '../../services/api';
+
 
 const MedicineForm = ({
   medicineForm,
@@ -573,7 +575,7 @@ const MedicineForm = ({
                   <Box sx={{ position: 'relative', borderRadius: 2, border: `1px solid ${COLORS.border}`, p: 0.5, backgroundColor: COLORS.lightGreen }}>
                     <Box 
                       component="img" 
-                      src={medicineForm.imageUrl} 
+                      src={getPublicFileUrl(medicineForm.imageUrl)} 
                       alt="Preview" 
                       sx={{ 
                         maxHeight: 120, 
@@ -739,7 +741,7 @@ const MedicineForm = ({
             <CardMedia 
               component="img" 
               height="130" 
-              image={medicineForm.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300'} 
+              image={getPublicFileUrl(medicineForm.imageUrl) || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300'} 
               alt="Listing Preview" 
               sx={{ 
                 objectFit: 'cover', 

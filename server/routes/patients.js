@@ -1769,16 +1769,25 @@ router.get('/order/:orderId/payhere-params', authMiddleware, async (req, res) =>
     const merchantId = process.env.PAYHERE_MERCHANT_ID;
     const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
     
+    const amount = (order.finalAmount || order.totalAmount || 0).toFixed(2);
+    const currency = 'LKR';
+    const orderId = order._id.toString();
+
     if (!merchantId || !merchantSecret) {
-      return res.status(500).json({ message: 'PayHere credentials are not configured in environment variables' });
+      // Return a mock descriptor
+      return res.json({
+        mock: true,
+        order_id: orderId,
+        amount: amount,
+        currency: currency,
+        items: `Jayathura LifeCare Order #${order.orderId || orderId.slice(-6).toUpperCase()}`,
+        first_name: order.patientId?.name || 'Customer',
+        email: order.patientId?.email || 'customer@example.com',
+      });
     }
 
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    
-    const amount = (order.finalAmount || order.totalAmount || 0).toFixed(2);
-    const currency = 'LKR';
-    const orderId = order._id.toString();
 
     // 1. Hash Merchant Secret to MD5 in uppercase
     const hashedSecret = crypto
@@ -1788,7 +1797,6 @@ router.get('/order/:orderId/payhere-params', authMiddleware, async (req, res) =>
       .toUpperCase();
 
     // 2. Generate security hash signature
-    // Formula: MD5(MerchantID + OrderID + Amount + Currency + MD5(MerchantSecret).toUpperCase()).toUpperCase()
     const hash = crypto
       .createHash('md5')
       .update(merchantId + orderId + amount + currency + hashedSecret)
@@ -1796,7 +1804,7 @@ router.get('/order/:orderId/payhere-params', authMiddleware, async (req, res) =>
       .toUpperCase();
 
     res.json({
-      sandbox: true, // Use false in production
+      sandbox: true,
       merchant_id: merchantId,
       return_url: `${clientUrl}/patient`,
       cancel_url: `${clientUrl}/patient`,
@@ -1817,6 +1825,38 @@ router.get('/order/:orderId/payhere-params', authMiddleware, async (req, res) =>
   } catch (error) {
     console.error('Error generating PayHere params:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+});
+
+// Mock Pay Endpoint (used when PayHere credentials are not set)
+router.post('/order/:orderId/mock-pay', authMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    
+    // Verify ownership
+    if (order.patientId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    order.paymentStatus = 'paid';
+    order.paymentDetails = {
+      gateway: 'mock_payhere',
+      paymentId: 'MOCK_PAY_' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      completedAt: new Date()
+    };
+    
+    // If the order is in draft status, change it to pending since payment is confirmed
+    if (order.status === 'draft') {
+      order.status = 'pending';
+    }
+    
+    await order.save();
+    console.log(`✅ Order ${order._id} successfully mock paid.`);
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('Mock pay error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

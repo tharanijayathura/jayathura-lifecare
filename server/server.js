@@ -7,15 +7,22 @@ require('dotenv').config();
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-if (MONGO_URI && MONGO_URI.startsWith('mongodb+srv://') && process.env.MONGO_DNS_SERVERS) {
-  const dnsServers = process.env.MONGO_DNS_SERVERS
+let dnsServers = [];
+if (process.env.MONGO_DNS_SERVERS) {
+  dnsServers = process.env.MONGO_DNS_SERVERS
     .split(',')
     .map((server) => server.trim())
     .filter(Boolean);
+} else if (MONGO_URI && MONGO_URI.startsWith('mongodb+srv://')) {
+  dnsServers = ['1.1.1.1', '8.8.8.8'];
+}
 
-  if (dnsServers.length > 0) {
+if (dnsServers.length > 0) {
+  try {
     dns.setServers(dnsServers);
     console.log('🌐 Using DNS servers for MongoDB SRV lookups:', dnsServers.join(', '));
+  } catch (err) {
+    console.warn('⚠️  Could not set custom DNS servers:', err.message);
   }
 }
 

@@ -53,27 +53,28 @@ const AdminAnalytics = () => {
   const [error, setError] = useState('');
 
   const COLORS = {
-    primary: '#2C3E50',
-    secondary: '#546E7A',
-    teal: '#7AA8B0',
-    bg1: '#ECF4E8',
-    bg2: '#CBF3BB',
-    green: '#ABE7B2',
-    blue: '#93BFC7',
-    blue2: '#7AA8B0',
-    text: '#2C3E50',
-    subtext: '#546E7A',
-    border: 'rgba(147,191,199,0.35)',
+    primary: '#4318FF',
+    secondary: '#A3AED0',
+    teal: '#05CD99',
+    bg1: '#F4F7FE',
+    bg2: '#FFFFFF',
+    green: '#05CD99',
+    blue: '#4318FF',
+    blue2: '#39B8FF',
+    text: '#2B3674',
+    subtext: '#A3AED0',
+    border: '#E0E5F2',
     glass: '#ffffff',
   };
 
   const glassCardSx = {
-    borderRadius: 3,
+    borderRadius: 4,
     border: `1px solid ${COLORS.border}`,
     backgroundColor: COLORS.glass,
-    boxShadow: '0 8px 30px rgba(44,62,80,0.04)',
+    boxShadow: '0 10px 40px rgba(112, 144, 176, 0.08)',
     overflow: 'hidden',
-    height: '100%'
+    display: 'flex',
+    flexDirection: 'column'
   };
 
   const sectionHeaderSx = {
@@ -420,7 +421,7 @@ Prepared by Jayathura LifeCare Management Dashboard.
         minHeight: '100%',
         py: { xs: 2.5, md: 3 },
         px: { xs: 1.5, md: 2.5 },
-        background: `linear-gradient(135deg, ${COLORS.bg1} 0%, ${COLORS.bg2} 55%, rgba(147,191,199,0.18) 100%)`,
+        background: `linear-gradient(135deg, ${COLORS.bg1} 0%, ${COLORS.bg2} 100%)`,
       }}
     >
       <Container maxWidth="xl">

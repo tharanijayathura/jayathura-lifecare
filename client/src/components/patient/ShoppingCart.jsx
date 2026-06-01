@@ -36,6 +36,8 @@ import {
 import { Delete, ShoppingCart as CartIcon, Payment, LocalShipping, ReceiptLong, CheckCircleOutline, ShoppingBag, LocationOn, LocalOffer, LocalPharmacy, VolumeUp } from '@mui/icons-material';
 import { useNotification } from '../../contexts/NotificationContext';
 import { calculateDeliveryFee } from '../../utils/deliveryFee';
+import { getPublicFileUrl } from '../../services/api';
+
 
 const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescription, loading, orderId }) => {
   const { showNotification } = useNotification();
@@ -138,7 +140,7 @@ const ShoppingCart = ({ cartItems, onRemoveItem, onSubmitOrder, latestPrescripti
                       <ListItemAvatar sx={{ mt: 0.5 }}>
                         <Avatar
                           variant="rounded"
-                          src={item.image}
+                          src={getPublicFileUrl(item.image)}
                           sx={{ width: 64, height: 64, bgcolor: '#f8fafc', borderRadius: 3, border: `1px solid ${COLORS.border}` }}
                         >
                           <LocalPharmacy />
