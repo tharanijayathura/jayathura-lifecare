@@ -27,11 +27,14 @@ import axios from 'axios';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
+  // Track user email to request verification code
   const [email, setEmail] = useState('');
+  // Loading and error indicators
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Theme colors matching the common layout
   const COLORS = {
     primary: '#1e293b',
     secondary: '#93BFC7',
@@ -42,6 +45,7 @@ const ForgotPassword = () => {
     border: 'rgba(147, 191, 199, 0.25)',
   };
 
+  // Submit email to backend to trigger verification code generation and delivery
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -49,11 +53,15 @@ const ForgotPassword = () => {
     setSuccess(false);
 
     try {
+      // Hit the forgot-password API
       await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/forgot-password`, {
         email
       });
+      
       setSuccess(true);
+      // Wait 2 seconds so the user sees the success indicator, then forward to reset screen
       setTimeout(() => {
+        // Pass the email in the React Router navigation state so the user doesn't have to re-enter it
         navigate('/reset-password', { state: { email } });
       }, 2000);
     } catch (err) {
@@ -62,6 +70,7 @@ const ForgotPassword = () => {
     }
   };
 
+  // Styling override for the custom Material UI text field
   const FIELD_SX = {
     '& .MuiOutlinedInput-root': {
       borderRadius: 4,
@@ -106,6 +115,7 @@ const ForgotPassword = () => {
             textAlign: 'center'
           }}
         >
+          {/* Top navigation controls */}
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
             <IconButton 
               size="small"

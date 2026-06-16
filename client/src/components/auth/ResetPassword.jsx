@@ -32,17 +32,26 @@ import axios from 'axios';
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Retrieve the email passed through state during navigation. Default to empty if accessed directly.
   const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Toggle password eye icons
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // UI states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  
+  // Track if the 6-digit code has been validated by the backend
   const [codeVerified, setCodeVerified] = useState(false);
 
+  // Palette colors for cohesive styling
   const COLORS = {
     primary: '#1e293b',
     secondary: '#93BFC7',
@@ -53,12 +62,14 @@ const ResetPassword = () => {
     border: 'rgba(147, 191, 199, 0.25)',
   };
 
+  // Kick user back to forgot-password if they refresh or try to load this page without an email
   useEffect(() => {
     if (!email) {
       navigate('/forgot-password');
     }
   }, [email, navigate]);
 
+  // Submit the 6-digit code to the server to check validation and expiry
   const handleVerifyCode = async () => {
     if (!code || code.length !== 6) {
       setError('Identity error: Please enter a valid 6-digit verification code.');
@@ -74,6 +85,7 @@ const ResetPassword = () => {
         code
       });
 
+      // Unlock password form if verified
       if (response.data.verified) {
         setCodeVerified(true);
         setError('');
@@ -85,10 +97,12 @@ const ResetPassword = () => {
     }
   };
 
+  // Submit the new password to update database credentials
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
+    // Pre-submission UI sanity checks
     if (!codeVerified) {
       setError('Authorization error: Verification code must be validated first.');
       return;
@@ -107,6 +121,7 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
+      // POST the reset details
       await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/reset-password`, {
         email,
         code,
@@ -114,6 +129,7 @@ const ResetPassword = () => {
       });
 
       setSuccess(true);
+      // Wait 2 seconds for feedback to be read, then navigate to login with a helper message
       setTimeout(() => {
         navigate('/login', { state: { message: 'Security update successful. Please re-authenticate.' } });
       }, 2000);
@@ -123,6 +139,7 @@ const ResetPassword = () => {
     }
   };
 
+  // Style helper for material fields
   const FIELD_SX = {
     '& .MuiOutlinedInput-root': {
       borderRadius: 4,
@@ -155,6 +172,7 @@ const ResetPassword = () => {
       }}
     >
       <Container maxWidth="sm">
+        {/* Navigation controls header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
           <Stack direction="row" spacing={1}>
             <IconButton 
@@ -213,6 +231,7 @@ const ResetPassword = () => {
           </Fade>
 
           <Box component="form" onSubmit={handleSubmit}>
+            {/* Display target email as read-only field */}
             <TextField
               fullWidth
               label="Verified Target"
@@ -228,6 +247,7 @@ const ResetPassword = () => {
               }}
             />
 
+            {/* Input field for 6 digit reset code */}
             <TextField
               fullWidth
               required
@@ -243,6 +263,7 @@ const ResetPassword = () => {
               }}
             />
 
+            {/* Render verify button first; once code is validated, swap it for the new password fields */}
             {!codeVerified ? (
               <Button
                 fullWidth

@@ -25,6 +25,8 @@ import Navbar from '../components/common/Navbar';
 import ChatWidget from '../components/chat/ChatWidget';
 import aboutusBg from '../assets/aboutusbg.jpg';
 
+// Static lists containing data for our features, stats, and company values.
+// Storing this as static objects makes the JSX code cleaner and easier to maintain.
 const VALUES = [
   { Icon: Favorite, title: 'Care', description: 'We care deeply about your health and wellbeing' },
   { Icon: CheckCircle, title: 'Reliability', description: 'Dependable service you can trust' },
@@ -49,6 +51,8 @@ const STATS = [
   { number: '24/7', label: 'Support Available', Icon: HealthAndSafety, color: '#ABE7B2' },
 ];
 
+// Centralized styling object used by Material UI's 'sx' prop.
+// This separates layout concerns from component markup, similar to stylesheets.
 const sx = {
   page: {
     minHeight: '100vh',

@@ -17,6 +17,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Name, email and password are required' });
     }
 
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+    
+    if (!/(?=.*[a-zA-Z])/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain at least one letter' });
+    }
+    
+    if (!/(?=.*\d)/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain at least one number' });
+    }
+
     if (!ALLOWED_ROLES.includes(role)) {
       return res.status(400).json({ message: 'Invalid role' });
     }

@@ -38,13 +38,16 @@ const Contact = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
+  // Update the corresponding state field dynamically when the user types
   const handleChange = (e) => {
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
+  // Submit the contact form payload to the backend server
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Basic required fields validator
     if (!formData.name || !formData.email || !formData.message) {
       setSnackbarMessage('Please fill in all required fields');
       setSnackbarSeverity('error');
@@ -52,6 +55,7 @@ const Contact = () => {
       return;
     }
 
+    // Simple email regex validator to verify standard email structure
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setSnackbarMessage('Please enter a valid email address');
@@ -60,7 +64,7 @@ const Contact = () => {
       return;
     }
 
-    // Send to backend
+    // Trigger backend fetch request to register user message
     fetch('http://localhost:5000/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,10 +77,11 @@ const Contact = () => {
             const data = await res.json();
             errorMsg = data.error || errorMsg;
           } catch (e) {
-            // Not JSON, keep default errorMsg
+            // Non-JSON response fallback
           }
           throw new Error(errorMsg);
         }
+        // Success: inform user, set green severity, and reset inputs
         setSnackbarMessage('Thank you! Your message has been sent. We will get back to you soon.');
         setSnackbarSeverity('success');
         setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -85,9 +90,10 @@ const Contact = () => {
         setSnackbarMessage(err.message || 'Failed to send message');
         setSnackbarSeverity('error');
       })
-      .finally(() => setOpenSnackbar(true));
+      .finally(() => setOpenSnackbar(true)); // Display notification popup
   };
 
+  // Close the popup banner
   const handleCloseSnackbar = () => setOpenSnackbar(false);
 
   const contactInfo = [

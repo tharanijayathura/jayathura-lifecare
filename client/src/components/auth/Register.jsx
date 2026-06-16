@@ -31,35 +31,49 @@ import { useNavigate } from 'react-router-dom';
 import pimage from '../../assets/pimage.png';
 
 const Register = () => {
+  // Use the register function defined in AuthContext
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // Initialize registration fields
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'patient',
+    role: 'patient', // Default role is patient
     phone: '',
   });
 
+  // Track feedback messages and API loading state
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Update form inputs in state
   const handleChange = (e) => {
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
+  // Process registration on submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSuccess('');
 
+    // Ensure password is strong: min 8 chars, at least 1 letter and 1 number
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('Password must be at least 8 characters, and include at least one letter and one number.');
+      setLoading(false);
+      return;
+    }
+
+    // Match password fields locally to prevent unnecessary API roundtrips
     if (formData.password !== formData.confirmPassword) {
       setError('Registration Error: Passwords do not match.');
       setLoading(false);
@@ -67,13 +81,19 @@ const Register = () => {
     }
 
     try {
+      // Split out fields: concat first and last name for backend, omit confirmPassword
       const { confirmPassword, firstName, lastName, ...rest } = formData;
       const registerData = {
         name: `${firstName.trim()} ${lastName.trim()}`.trim(),
         ...rest
       };
+      
       const result = await register(registerData);
+      
+      // Patient roles are auto-approved, while staff roles (pharmacist/delivery) require admin approval
       setSuccess(result?.isApproved ? 'Identity verified! Redirecting to login...' : 'Credentials submitted for approval.');
+      
+      // Delay redirection by 2 seconds so the user can read the success message
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.message || 'System error. Please verify your details.');
@@ -83,7 +103,7 @@ const Register = () => {
 
   return (
     <Grid container sx={{ minHeight: '100vh' }}>
-      {/* Left side: Image and Branding */}
+      {/* Left side: branding sidebar (hidden on mobile layout) */}
       <Grid item xs={12} md={5} lg={4} sx={{ 
         bgcolor: '#ECF4E8', 
         display: { xs: 'none', md: 'flex' }, 
@@ -192,6 +212,10 @@ const Register = () => {
                   fullWidth required label="Confirm Password" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword} onChange={handleChange}
                   autoComplete="new-password"
+                  InputProps={{
+                    startAdornment: (<InputAdornment position="start"><LockOutlined sx={{ color: '#93BFC7' }} /></InputAdornment>),
+                    endAdornment: (<InputAdornment position="end"><IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end"><Visibility fontSize="small" /></IconButton></InputAdornment>)
+                  }}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: 3, bgcolor: '#f8fafc' } }}
                 />
               </Grid>

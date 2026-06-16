@@ -44,6 +44,8 @@ import deliveryPerson from '../assets/deliver1-removebg-preview.png';
 import homeBgImage from '../assets/c315609e636d82456e8d2ac8a244ddff.jpg';
 import heroBg from '../assets/hero.png'; // ✅ your new hero background image
 
+// Helper component that dynamically hides the header when scrolling down
+// to maximize screen real estate, sliding it back down when scrolling up
 function HideOnScroll(props) {
   const { children } = props;
   const trigger = useScrollTrigger();
@@ -69,14 +71,26 @@ const floatingPill = (color, top, left, duration, opacity = 0.7) => ({
 });
 
 const Home = () => {
+  // useNavigate is a React Router hook used to programmatically jump between routes (e.g. going to /login)
   const navigate = useNavigate();
+  
+  // useTheme lets us access MUI's responsive design breakpoints and styling variables
   const theme = useTheme();
+  
+  // useMediaQuery checks if the current screen size fits the mobile breakpoint ('md' down)
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  // useLocation lets us look at the active URL path to highlight the current navigation tab
   const location = useLocation();
   const pathname = location.pathname;
+  
+  // Local state to toggle the sidebar drawer menu on tablet/mobile screens
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  
+  // useScrollTrigger monitors how far the user has scrolled to trigger animations or menu changes
   const scrollY = useScrollTrigger({ threshold: 100 });
 
+  // Event handler to toggle mobile menu overlay
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };

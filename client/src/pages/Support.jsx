@@ -43,8 +43,11 @@ import Navbar from '../components/common/Navbar';
 import medicareImage from '../assets/medicare.jpg';
 
 const Support = () => {
+  // Navigation hook to redirect users to different routes
   const navigate = useNavigate();
+  // Fetch user object from AuthContext to conditionally render paths (e.g. prescription upload link)
   const { user } = useAuth();
+  // Theme hooks to capture responsive media queries
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 

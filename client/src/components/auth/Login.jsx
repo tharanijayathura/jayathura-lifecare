@@ -27,18 +27,25 @@ import { useNavigate } from 'react-router-dom';
 import pimage from '../../assets/pimage.png';
 
 const Login = () => {
+  // Pull the login API helper from our custom AuthContext
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Track the email and password entered by the user
   const [formData, setFormData] = useState({ email: '', password: '' });
+  // Control password field visibility (show plain text or bullets)
   const [showPassword, setShowPassword] = useState(false);
+  // Store any errors returned by the login process to display to the user
   const [error, setError] = useState('');
+  // Disable button and show a spinner while authentication is in progress
   const [loading, setLoading] = useState(false);
 
+  // Sync inputs with state on keypress
   const handleChange = (e) => {
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
+  // Trigger login action on form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -46,14 +53,19 @@ const Login = () => {
 
     try {
       const userData = await login(formData.email, formData.password);
+      
+      // Look up where to send the user based on their system role
       const redirectPaths = {
         patient: '/patient',
         pharmacist: '/pharmacist',
         admin: '/admin',
         delivery: '/delivery',
       };
+      
+      // Route the user to their dashboard, defaulting to patient page if unrecognized
       navigate(redirectPaths[userData.role] || '/patient');
     } catch (err) {
+      // Store API failure messages (like "pending approval" or "invalid credentials")
       setError(err.message || 'Authentication failed. Please check your credentials.');
       setLoading(false);
     }
@@ -61,7 +73,7 @@ const Login = () => {
 
   return (
     <Grid container sx={{ minHeight: '100vh' }}>
-      {/* Left side: Image and Branding */}
+      {/* Left side: Branding/Hero Image (Responsive - hidden on small screens) */}
       <Grid item xs={12} md={6} sx={{ 
         bgcolor: '#ECF4E8', 
         display: { xs: 'none', md: 'flex' }, 
@@ -72,6 +84,7 @@ const Login = () => {
         position: 'relative',
         minHeight: { xs: 'auto', md: '100vh' }
       }}>
+        {/* Click logo to return home */}
         <Box 
           onClick={() => navigate('/')}
           sx={{ position: 'absolute', top: 40, left: 40, cursor: 'pointer', '&:hover': { opacity: 0.8 }, transition: 'opacity 0.2s' }}
@@ -120,8 +133,20 @@ const Login = () => {
             </Typography>
           </Box>
 
+          {/* Error & Status Messages Alert Block */}
           {error && (
-            <Alert severity="error" sx={{ mb: 4, borderRadius: 3, fontWeight: 600 }}>
+            <Alert 
+              // Custom behavior: If user is pending approval, show a warning style alert box
+              severity={error.toLowerCase().includes('pending') ? 'warning' : 'error'} 
+              sx={{ 
+                mb: 4, 
+                borderRadius: 3, 
+                fontWeight: 600,
+                // Soft orange styling for warning/pending states to make it look professional
+                border: error.toLowerCase().includes('pending') ? '1px solid #FFE0B2' : 'none',
+                bgcolor: error.toLowerCase().includes('pending') ? '#FFF3E0' : undefined
+              }}
+            >
               {error}
             </Alert>
           )}
